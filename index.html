@@ -2,13 +2,14 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My Mini Garden</title>
     <style>
         /* 전체 화면 정중앙 대칭 정렬 고정 */
         html, body {
             width: 100%;
             height: 100%;
+            height: 100dvh;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -21,12 +22,14 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* 📱 스마트폰 모양의 모바일 전용 컨테이너 프레임 */
         .game-container {
             width: 100%;
             height: 100vh;
+            height: 100dvh;
             background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
             display: flex;
             flex-direction: column;
@@ -46,7 +49,7 @@
         /* 🔋 스마트폰 상단 가짜 상태바 및 사운드 토글 */
         .status-bar {
             position: absolute;
-            top: 15px;
+            top: calc(15px + env(safe-area-inset-top, 0px));
             left: 0;
             width: 100%;
             padding: 0 25px;
@@ -79,6 +82,9 @@
             border: 1px solid rgba(163, 226, 171, 0.3);
             position: relative;
             z-index: 5;
+            max-height: 92vh;
+            max-height: 92dvh;
+            overflow-y: auto;
         }
 
         /* 🎫 1단계 전용 비밀 정원 초대장 테마 스타일 */
@@ -234,6 +240,47 @@
             box-shadow: 0 4px 10px rgba(141, 110, 99, 0.3);
         }
 
+        /* 🌟 성격 선택기 스타일 (이름 짓기 화면) */
+        .personality-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .personality-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #fafafa;
+            text-align: center;
+        }
+        .personality-option.selected {
+            border-color: #4caf50;
+            background-color: #e8f5e9;
+            transform: scale(1.04);
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
+        }
+        .personality-emoji {
+            font-size: 26px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .personality-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: #43543e;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .personality-desc {
+            font-size: 10.5px;
+            color: #8a978a;
+            display: block;
+            line-height: 1.4;
+        }
+
         /* 📮 우체통 및 편지 오픈 레이아웃 */
         .mailbox-container {
             cursor: pointer;
@@ -348,6 +395,23 @@
                 top: 22px;
             }
         }
+
+        /* 📱 작은 모바일 화면(낮은 높이) 보정 — 카드 내부 여백을 줄여 답답하지 않게 */
+        @media (max-height: 680px) {
+            .screen-card {
+                padding: 22px 20px;
+            }
+            h1 {
+                font-size: 22px;
+                margin-bottom: 10px;
+            }
+            p {
+                margin-bottom: 16px;
+            }
+            .personality-selector {
+                margin-bottom: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -362,8 +426,14 @@
         </div>
 
         <div id="login-screen">
-            <div class="screen-card invitation-card">
-                <h1></span> 비밀의 정원 초대장</h1>
+            <div class="screen-card invitation-card" id="returning-card" style="display:none;">
+                <h1>🌿 다시 만나서 반가워요</h1>
+                <p><span id="returning-profile" style="font-size:22px;"></span> <span id="returning-name" style="font-weight:bold; color:#5d4037;"></span> 정원사님,<br>예전 정원으로 돌아가시겠어요?</p>
+                <button style="width: 100%;" onclick="continueAsReturningUser()">정원으로 돌아가기 ➔</button>
+                <button style="width: 100%; background-color:#bcaaa4; box-shadow:0 4px 0 #8d6e63; margin-top:8px;" onclick="startFresh()">새로운 정원사로 시작하기</button>
+            </div>
+            <div class="screen-card invitation-card" id="fresh-login-card">
+                <h1>🌱 비밀의 정원 초대장</h1>
                 <p>정원에 입장하실 집사님의 프로필과 이름을 정해주세요.</p>
                 
                 <div class="profile-selector">
@@ -396,6 +466,31 @@
                 <h1><span id="chosen-plant-title" style="font-weight: bold; color: #2e7d32;"></span> 이름 짓기</h1>
                 <p>키우실 <span id="chosen-plant-type" style="font-weight: bold; color: #2e7d32;"></span>의<br>멋진 이름을 지어주세요!</p>
                 <input type="text" id="plant-name-input" placeholder="식물 이름 입력" maxlength="10">
+
+                <p style="margin-bottom: 12px; font-size: 13.5px;">어떤 성격을 가진 친구일까요?</p>
+                <div class="personality-selector">
+                    <div class="personality-option selected" onclick="selectPersonality(this, 'active')">
+                        <span class="personality-emoji">😊</span>
+                        <span class="personality-name">활발한 성격</span>
+                        <span class="personality-desc">성장 빠름 · 물 자주 필요</span>
+                    </div>
+                    <div class="personality-option" onclick="selectPersonality(this, 'lazy')">
+                        <span class="personality-emoji">😴</span>
+                        <span class="personality-name">게으른 성격</span>
+                        <span class="personality-desc">성장 느림 · 물 오래 버팀</span>
+                    </div>
+                    <div class="personality-option" onclick="selectPersonality(this, 'shy')">
+                        <span class="personality-emoji">🌸</span>
+                        <span class="personality-name">수줍은 성격</span>
+                        <span class="personality-desc">말 걸어주면 더 잘 자람</span>
+                    </div>
+                    <div class="personality-option" onclick="selectPersonality(this, 'playful')">
+                        <span class="personality-emoji">🔥</span>
+                        <span class="personality-name">장난꾸러기</span>
+                        <span class="personality-desc">가끔 투정을 부려요</span>
+                    </div>
+                </div>
+
                 <button class="select-btn" onclick="openMailboxScreen()">이름 짓기 완료 ➔</button>
             </div>
         </div>
@@ -421,11 +516,15 @@
     </div>
 
     <script>
+        function safeGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+        function safeSet(key, val){ try{ localStorage.setItem(key, val); }catch(e){} }
+
         let nickname = '';
         let selectedProfile = '👨‍🌾'; 
         let selectedPlantDir = '';  
         let selectedPlantType = ''; 
         let plantName = '';         
+        let selectedPersonality = 'active';
         
         let audioCtx = null;
         let isPlaying = false;
@@ -433,15 +532,12 @@
 
         window.onload = function() {
             createLeaves(); 
-            const savedNickname = localStorage.getItem('miniGarden_nickname');
-            const savedProfile = localStorage.getItem('miniGarden_profile');
+            const savedNickname = safeGet('miniGarden_nickname');
+            const savedProfile = safeGet('miniGarden_profile');
             
-            if (savedNickname) {
-                document.getElementById('nickname-input').value = savedNickname;
-            }
             if (savedProfile) {
                 selectedProfile = savedProfile;
-                const options = document.querySelectorAll('.profile-option');
+                const options = document.querySelectorAll('#fresh-login-card .profile-option');
                 options.forEach(opt => {
                     if (opt.innerText === savedProfile) {
                         opt.classList.add('selected');
@@ -450,7 +546,36 @@
                     }
                 });
             }
+
+            // 🔁 저장된 닉네임이 있으면 "다시 만나서 반가워요" 화면을 먼저 보여줍니다.
+            if (savedNickname) {
+                document.getElementById('nickname-input').value = savedNickname;
+                document.getElementById('returning-name').innerText = savedNickname;
+                document.getElementById('returning-profile').innerText = savedProfile || '👨‍🌾';
+                document.getElementById('returning-card').style.display = 'block';
+                document.getElementById('fresh-login-card').style.display = 'none';
+            }
         };
+
+        // 저장된 닉네임/프로필 그대로 식물 선택 화면으로 이동
+        function continueAsReturningUser() {
+            nickname = safeGet('miniGarden_nickname') || '';
+            selectedProfile = safeGet('miniGarden_profile') || '👨‍🌾';
+
+            document.getElementById('user-profile').innerText = selectedProfile;
+            document.getElementById('user-greeting').innerText = nickname;
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('select-screen').style.display = 'block';
+        }
+
+        // 새 닉네임으로 다시 시작 — 입력 카드를 보여줍니다.
+        function startFresh() {
+            document.getElementById('returning-card').style.display = 'none';
+            document.getElementById('fresh-login-card').style.display = 'block';
+            document.getElementById('nickname-input').value = '';
+            document.getElementById('nickname-input').focus();
+        }
 
         function createLeaves() {
             const container = document.getElementById('leaf-container');
@@ -512,6 +637,13 @@
             selectedProfile = emoji;
         }
 
+        function selectPersonality(element, key) {
+            const options = document.querySelectorAll('.personality-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPersonality = key;
+        }
+
         function nextToSelect() {
             const input = document.getElementById('nickname-input').value.trim();
             if (input === "") {
@@ -520,8 +652,8 @@
             }
             nickname = input;
             
-            localStorage.setItem('miniGarden_nickname', nickname);
-            localStorage.setItem('miniGarden_profile', selectedProfile);
+            safeSet('miniGarden_nickname', nickname);
+            safeSet('miniGarden_profile', selectedProfile);
             
             document.getElementById('user-profile').innerText = selectedProfile;
             document.getElementById('user-greeting').innerText = nickname;
@@ -591,7 +723,7 @@
 
         // 🔗 [경로 수정 완료] 실제 대소문자 구조(Plant/Tomato)에 정확히 맞춤
         function goToPlantGame() {
-            const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}`;
+            const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(selectedPersonality)}`;
             window.location.href = url;
         }
     </script>
