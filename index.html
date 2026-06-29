@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Mini Garden</title>
+    <style>
+        /* 전체 화면 정중앙 대칭 정렬 고정 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f1f8e9; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 📱 스마트폰 모양의 모바일 전용 컨테이너 프레임 */
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden; 
+            z-index: 2;
+        }
+
+        .game-container::before {
+            display: none;
+        }
+
+        /* 🔋 스마트폰 상단 가짜 상태바 및 사운드 토글 */
+        .status-bar {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            padding: 0 25px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #757575;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .sound-btn {
+            cursor: pointer;
+            padding: 2px 5px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        /* 🟢 기본 화이트 카드 스타일 */
+        .screen-card {
+            background-color: #ffffff;
+            padding: 35px 24px;
+            border-radius: 28px;
+            box-shadow: 0 10px 25px rgba(46, 125, 50, 0.08);
+            width: 95%;
+            box-sizing: border-box;
+            text-align: center; 
+            margin: 0 auto;
+            border: 1px solid rgba(163, 226, 171, 0.3);
+            position: relative;
+            z-index: 5;
+        }
+
+        /* 🎫 1단계 전용 비밀 정원 초대장 테마 스타일 */
+        .invitation-card {
+            background: #fdf5e6; 
+            border: 2px double #d7ccc8;
+            box-shadow: 0 10px 30px rgba(141, 110, 99, 0.15);
+        }
+
+        /* 💌 편지 전용 아늑한 양식지 스타일 고도화 */
+        .letter-paper {
+            background-color: #fffdf0; 
+            border: 2px double #bcaaa4; 
+            background-image: linear-gradient(rgba(188, 170, 164, 0.15) 1px, transparent 1px);
+            background-size: 100% 25px; 
+            padding: 25px 20px;
+            border-radius: 16px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.03);
+            min-height: 150px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2e7d32; 
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 26px;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+        .invitation-card h1 {
+            color: #5d4037; 
+        }
+        p {
+            color: #616161;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        /* 편지 내부 본문 텍스트 좌측 정렬 */
+        .letter-text {
+            color: #5d4037;
+            font-family: 'Malgun Gothic', sans-serif;
+            font-size: 14px;
+            line-height: 25px; 
+            margin-bottom: 0;
+            word-break: keep-all;
+            text-align: left; 
+            display: block;
+            width: 100%;
+        }
+        /* 타자기 커서 깜빡임 효과 */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 0.8s infinite;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 14px 24px;
+            background-color: #4caf50; 
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 5px auto;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #388e3c; 
+            transition: all 0.1s;
+        }
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .invitation-card button {
+            background-color: #8d6e63;
+            box-shadow: 0 4px 0 #5d4037;
+        }
+        .select-btn {
+            background-color: #81c784;
+            box-shadow: 0 4px 0 #66bb6a;
+            width: 100%; 
+            margin: 10px auto; 
+            display: block;
+        }
+        .select-btn:active {
+            box-shadow: none;
+        }
+        input[type="text"] {
+            font-size: 18px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #c8e6c9;
+            margin: 0 auto 20px auto; 
+            text-align: center;
+            outline: none;
+            width: 100%; 
+            box-sizing: border-box;
+            display: block;
+            transition: border-color 0.2s;
+            background-color: #fafafa;
+        }
+        .invitation-card input[type="text"] {
+            border-color: #d7ccc8;
+            background-color: #fafafa;
+        }
+        input[type="text"]:focus {
+            border-color: #4caf50;
+            background-color: #ffffff;
+        }
+        .invitation-card input[type="text"]:focus {
+            border-color: #8d6e63;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e0e0e0;
+            margin: 20px auto;
+            width: 100%;
+        }
+
+        /* 👨‍🌾 프로필 캐릭터 선택기 스타일 */
+        .profile-selector {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .profile-option {
+            font-size: 28px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #fafafa;
+        }
+        .profile-option.selected {
+            border-color: #4caf50;
+            background-color: #e8f5e9;
+            transform: scale(1.15);
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+        }
+        .invitation-card .profile-option.selected {
+            border-color: #8d6e63;
+            background-color: #efebe9;
+            box-shadow: 0 4px 10px rgba(141, 110, 99, 0.3);
+        }
+
+        /* 📮 우체통 및 편지 오픈 레이아웃 */
+        .mailbox-container {
+            cursor: pointer;
+            margin: 20px auto;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .mailbox-container:hover {
+            transform: scale(1.05);
+        }
+        .mailbox-img {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .mailbox-text {
+            font-size: 14px;
+            color: #795548;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        .letter-box {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.8s ease-in-out, opacity 0.5s ease-in-out;
+            margin-top: 0;
+        }
+        .letter-box.open {
+            max-height: 500px; 
+            opacity: 1;
+            margin-top: 20px;
+        }
+
+        #login-screen, #select-screen, #name-screen, #mailbox-screen {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 🍃 나뭇잎 흩날리기 이펙트 요소 클래스 */
+        .leaf {
+            position: absolute;
+            top: -20px;
+            color: rgba(76, 175, 80, 0.25);
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1;
+            animation: fall linear infinite;
+        }
+
+        /* ✨ 애니메이션 키프레임 */
+        .floating-emoji {
+            display: inline-block;
+            animation: float 2.5s ease-in-out infinite;
+        }
+        .delay-emoji {
+            animation-delay: 0.5s;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.6; }
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(105vh) rotate(720deg) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* 💻 데스크톱 PC 브라우저 베젤 활성화 */
+        @media (min-width: 1024px) {
+            body {
+                background-color: #dcedc8; 
+            }
+            .game-container {
+                width: 360px;       
+                height: 740px;      
+                border: 8px solid #333333; 
+                border-radius: 36px;       
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+            .game-container::before {
+                content: '';
+                position: absolute;
+                top: 10px;
+                width: 60px;
+                height: 6px;
+                background-color: #333333;
+                border-radius: 3px;
+                z-index: 10;
+                display: block;
+            }
+            .status-bar {
+                top: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="leaf-container" style="position: absolute; width:100%; height:100%; overflow:hidden; top:0; left:0; pointer-events:none; z-index:1;"></div>
+
+    <div class="game-container" id="main-container">
+        <div class="status-bar">
+            <span>12:00 🌿</span>
+            <span class="sound-btn" id="audio-toggle" onclick="toggleSound()">🔇 사운드 켜기</span>
+            <span>📶 🔋 100%</span>
+        </div>
+
+        <div id="login-screen">
+            <div class="screen-card invitation-card">
+                <h1></span> 비밀의 정원 초대장</h1>
+                <p>정원에 입장하실 집사님의 프로필과 이름을 정해주세요.</p>
+                
+                <div class="profile-selector">
+                    <div class="profile-option selected" onclick="selectProfile(this, '🐶')">🐶</div>
+                    <div class="profile-option" onclick="selectProfile(this, '🐹')">🐹</div>
+                    <div class="profile-option" onclick="selectProfile(this, '🐱')">🐱</div>
+                    <div class="profile-option" onclick="selectProfile(this, '🐰')">🐰</div>
+                </div>
+
+                <input type="text" id="nickname-input" placeholder="닉네임 입력" maxlength="10">
+                <button style="width: 100%;" onclick="nextToSelect()">정원 입장하기 ➔</button>
+            </div>
+        </div>
+
+        <div id="select-screen" style="display: none;">
+            <div class="screen-card">
+                <h1><span class="floating-emoji">🌱</span> 식물 고르기 <span class="floating-emoji delay-emoji">🌱</span></h1>
+                <p><span id="user-profile" style="font-size: 20px; margin-right: 4px;"></span><span id="user-greeting" style="font-weight: bold; color: #2e7d32;"></span> 정원사님,<br>식물을 골라주세요!</p>
+                <hr>
+                <button class="select-btn" onclick="selectPlant('Tomato', '토마토')">🍅 토마토</button>
+                <button class="select-btn" onclick="selectPlant('Carrot', '당근')">🥕 당근</button>
+                <button class="select-btn" onclick="selectPlant('Avocado', '아보카도')">🥑 아보카도</button>
+                <button class="select-btn" onclick="selectPlant('Strawberry', '딸기')">🍓 딸기</button>
+                <button class="select-btn" onclick="selectPlant('Mushroom', '버섯')">🍄 버섯</button>
+            </div>
+        </div>
+
+        <div id="name-screen" style="display: none;">
+            <div class="screen-card">
+                <h1><span id="chosen-plant-title" style="font-weight: bold; color: #2e7d32;"></span> 이름 짓기</h1>
+                <p>키우실 <span id="chosen-plant-type" style="font-weight: bold; color: #2e7d32;"></span>의<br>멋진 이름을 지어주세요!</p>
+                <input type="text" id="plant-name-input" placeholder="식물 이름 입력" maxlength="10">
+                <button class="select-btn" onclick="openMailboxScreen()">이름 짓기 완료 ➔</button>
+            </div>
+        </div>
+
+        <div id="mailbox-screen" style="display: none;">
+            <div class="screen-card">
+                <h1><span class="floating-emoji">📬</span> 정원 우체통</h1>
+                <p>정원에 새로운 편지가 도착했습니다.</p>
+                
+                <div class="mailbox-container" id="mailbox-clicker" onclick="triggerLetterOpen()">
+                    <span class="mailbox-img" id="mailbox-icon">📮</span>
+                    <span class="mailbox-text" id="mailbox-hint">눌러서 우체통 열기</span>
+                </div>
+
+                <div class="letter-box" id="secret-letter">
+                    <div class="letter-paper">
+                        <span class="letter-text typing-cursor" id="typing-content"></span>
+                    </div>
+                    <button class="select-btn" id="start-game-btn" style="margin-top: 20px; display: none;" onclick="goToPlantGame()">정원으로 입장하기 ➔</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let nickname = '';
+        let selectedProfile = '👨‍🌾'; 
+        let selectedPlantDir = '';  
+        let selectedPlantType = ''; 
+        let plantName = '';         
+        
+        let audioCtx = null;
+        let isPlaying = false;
+        let noiseNode = null;
+
+        window.onload = function() {
+            createLeaves(); 
+            const savedNickname = localStorage.getItem('miniGarden_nickname');
+            const savedProfile = localStorage.getItem('miniGarden_profile');
+            
+            if (savedNickname) {
+                document.getElementById('nickname-input').value = savedNickname;
+            }
+            if (savedProfile) {
+                selectedProfile = savedProfile;
+                const options = document.querySelectorAll('.profile-option');
+                options.forEach(opt => {
+                    if (opt.innerText === savedProfile) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+            }
+        };
+
+        function createLeaves() {
+            const container = document.getElementById('leaf-container');
+            const leafEmojis = ['🍃', '🌱', '🍂', '🌸'];
+            for (let i = 0; i < 15; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                leaf.innerText = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+                leaf.style.left = Math.random() * 100 + '%';
+                leaf.style.animationDelay = Math.random() * 5 + 's';
+                leaf.style.animationDuration = (Math.random() * 4 + 6) + 's';
+                leaf.style.fontSize = (Math.random() * 12 + 14) + 'px';
+                container.appendChild(leaf);
+            }
+        }
+
+        function toggleSound() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (!isPlaying) {
+                const bufferSize = 2 * audioCtx.sampleRate;
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = noiseBuffer;
+                noiseNode.loop = true;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime); 
+
+                noiseNode.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                noiseNode.start();
+                document.getElementById('audio-toggle').innerText = '🔊 사운드 끄기';
+                isPlaying = true;
+            } else {
+                if (noiseNode) noiseNode.stop();
+                document.getElementById('audio-toggle').innerText = '🔇 사운드 켜기';
+                isPlaying = false;
+            }
+        }
+
+        function selectProfile(element, emoji) {
+            const options = document.querySelectorAll('.profile-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedProfile = emoji;
+        }
+
+        function nextToSelect() {
+            const input = document.getElementById('nickname-input').value.trim();
+            if (input === "") {
+                alert("닉네임을 입력해 주세요!");
+                return;
+            }
+            nickname = input;
+            
+            localStorage.setItem('miniGarden_nickname', nickname);
+            localStorage.setItem('miniGarden_profile', selectedProfile);
+            
+            document.getElementById('user-profile').innerText = selectedProfile;
+            document.getElementById('user-greeting').innerText = nickname;
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('select-screen').style.display = 'block';
+        }
+
+        function selectPlant(plantDir, plantType) {
+            selectedPlantDir = plantDir;
+            selectedPlantType = plantType;
+            
+            document.getElementById('chosen-plant-title').innerText = selectedPlantType;
+            document.getElementById('chosen-plant-type').innerText = selectedPlantType;
+            
+            document.getElementById('select-screen').style.display = 'none';
+            document.getElementById('name-screen').style.display = 'block';
+        }
+
+        function openMailboxScreen() {
+            const input = document.getElementById('plant-name-input').value.trim();
+            if (input === "") {
+                alert("식물의 이름을 입력해 주세요!");
+                return;
+            }
+            plantName = input;
+
+            document.getElementById('name-screen').style.display = 'none';
+            document.getElementById('mailbox-screen').style.display = 'flex';
+        }
+
+        function triggerLetterOpen() {
+            document.getElementById('mailbox-icon').innerText = '📭';
+            document.getElementById('mailbox-hint').style.display = 'none';
+            document.getElementById('mailbox-clicker').removeAttribute('onclick'); 
+            
+            const letter = document.getElementById('secret-letter');
+            letter.classList.add('open');
+
+            const fullText = `안녕, 내 사랑하는 ${nickname}.\n네가 지어준 ${plantName}의 이름을 들으니 참 기쁘구나.\n\n마음이 지치고 삭막할 때마다\n이 아이를 정성껏 돌보며 위로받으렴.\n비밀의 정원은 언제나 네 편이란다.`;
+            
+            setTimeout(() => {
+                startTypingEffect(fullText);
+            }, 600);
+        }
+
+        function startTypingEffect(text) {
+            const target = document.getElementById('typing-content');
+            let index = 0;
+
+            function type() {
+                if (index < text.length) {
+                    if (text[index] === '\n') {
+                        target.innerHTML += '<br>';
+                    } else {
+                        target.innerHTML += text[index];
+                    }
+                    index++;
+                    setTimeout(type, 50); 
+                } else {
+                    target.classList.remove('typing-cursor');
+                    document.getElementById('start-game-btn').style.display = 'block';
+                }
+            }
+            type();
+        }
+
+        // 🔗 [경로 수정 완료] 실제 대소문자 구조(Plant/Tomato)에 정확히 맞춤
+        function goToPlantGame() {
+            const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}`;
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
