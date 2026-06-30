@@ -1437,7 +1437,7 @@ function showBubble(msg){
   bubble.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showBubble._t);
-  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 2400);
+  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 5000);
 }
 
 /* 🤔 식물이 답변을 "생각 중"일 때 — 점 3개가 움직이는 말풍선을 계속 띄워둡니다 (자동으로 사라지지 않음) */
@@ -1456,7 +1456,7 @@ function showGardenerBubble(msg){
   text.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showGardenerBubble._t);
-  showGardenerBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 2200);
+  showGardenerBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 5000);
 }
 
 /* ================= 수확 ================= */
