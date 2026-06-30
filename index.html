@@ -7,11 +7,12 @@
     <meta name="theme-color" content="#81c784">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Mini Garden">
+    <meta name="apple-mobile-web-app-title" content="Pocket Planter">
     <link rel="apple-touch-icon" href="icons/icon-180.png">
-    <title>My Mini Garden</title>
+    <title>Pocket Planter</title>
     <style>
         html, body {
+            touch-action: manipulation;
             width: 100%;
             height: 100%;
             height: 100dvh;
@@ -190,6 +191,19 @@
         .invitation-card input[type="text"]:focus { border-color: #8d6e63; }
         hr { border: 0; height: 1px; background: #e0e0e0; margin: 20px auto; width: 100%; }
 
+        .update-toast{
+            position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+            background:#2c3a2c; color:#fff; padding:11px 14px; border-radius:14px;
+            font-size:12px; font-weight:700; z-index:200; display:none;
+            align-items:center; gap:10px; box-shadow:0 10px 24px rgba(0,0,0,0.25);
+            white-space:nowrap;
+        }
+        .update-toast.show{ display:flex; }
+        .update-toast button{
+            background:#4caf50; border:none; color:#fff; font-weight:800; font-size:11px;
+            padding:7px 12px; border-radius:999px; cursor:pointer; box-shadow:none; margin:0;
+        }
+
         .profile-selector { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
         .profile-option {
             font-size: 28px; width: 50px; height: 50px;
@@ -276,6 +290,11 @@
 
     <div id="leaf-container" style="position: absolute; width:100%; height:100%; overflow:hidden; top:0; left:0; pointer-events:none; z-index:1;"></div>
 
+    <div class="update-toast" id="update-toast">
+        <span>🔄 새 업데이트가 있어요!</span>
+        <button onclick="applyUpdate()">새로고침</button>
+    </div>
+
     <div class="game-container" id="main-container">
         <div class="status-bar">
             <span>12:00 🌿</span>
@@ -284,12 +303,6 @@
         </div>
 
         <div id="login-screen">
-            <div class="screen-card invitation-card" id="returning-card" style="display:none;">
-                <h1>🌿 다시 만나서 반가워요</h1>
-                <p><span id="returning-profile" style="font-size:22px;"></span> <span id="returning-name" style="font-weight:bold; color:#5d4037;"></span> 정원사님,<br>예전 정원으로 돌아가시겠어요?</p>
-                <button style="width: 100%;" onclick="continueAsReturningUser()">정원으로 돌아가기 ➔</button>
-                <button style="width: 100%; background-color:#bcaaa4; box-shadow:0 4px 0 #8d6e63; margin-top:8px;" onclick="startFresh()">새로운 정원사로 시작하기</button>
-            </div>
             <div class="screen-card invitation-card" id="fresh-login-card">
                 <h1>🌱 비밀의 정원 초대장</h1>
                 <p>정원에 입장하실 집사님의 프로필과 이름을 정해주세요.</p>
@@ -310,6 +323,7 @@
             <div class="screen-card">
                 <h1><span class="floating-emoji">🌱</span> 식물 고르기 <span class="floating-emoji delay-emoji">🌱</span></h1>
                 <p><span id="user-profile" style="font-size: 20px; margin-right: 4px;"></span><span id="user-greeting" style="font-weight: bold; color: #2e7d32;"></span> 정원사님,<br>식물을 골라주세요!</p>
+                <p style="font-size: 12.5px; color: #e53935; font-weight: bold; margin-top: -10px; margin-bottom: 18px;">⚠️ 한 번 고르면 수확하기 전까지는 바꿀 수 없어요. 신중하게 골라주세요!</p>
                 <hr>
                 <button class="select-btn" onclick="selectPlant('Tomato', '토마토')">🍅 토마토</button>
                 <button class="select-btn locked" onclick="lockedPlantAlert()">🥕 당근 <span class="lock-badge">🔒 준비중</span></button>
@@ -388,6 +402,30 @@
         let isPlaying = false;
         let noiseNode = null;
 
+        /* 🔘 버튼 클릭 효과음 */
+        function playClickSound(){
+            try{
+                if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.06);
+                gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.13);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.14);
+            }catch(e){}
+        }
+        document.addEventListener('click', function(e){
+            const btn = e.target.closest('button, .select-btn, .profile-option, .personality-option, .mailbox-container');
+            if (btn) playClickSound();
+        }, true);
+
         function lockedPlantAlert(){
             alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요. 지금은 🍅 토마토를 키워보세요!');
         }
@@ -409,13 +447,10 @@
                 });
             }
 
-            // 🔁 저장된 닉네임이 있으면 "다시 만나서 반가워요" 화면을 먼저 보여줍니다.
+            // 🔁 저장된 닉네임이 있으면 화면 보여주지 않고 바로 이어서 진행합니다.
             if (savedNickname) {
-                document.getElementById('nickname-input').value = savedNickname;
-                document.getElementById('returning-name').innerText = savedNickname;
-                document.getElementById('returning-profile').innerText = savedProfile || '👨‍🌾';
-                document.getElementById('returning-card').style.display = 'block';
-                document.getElementById('fresh-login-card').style.display = 'none';
+                continueAsReturningUser();
+                return;
             }
         };
 
@@ -440,14 +475,6 @@
             document.getElementById('user-greeting').innerText = nickname;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('select-screen').style.display = 'block';
-        }
-
-        // 새 닉네임으로 다시 시작 — 입력 카드를 보여줍니다.
-        function startFresh() {
-            document.getElementById('returning-card').style.display = 'none';
-            document.getElementById('fresh-login-card').style.display = 'block';
-            document.getElementById('nickname-input').value = '';
-            document.getElementById('nickname-input').focus();
         }
 
         function createLeaves() {
@@ -607,10 +634,50 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('PWA service worker registered'))
-                    .catch(err => console.error('SW registration failed:', err));
+                setupUpdateWatcher();
             });
+        }
+
+        function setupUpdateWatcher(){
+            let reloadedAfterUpdate = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (reloadedAfterUpdate) return;
+                reloadedAfterUpdate = true;
+                window.location.reload();
+            });
+            navigator.serviceWorker.register('./sw.js').then((reg) => {
+                if (!reg) return;
+                console.log('PWA service worker registered');
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            document.getElementById('update-toast').classList.add('show');
+                        }
+                    });
+                });
+                // 📲 접속하자마자 새 버전이 있는지 즉시 확인
+                reg.update().catch(() => {});
+                // 주기적으로 새 버전 있는지 확인
+                setInterval(() => { reg.update().catch(() => {}); }, 60 * 1000);
+            }).catch(err => console.error('SW registration failed:', err));
+        }
+
+        function applyUpdate(){
+            document.getElementById('update-toast').classList.remove('show');
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg && reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    } else {
+                        window.location.reload();
+                    }
+                });
+            } else {
+                window.location.reload();
+            }
         }
     </script>
 </body>

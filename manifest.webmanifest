@@ -1,6 +1,6 @@
 {
-  "name": "My Mini Garden",
-  "short_name": "Mini Garden",
+  "name": "Pocket Planter",
+  "short_name": "Pocket Planter",
   "description": "귀여운 식물을 돌보는 미니 가드닝 게임",
   "start_url": "./index.html",
   "scope": "./",

@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#81c784">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Mini Garden">
+<meta name="apple-mobile-web-app-title" content="Pocket Planter">
 <link rel="apple-touch-icon" href="../../icons/icon-180.png">
-<title>My Mini Garden - Tomato</title>
+<title>Pocket Planter - Tomato</title>
 <style>
   :root{
     --sky-light:#dcf0f7;
@@ -32,6 +32,7 @@
   html,body{
     width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   body{
     font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -799,6 +800,30 @@ let plantState = {
 
 let petCount = 0, petResetTimer = null;
 let audioCtx = null, ambientSound = null;
+
+/* 🔘 버튼 클릭 효과음 (작고 귀여운 "똑" 소리) */
+function playClickSound(){
+  try{
+    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.13);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.14);
+  }catch(e){ /* 사운드 실패는 무시 */ }
+}
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button, .select-btn, .mailbox-container, .menu-btn, .modal-opt-btn, .basket-tomato');
+  if(btn) playClickSound();
+}, true);
 let soundOn = false;
 let isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 let isAiReplying = false;
@@ -1295,7 +1320,7 @@ function buildPotFace(){
     mouth = `<path class="pot-face-mouth" d="M${cx-5},${cy+7} l 10,0" />`;
   }
 
-  return `<g transform="translate(0,-70)">${eyes}${mouth}${extra}</g>`;
+  return `<g transform="translate(0,-45)">${eyes}${mouth}${extra}</g>`;
 }
 
 function buildPlantSVG(stage){
@@ -1806,14 +1831,31 @@ async function processSpeech(){
 
 /* 🤖 AI를 통한 식물 답변 생성. 실패 시 기존 하드코딩 답변으로 자동 대체됩니다. */
 const FALLBACK_REPLIES = {
-  active:  { good:'그 말 들으니 완전 신나요!', bad:'그런 말은... 그래도 금방 잊을게요!', neutral:'정원사님 목소리 들으니 기운 나요!' },
-  lazy:    { good:'음... 기분 좋아요... 헤헤.', bad:'속상해요... 그냥 잘래요.', neutral:'...그렇구나...(이제 가주세요..)' },
-  shy:     { good:'그런 말... 부끄러워요. 고마워요.', bad:'그 말은 좀 아팠어요...', neutral:'말 걸어줘서... 좋아요.' },
-  playful: { good:'헤헤! 또 말해줘요!', bad:'삐졌어요! 그래도 화해해요!', neutral:'심심했는데 잘됐다! 또 놀아줘요!' }
+  active:  {
+    good:    ['그 말 들으니 완전 신나요!', '우와, 기분 최고예요!', '정원사님 덕분에 힘이 솟아요!', '오늘따라 더 쑥쑥 자랄 것 같아요!'],
+    bad:     ['그런 말은... 그래도 금방 잊을게요!', '에이, 살짝 서운하지만 괜찮아요!', '흠... 그래도 씩씩하게 버틸게요!'],
+    neutral: ['정원사님 목소리 들으니 기운 나요!', '오늘도 와주셨네요, 신나요!', '심심했는데 반가워요!']
+  },
+  lazy:    {
+    good:    ['음... 기분 좋아요... 헤헤.', '오... 좋다... 더 자고싶어져요.', '히힛... 기분이 몽글몽글해요.'],
+    bad:     ['속상해요... 그냥 잘래요.', '으... 그 말은 좀 그러네요...', '쩝... 기운이 더 빠지네요.'],
+    neutral: ['...그렇구나...(이제 가주세요..)', '음냐... 누구세요...', '...왔어요...? 졸려요...']
+  },
+  shy:     {
+    good:    ['그런 말... 부끄러워요. 고마워요.', '얼굴이 빨개지는 것 같아요...', '그렇게 말해주니 좋아요... 헤헤.'],
+    bad:     ['그 말은 좀 아팠어요...', '...조금 슬퍼요.', '음... 마음이 콕 찔렸어요.'],
+    neutral: ['말 걸어줘서... 좋아요.', '...안녕하세요. 와줘서 기뻐요.', '오늘도 와주셨네요... 좋아요.']
+  },
+  playful: {
+    good:    ['헤헤! 또 말해줘요!', '오예! 기분 째져요!', '그거 다시 한번 말해줘요!'],
+    bad:     ['삐졌어요! 그래도 화해해요!', '치, 그런 말 하면 안 놀아줘요!', '흥! 그래도 금방 풀릴게요!'],
+    neutral: ['심심했는데 잘됐다! 또 놀아줘요!', '오! 드디어 왔네요, 놀자구요!', '심심해 죽는 줄 알았어요!']
+  }
 };
 function getFallbackReply(isGood, isBad){
   const pool = FALLBACK_REPLIES[personalityKey] || FALLBACK_REPLIES.active;
-  return isGood ? pool.good : isBad ? pool.bad : pool.neutral;
+  const list = isGood ? pool.good : isBad ? pool.bad : pool.neutral;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 async function getAiReply(userText, isGood, isBad){
@@ -1828,21 +1870,16 @@ async function getAiReply(userText, isGood, isBad){
 이모티콘은 0~1개만 사용. 따옴표나 설명 없이 대답 텍스트만 출력해.
 ${moodHint}`;
 
+  // ✅ 무료 Cloudflare Worker(Workers AI)로 연결됨 — API 키 필요 없음
   try{
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://mini-garden-ai.jhytkfkd.workers.dev/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 100,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userText }]
-      })
+      body: JSON.stringify({ systemPrompt, userText })
     });
     if(!response.ok) throw new Error('api error');
     const data = await response.json();
-    const textBlock = (data.content || []).find(c=>c.type==='text');
-    let out = textBlock ? textBlock.text.trim() : '';
+    let out = (data.reply || '').trim();
     out = out.replace(/^["'“”]+|["'“”]+$/g,'');
     if(!out) throw new Error('empty reply');
     return out.length > 60 ? out.slice(0,60) : out;
@@ -1935,6 +1972,8 @@ function setupUpdateWatcher(){
         }
       });
     });
+    // 📲 접속하자마자 새 버전이 있는지 즉시 확인
+    reg.update().catch(()=>{});
     // 주기적으로 새 버전 있는지 확인
     setInterval(()=>{ reg.update().catch(()=>{}); }, 60*1000);
   }).catch(err => console.error('SW registration failed:', err));
