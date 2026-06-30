@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#81c784">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mini Garden">
+<link rel="apple-touch-icon" href="../../icons/icon-180.png">
 <title>My Mini Garden - Tomato</title>
 <style>
   :root{
@@ -552,7 +558,7 @@
   </div>
   <div class="control-menu row2" style="grid-template-columns:repeat(4,1fr);">
     <div class="menu-btn" onclick="openModal('diary')" id="diary-menu-btn">
-      <span class="menu-btn-icon">📔</span>일기
+      <span class="menu-btn-icon">📒</span>일기
       <span class="menu-btn-badge" id="diary-badge" style="display:none;">!</span>
     </div>
     <div class="menu-btn" onclick="openModal('basket')" id="basket-menu-btn">
@@ -627,7 +633,7 @@ const PERSONALITY_TABLE = {
   shy:     { label:'수줍은 토마토', emoji:'🌸', growthMul:1.0,  dryMul:1.0,  talkBonus:0.5, complainChance:0.0,
              greeting:['아, 안녕... 보고 있었어요, 헤헤.','...왔네요. 반가워요 (작게)'] },
   playful: { label:'장난꾸러기 토마토', emoji:'🔥', growthMul:1.0, dryMul:1.1, talkBonus:0.3, complainChance:0.12,
-             greeting:['짜잔! 저 왔어요! 놀아주세요!','심심했어요! 빨리 물 줘요!'] }
+             greeting:['짜잔! 저 왔어요! 놀아주세요!','심심해!!! 빨리 물 줘!'] }
 };
 function getPersonality(){
   return PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
@@ -1003,7 +1009,7 @@ function gameTick(){
 
   // 🔥 장난꾸러기 성격: 물이 부족할 때 가끔 투정을 부립니다.
   if(personalityKey === 'playful' && plantState.water < 35 && Math.random() < p.complainChance){
-    showBubble('💧 물 주세요!! 목 말라요!!');
+    showBubble('물 주세요!! 목 말라요!!-_-');
   }
 
   plantState.lastRealTick = now;
@@ -1231,7 +1237,7 @@ function waterPlant(){
   // 🚫 이미 충분히 촉촉한 상태라면(96% 이상) 물을 더 주지 않고 안내만 띄웁니다.
   // (과습으로 뿌리가 썩는 걸 막기 위해 100%까지는 절대 못 올라가게 일부러 막아둔 거예요)
   if(plantState.water >= WATER_CAP){
-    showBubble("💧 지금은 충분히 촉촉해요! 조금 마르면 다시 줄게요.");
+    showBubble("지금은 충분히 촉촉해요! 조금 마르면 다시 줄게요.");
     return;
   }
 
@@ -1246,7 +1252,7 @@ function waterPlant(){
     plantState.stats.wateredOnlyOnRain = false;
   }
 
-  showBubble("💧 꿀꺽꿀꺽! 시원해요!");
+  showBubble("꿀꺽꿀꺽! 시원해요!");
   updateUI();
   checkDeathConditions();
   checkAchievements();
@@ -1271,11 +1277,11 @@ function petPlant(){
   svg.classList.add('pet-shake');
   setTimeout(()=>{ svg.classList.remove('pet-shake'); svg.classList.add('sway'); }, 600);
 
-  showBubble("💚 정원사님의 따뜻한 손길!");
+  showBubble("정원사님의 따뜻한 손길!💚");
 
   clearTimeout(petResetTimer);
   if(petCount >= 7){
-    showBubble("💢 너무 많이 만져서 살짝 피곤해요!");
+    showBubble("너무 많이 만져서 살짝 피곤해요!💢");
     petCount = 0;
   } else {
     petResetTimer = setTimeout(()=>{ petCount = 0; }, 3000);
@@ -1363,11 +1369,11 @@ function openModal(type){
     const locs = [
       {key:'테라스', icon:'☀️', sub:'성장 빠름 · 건조 빠름', color:'#e07a3d'},
       {key:'창가',  icon:'🪟', sub:'표준 밸런스', color:'#4c9a5b'},
-      {key:'책상',  icon:'🖥️', sub:'일조 부족', color:'#8a93a8'},
+      {key:'책상',  icon:'🖥️', sub:'일조 부족 · 해충 없음', color:'#8a93a8'},
       {key:'마당',  icon:'🏡', sub:'광합성 우수', color:'#3590c4'}
     ];
     content.innerHTML = `
-      <div class="modal-title">📦 화분 위치 옮기기</div>
+      <div class="modal-title">📦화분 위치 옮기기📦</div>
       <p class="modal-sub">장소마다 일조량과 수분 증발 속도가 달라요.</p>
       <div class="modal-options-grid">
         ${locs.map(l=>`
@@ -1408,7 +1414,7 @@ function closeModal(){
 function setLocation(loc){
   plantState.location = loc;
   applyLocationVisual();
-  showBubble(`📦 화분을 [ ${loc} ] 으로 옮겼어요!`);
+  showBubble(`화분을 [ ${loc} ] 으로 옮겼어요!`);
   closeModal();
   updateUI();
   savePlantState();
@@ -1419,7 +1425,7 @@ function renderBasketModal(){
   const basket = plantState.harvestedBasket;
   if(!basket.length){
     return `
-      <div class="modal-title">🧺 수확 바구니</div>
+      <div class="modal-title">🧺수확 바구니🧺</div>
       <div class="basket-empty">
         <span class="basket-empty-icon">🧺</span>
         <div class="basket-empty-text">아직 수확한 토마토가 없어요.<br>정성껏 키워서 첫 수확을 해보세요!</div>
@@ -1430,7 +1436,7 @@ function renderBasketModal(){
   const fastest = basket.reduce((min,b)=> b.day < min ? b.day : min, basket[0].day);
   const goldenCount = basket.filter(b=>b.isGolden).length;
   return `
-    <div class="modal-title">🧺 수확 바구니</div>
+    <div class="modal-title">🧺수확 바구니🧺</div>
     <div class="basket-summary">
       <div class="basket-summary-item">
         <span class="basket-summary-num">${basket.length}</span>
@@ -1462,16 +1468,16 @@ function renderDiaryModal(){
   const diary = plantState.diary;
   if(!diary.length){
     return `
-      <div class="modal-title">📔 토마토의 일기</div>
+      <div class="modal-title">📒토마토의 일기📒</div>
       <div class="diary-empty">
-        <span class="diary-empty-icon">📔</span>
+        <span class="diary-empty-icon">📒</span>
         <div class="diary-empty-text">아직 일기가 없어요.<br>하루가 지나면 첫 일기가 쓰여질 거예요!</div>
       </div>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
   }
   return `
-    <div class="modal-title">📔 ${plantName}의 일기</div>
+    <div class="modal-title">📒 ${plantName}의 일기</div>
     <div class="diary-list">
       ${diary.slice().reverse().map(e=>`
         <div class="diary-entry">
@@ -1487,7 +1493,7 @@ function renderDiaryModal(){
 function renderAchievementsModal(){
   const unlockedCount = ACHIEVEMENT_DEFS.filter(a=>plantState.achievements[a.key]).length;
   return `
-    <div class="modal-title">🏆 업적</div>
+    <div class="modal-title">🏆업적🏆</div>
     <div class="achv-summary-bar">${unlockedCount} / ${ACHIEVEMENT_DEFS.length} 달성</div>
     <div class="achv-grid">
       ${ACHIEVEMENT_DEFS.map(a=>{
@@ -1539,18 +1545,18 @@ function processSpeech(){
   const text = inputField.value.trim();
   if(!text) return;
 
-  const goodWords = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워'];
-  const badWords = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기'];
+  const goodWords = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭'];
+  const badWords = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져'];
 
   const isGood = goodWords.some(w=>text.includes(w));
   const isBad = badWords.some(w=>text.includes(w));
   const p = getPersonality();
 
   const replyPool = {
-    active:  { good:'🥰 그 말 들으니 완전 신나요!', bad:'😢 그런 말은... 그래도 금방 잊을게요!', neutral:'🎵 정원사님 목소리 들으니 기운 나요!' },
-    lazy:    { good:'🥰 음... 기분 좋아요... 헤헤.', bad:'😢 속상해요... 그냥 잘래요.', neutral:'🎵 ...왔어요? 반가워요...' },
-    shy:     { good:'🥰 그런 말... 부끄러워요. 고마워요.', bad:'😢 그 말은 좀 아팠어요...', neutral:'🎵 말 걸어줘서... 좋아요.' },
-    playful: { good:'🥰 헤헤! 또 말해줘요!', bad:'😢 삐졌어요! 그래도 화해해요!', neutral:'🎵 심심했는데 잘됐다! 또 놀아줘요!' }
+    active:  { good:'그 말 들으니 완전 신나요!', bad:'그런 말은... 그래도 금방 잊을게요!', neutral:'정원사님 목소리 들으니 기운 나요!' },
+    lazy:    { good:'음... 기분 좋아요... 헤헤.', bad:'속상해요... 그냥 잘래요.', neutral:'...그렇구나...(이제 가주세요..)' },
+    shy:     { good:'그런 말... 부끄러워요. 고마워요.', bad:'그 말은 좀 아팠어요...', neutral:'말 걸어줘서... 좋아요.' },
+    playful: { good:'헤헤! 또 말해줘요!', bad:'삐졌어요! 그래도 화해해요!', neutral:'심심했는데 잘됐다! 또 놀아줘요!' }
   };
   const pool = replyPool[personalityKey] || replyPool.active;
 
@@ -1647,6 +1653,15 @@ function createAmbientLeaves(){
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden) gameTick();
 });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../../sw.js')
+        .then(() => console.log('PWA service worker registered'))
+        .catch(err => console.error('SW registration failed:', err));
+    });
+  }
 </script>
 </body>
 </html>

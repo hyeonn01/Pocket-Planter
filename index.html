@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#81c784">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Mini Garden">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
     <title>My Mini Garden</title>
     <style>
         /* 전체 화면 정중앙 대칭 정렬 고정 */
@@ -725,6 +731,15 @@
         function goToPlantGame() {
             const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(selectedPersonality)}`;
             window.location.href = url;
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('PWA service worker registered'))
+                    .catch(err => console.error('SW registration failed:', err));
+            });
         }
     </script>
 </body>

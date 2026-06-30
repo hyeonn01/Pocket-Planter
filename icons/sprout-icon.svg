@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="My Mini Garden sprout icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F6FFF0"/>
+      <stop offset="100%" stop-color="#CDEEC0"/>
+    </linearGradient>
+    <linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8A36F"/>
+      <stop offset="100%" stop-color="#C87344"/>
+    </linearGradient>
+    <linearGradient id="leafL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9BE27E"/>
+      <stop offset="100%" stop-color="#4CAF50"/>
+    </linearGradient>
+    <linearGradient id="leafR" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B9F08D"/>
+      <stop offset="100%" stop-color="#66BB6A"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#6EA56A" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="120" fill="url(#bg)"/>
+  <circle cx="392" cy="118" r="44" fill="#FFF9C4" opacity="0.95"/>
+  <path d="M67 132c30-38 78-57 123-49 24 4 46 15 65 30-7 2-14 6-19 11-23-15-48-25-76-28-33-3-66 6-93 25z" fill="#FFFFFF" opacity="0.7"/>
+
+  <g filter="url(#shadow)">
+    <ellipse cx="256" cy="394" rx="122" ry="24" fill="#9BCB98" opacity="0.32"/>
+
+    <path d="M168 314h176l-18 96c-40 18-100 18-140 0z" fill="url(#pot)"/>
+    <rect x="150" y="294" width="212" height="38" rx="18" fill="#E9A97A"/>
+    <ellipse cx="256" cy="314" rx="96" ry="18" fill="#8A5B3C" opacity="0.58"/>
+
+    <path d="M252 300c-5-69 8-127 29-165" stroke="#4E8B5B" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M255 199c-58-12-98-55-108-110 64-4 123 31 135 90 1 7 2 13 1 20-9 2-18 2-28 0z" fill="url(#leafL)"/>
+    <path d="M282 170c26-47 76-76 132-75-3 62-47 114-107 125-11 2-21 2-31 0 0-17 2-34 6-50z" fill="url(#leafR)"/>
+    <path d="M275 134c15-18 40-38 67-47" stroke="#7BCB70" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M243 144c-18-24-46-42-73-50" stroke="#7BCB70" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8"/>
+
+    <circle cx="225" cy="320" r="8" fill="#3F332D"/>
+    <circle cx="287" cy="320" r="8" fill="#3F332D"/>
+    <ellipse cx="202" cy="338" rx="14" ry="8" fill="#F5B3A9" opacity="0.65"/>
+    <ellipse cx="310" cy="338" rx="14" ry="8" fill="#F5B3A9" opacity="0.65"/>
+    <path d="M226 349c10 12 50 12 60 0" stroke="#3F332D" stroke-width="8" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
