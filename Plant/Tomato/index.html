@@ -549,7 +549,7 @@
 
   <!-- 💀 죽음 화면 -->
   <div class="death-screen" id="game-over-screen">
-    <h1>🥀 식물이 시들었습니다</h1>
+    <h1>식물이 시들었습니다 🥀</h1>
     <p id="death-reason"></p>
     <button class="restart-btn" onclick="restartToGardenSelect()">처음부터 다시 시작하기</button>
   </div>
@@ -697,13 +697,13 @@ const DAILY_SPEED_BUDGET_MIN = 120; // 하루에 배속으로 당길 수 있는 
 /* ================= 성격 시스템 ================= */
 const PERSONALITY_TABLE = {
   active:  { label:'활발한 토마토', emoji:'😊', growthMul:1.10, dryMul:1.25, talkBonus:0.3, complainChance:0.0,
-             greeting:['안녕! 오늘도 신나는 하루네요!','정원사님 왔다! 오늘 뭐할까요?!'] },
+             greeting:['안녕! 오늘도 신나는 하루야!','왔어?! 오늘 뭐할까?!'] },
   lazy:    { label:'게으른 토마토', emoji:'😴', growthMul:0.85, dryMul:0.7,  talkBonus:0.3, complainChance:0.0,
-             greeting:['...음... 왔어요...? 졸려요.','조금만 더 자고 싶은데... 안녕하세요.'] },
+             greeting:['...음... 언제 왔어...? 졸려..','조금만 더 자고 싶은데... 안녕.'] },
   shy:     { label:'수줍은 토마토', emoji:'🌸', growthMul:1.0,  dryMul:1.0,  talkBonus:0.5, complainChance:0.0,
-             greeting:['아, 안녕... 보고 있었어요, 헤헤.','...왔네요. 반가워요 (작게)'] },
+             greeting:['아, 안녕하세요... 보고 있었어요, 헤헤.','...반가워요 (작게)'] },
   playful: { label:'장난꾸러기 토마토', emoji:'🔥', growthMul:1.0, dryMul:1.1, talkBonus:0.3, complainChance:0.12,
-             greeting:['짜잔! 저 왔어요! 놀아주세요!','심심해!!! 빨리 물 줘!'] }
+             greeting:['왜 이제 와! 놀아줘!','심심해! 놀아줘! 물 줘!'] }
 };
 function getPersonality(){
   return PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
@@ -712,24 +712,24 @@ function getPersonality(){
 /* ================= 일기 문구 풀 ================= */
 const DIARY_LINES = {
   active: {
-    sunny:   ['오늘은 햇빛이 따뜻해서 기분이 정말 좋았어요!','맑은 날씨 덕분에 신나게 쑥쑥 자란 것 같아요!'],
-    bright:  ['눈부신 햇살을 받으니 온몸에 힘이 솟아요!','오늘처럼 화창한 날엔 더 빨리 자라고 싶어져요!'],
-    cloudy:  ['흐린 날이지만 그래도 기운 내봤어요!','구름이 많아도 저는 활기차게 보냈답니다!'],
-    rainy:   ['비가 와서 조금 심심했지만 곧 해가 뜨겠죠!','빗소리 들으면서도 콧노래를 불렀어요!'],
-    water:   ['물을 마시니까 다시 팔팔해졌어요! 고마워요!','시원한 물 한 잔, 역시 최고예요!'],
-    talk:    ['정원사님이랑 얘기해서 오늘 더 신났어요!','말 걸어줘서 기분이 두 배로 좋아졌어요!'],
-    badword: ['속상한 말을 들었지만 금방 털어버렸어요.','좀 슬펐지만 다시 힘낼 거예요!'],
-    default: ['오늘도 부지런히 잘 보낸 하루였어요!','내일은 또 어떤 신나는 일이 생길까요?']
+    sunny:   ['오늘은 햇빛이 따뜻해서 기분이 정말 좋았어!','맑은 날씨 덕분에 신나게 쑥쑥 자란 것 같아!'],
+    bright:  ['눈부신 햇살을 받으니 온몸에 힘이 솟아!','오늘처럼 화창한 날엔 더 빨리 자라고 싶어져!'],
+    cloudy:  ['흐린 날이지만 그래도 기운 내봤어!','구름이 많아도 활기차게 보냈어!'],
+    rainy:   ['비가 와서 조금 심심했지만 곧 해가 뜨겠지!','빗소리 들으면서도 콧노래를 불렀어!'],
+    water:   ['물을 마시니까 다시 팔팔해졌어! 고마워!','시원한 물 한 잔, 역시 최고야!'],
+    talk:    ['너랑 얘기해서 더 신나!','말 걸어줘서 기분이 두 배로 좋아졌어!'],
+    badword: ['속상한 말을 들었지만 금방 털어버릴게..','..좀 슬프지만 다시 힘낼 거야!'],
+    default: ['오늘도 부지런히 잘 보낸 하루였어!','내일은 또 어떤 신나는 일이 생길까?']
   },
   lazy: {
-    sunny:   ['따뜻해서... 낮잠 자기 딱 좋은 날이었어요.','햇볕 쬐다가 살짝 졸았어요... 좋았어요.'],
-    bright:  ['너무 눈부셔서 눈 감고 있었어요...','화창하지만 그냥 가만히 있었어요.'],
-    cloudy:  ['흐린 날이라 더 늘어지게 됐어요...','구름 보면서 멍하니 있었어요.'],
-    rainy:   ['비 오는 소리 들으면서 푹 쉬었어요...','오늘은 그냥 종일 쉬었어요... 좋았어요.'],
-    water:   ['물 줘서... 고마워요... 좀 시원했어요.','목 마른 거 겨우 해결했어요... 졸려요.'],
-    talk:    ['말 걸어줘서... 음... 좋았어요. 졸리지만요.','조금 반가웠어요... 다시 잘게요.'],
-    badword: ['속상한 말... 그냥 자고 잊을래요.','마음이 좀 무거웠어요... 자고 일어나면 괜찮을 거예요.'],
-    default: ['오늘도 별일 없이 느긋하게 보냈어요...','딱히 한 건 없지만... 평화로웠어요.']
+    sunny:   ['따뜻해서... 낮잠 자기 딱 좋은 날이었어.','햇볕 쬐다가 살짝 졸았어... 좋았어.'],
+    bright:  ['너무 눈부셔서 눈 감고 있었어...','화창하지만 그냥 가만히 있었어.'],
+    cloudy:  ['흐린 날이라 더 늘어지게 됐어...','구름 보면서 멍하니 있었어.'],
+    rainy:   ['비 오는 소리 들으면서 푹 쉬었어...','오늘은 그냥 종일 쉬었어... 좋았어.'],
+    water:   ['물 줘서... 고마워... 좀 시원했어.','목 마른 거 겨우 해결했어... 졸려.'],
+    talk:    ['말 걸어줘서... 음... 좋았어. 졸리지만..','반가웠어... 다시 잘게.'],
+    badword: ['속상한 말... 그냥 자고 잊을래.','마음이 좀 무겁네... 자고 일어나면 괜찮겠지.'],
+    default: ['오늘도 별일 없이 느긋하게 보냈어...','딱히 한 건 없지만... 평화로웠어.']
   },
   shy: {
     sunny:   ['해가 따뜻해서... 살짝 기분이 좋았어요.','아무도 안 볼 때 살짝 웃었어요, 헤헤.'],
@@ -742,14 +742,14 @@ const DIARY_LINES = {
     default: ['조용히, 그렇지만 알차게 보낸 하루였어요.','오늘도 혼자 생각이 많았어요.']
   },
   playful: {
-    sunny:   ['해가 쨍쨍해서 신나게 흔들흔들 했어요!','오늘 날씨 최고! 장난칠 맛이 났어요!'],
-    bright:  ['너무 화창해서 가만히 못 있었어요!','신난다 신난다! 오늘 완전 좋은 날!'],
-    cloudy:  ['흐려서 심심했는데 그래도 장난쳤어요!','구름 보면서 모양 맞추기 했어요, 재밌었어요!'],
-    rainy:   ['빗방울 떨어지는 거 보는 것도 꽤 신기했어요!','비 오는 날엔 장난칠 사람이 없어서 좀 심심했어요!'],
-    water:   ['물 주는 거 늦으면 또 투정 부릴 거예요! 흐흐.','시원하다! 다음엔 더 빨리 줘요!'],
-    talk:    ['말 걸어줘서 완전 신났어요! 또 놀아줘요!','대화하니까 더 까불고 싶어졌어요!'],
-    badword: ['그 말은 좀 너무했어요... 장난도 정도가 있죠.','삐졌어요! 그래도 금방 풀릴 거예요.'],
-    default: ['오늘도 한바탕 신나게 떠들었어요!','심심할 틈이 없는 하루였어요!']
+    sunny:   ['해가 쨍쨍해서 신나게 흔들흔들 했어!','오늘 날씨 최고! 장난칠 맛이 나는구만!'],
+    bright:  ['너무 화창해서 가만히 못 있었어!','신난다 신난다! 오늘 완전 좋은 날!'],
+    cloudy:  ['흐려서 심심했는데 그래도 장난쳤어!','구름 보면서 모양 맞추기 했어, 재밌었어!'],
+    rainy:   ['빗방울 떨어지는 거 보는 것도 꽤 신기했어!','비 오는 날엔 장난칠 사람이 없어서 좀 심심했어!'],
+    water:   ['물 주는 거 늦으면 또 투정 부릴 거야! 흐흐.','시원하다! 다음엔 더 빨리 줘!'],
+    talk:    ['말 걸어줘서 완전 신났어! 또 놀아줘!','대화하니까 더 까불고 싶어졌어!'],
+    badword: ['그 말은 좀 너무했어... 장난도 정도가 있지.','삐졌어! 그래도 금방 풀릴 거야.'],
+    default: ['오늘도 한바탕 신나게 떠들었어!','심심할 틈이 없는 하루였어!']
   }
 };
 
@@ -1168,7 +1168,7 @@ function gameTick(){
   }
 
   if(personalityKey === 'playful' && plantState.water < 35 && Math.random() < p.complainChance){
-    showBubble('물 주세요!! 목 말라요!!-_-');
+    showBubble('물 줘!! 목 말라!!-_-');
   }
 
   plantState.lastRealTick = now;
@@ -1420,11 +1420,11 @@ function petPlant(){
   svg.classList.add('pet-shake');
   setTimeout(()=>{ svg.classList.remove('pet-shake'); svg.classList.add('sway'); }, 600);
 
-  showBubble("정원사님의 따뜻한 손길!💚");
+  showBubble("정원사님의 따뜻한 손길! 💚");
 
   clearTimeout(petResetTimer);
   if(petCount >= 7){
-    showBubble("너무 많이 만져서 살짝 피곤해요!💢");
+    showBubble("너무 많이 만져서 살짝 피곤해요! 💢");
     petCount = 0;
   } else {
     petResetTimer = setTimeout(()=>{ petCount = 0; }, 3000);
@@ -1551,7 +1551,7 @@ function openModal(type){
     const locs = [
       {key:'테라스', icon:'☀️', sub:'성장 빠름 · 건조 빠름', color:'#e07a3d'},
       {key:'창가',  icon:'🪟', sub:'표준 밸런스', color:'#4c9a5b'},
-      {key:'책상',  icon:'🖥️', sub:'일조 부족 · 해충 없음', color:'#8a93a8'},
+      {key:'책상',  icon:'🖥️', sub:'일조 부족 · 해충 없음', color:'#FFDD33'},
       {key:'마당',  icon:'🏡', sub:'광합성 우수', color:'#3590c4'}
     ];
     content.innerHTML = `
@@ -1599,8 +1599,8 @@ function openModal(type){
           <span class="switch-track"></span>
         </label>
       </div>
-      <button class="action-btn" style="background:var(--leaf-deep);" onclick="installApp()">📲 앱 설치하기</button>
-      <button class="action-btn" style="background:var(--sky-deep);" onclick="shareGarden()">🎫 친구에게 자랑하기</button>
+      <button class="action-btn" style="background:var(--leaf);" onclick="installApp()">앱 설치하기</button>
+      <button class="action-btn" style="background:var(--sky-deep);" onclick="shareGarden()">친구에게 자랑하기</button>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
   }
@@ -1622,7 +1622,7 @@ function renderBasketModal(){
   const basket = plantState.harvestedBasket;
   if(!basket.length){
     return `
-      <div class="modal-title">🧺수확 바구니🧺</div>
+      <div class="modal-title">🧺 수확 바구니 🧺</div>
       <div class="basket-empty">
         <span class="basket-empty-icon">🧺</span>
         <div class="basket-empty-text">아직 수확한 토마토가 없어요.<br>정성껏 키워서 첫 수확을 해보세요!</div>
@@ -1633,7 +1633,7 @@ function renderBasketModal(){
   const fastest = basket.reduce((min,b)=> b.day < min ? b.day : min, basket[0].day);
   const goldenCount = basket.filter(b=>b.isGolden).length;
   return `
-    <div class="modal-title">🧺수확 바구니🧺</div>
+    <div class="modal-title">🧺 수확 바구니 🧺</div>
     <p class="modal-sub" style="margin-bottom:10px;">토마토를 눌러서 상세정보를 확인해보세요!</p>
     <div class="basket-summary">
       <div class="basket-summary-item">
@@ -1701,7 +1701,7 @@ function renderDiaryModal(){
   const diary = plantState.diary;
   if(!diary.length){
     return `
-      <div class="modal-title">📒토마토의 일기📒</div>
+      <div class="modal-title">📒 토마토의 일기 📒</div>
       <div class="diary-empty">
         <span class="diary-empty-icon">📒</span>
         <div class="diary-empty-text">아직 일기가 없어요.<br>하루가 지나면 첫 일기가 쓰여질 거예요!</div>
@@ -1726,7 +1726,7 @@ function renderDiaryModal(){
 function renderAchievementsModal(){
   const unlockedCount = ACHIEVEMENT_DEFS.filter(a=>plantState.achievements[a.key]).length;
   return `
-    <div class="modal-title">🏆업적🏆</div>
+    <div class="modal-title">🏆 업적 🏆</div>
     <div class="achv-summary-bar">${unlockedCount} / ${ACHIEVEMENT_DEFS.length} 달성</div>
     <div class="achv-grid">
       ${ACHIEVEMENT_DEFS.map(a=>{
@@ -1774,7 +1774,7 @@ document.getElementById('talk-inline-input').addEventListener('keydown', functio
 
 // 🚫 나쁜말 카운트는 항상 이 하드코딩된 키워드 목록으로만 판정합니다 (AI 응답 내용과 무관)
 const GOOD_WORDS = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭'];
-const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져'];
+const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져','뭘봐',];
 
 async function processSpeech(){
   if(isAiReplying) return;
@@ -1866,7 +1866,7 @@ async function getAiReply(userText, isGood, isBad){
 
   const systemPrompt =
 `너는 "${plantName}"이라는 이름의 ${p.label}(이)야. 성격: ${p.label}. 정원사 닉네임: ${nickname}.
-정원사가 너에게 말을 걸었을 때, 너의 성격에 맞는 말투로 1문장(최대 35자 이내), 한국어로 짧고 자연스럽게 대답해.
+정원사가 너에게 말을 걸었을 때, 너의 성격에 맞는 말투로 1문장, 한국어로 문맥에 맞춰 자연스럽게 대답해.
 이모티콘은 0~1개만 사용. 따옴표나 설명 없이 대답 텍스트만 출력해.
 ${moodHint}`;
 
@@ -1941,7 +1941,7 @@ async function installApp(){
     const { outcome } = await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
     if(outcome === 'accepted'){
-      showBubble('🎉 정원 앱이 설치됐어요!');
+      showBubble('정원 앱이 설치됐어요!');
     }
     return;
   }
@@ -1949,7 +1949,7 @@ async function installApp(){
     alert('📲 아이폰/아이패드에서 설치하는 방법\n\n1. 하단의 [공유] 버튼(⬆️)을 눌러주세요\n2. "홈 화면에 추가"를 선택해주세요\n3. "추가"를 누르면 설치 완료!');
     return;
   }
-  alert('이 브라우저에서는 설치 버튼을 직접 지원하지 않을 수 있어요.\n브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 찾아보세요!');
+  alert('이 브라우저에서는 설치 버튼을 직접 지원하지 않을 수 있어요.\n브라우저 메뉴(ex.크롬)에서 "앱 설치" 또는 "홈 화면에 추가"를 찾아보세요!');
 }
 
 /* ================= 🔄 업데이트 감지 팝업 ================= */
