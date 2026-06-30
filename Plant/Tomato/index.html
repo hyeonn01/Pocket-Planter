@@ -48,7 +48,6 @@
     background: linear-gradient(180deg, var(--sky-light) 0%, var(--mint) 100%);
   }
 
-  /* ====== 배경 레이어 (위치별 이미지) ====== */
   .scene-bg{
     position:absolute; inset:0;
     background-size:cover; background-position:center;
@@ -64,7 +63,6 @@
   }
   .scene-dim.is-rainy{ background: rgba(15,25,35,0.28); }
 
-  /* 비 내리는 효과 */
   .rain-layer{
     position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; display:none;
   }
@@ -99,7 +97,6 @@
     100%{ transform:translateY(105vh) rotate(360deg); opacity:0; }
   }
 
-  /* ====== 상단 상태바 ====== */
   .status-bar{
     position:relative; z-index:6;
     display:flex; justify-content:space-between; align-items:center;
@@ -112,7 +109,6 @@
     backdrop-filter: blur(2px);
   }
 
-  /* ====== 대시보드 ====== */
   .dashboard{
     position:relative; z-index:6;
     background: rgba(255,255,255,0.92);
@@ -143,7 +139,6 @@
   .water-fill{ background: linear-gradient(90deg, #8fd3ec, #4fa9d6); }
   .sun-fill{ background: linear-gradient(90deg, #ffe49a, #ffc14d); }
 
-  /* ====== 식물 스테이지 ====== */
   .garden-stage{
     flex:1; position:relative; z-index:5;
     display:flex; align-items:flex-end; justify-content:center;
@@ -173,6 +168,34 @@
     border-radius: 0 0 4px 0;
     clip-path: polygon(0 0, 100% 0, 0 100%);
   }
+  .thinking-dots{ display:inline-flex; gap:3px; align-items:center; vertical-align:middle; }
+  .thinking-dots span{
+    width:6px; height:6px; border-radius:50%; background:#9fb89a;
+    animation: dot-bounce 1.1s ease-in-out infinite;
+  }
+  .thinking-dots span:nth-child(2){ animation-delay:0.15s; }
+  .thinking-dots span:nth-child(3){ animation-delay:0.3s; }
+  @keyframes dot-bounce{
+    0%, 80%, 100%{ transform: translateY(0); opacity:0.5; }
+    40%{ transform: translateY(-4px); opacity:1; }
+  }
+
+  /* 🧑‍🌾 정원사(나)가 한 말이 뜨는 말풍선 — 입력창이 있던 자리(하단)에서 뜨고 사라집니다 */
+  .gardener-bubble-wrap{
+    position:relative; z-index:6;
+    margin: 0 14px 0;
+    max-height:0; opacity:0; overflow:hidden;
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+  }
+  .gardener-bubble-wrap.show{
+    max-height:70px; opacity:1; margin:0 14px 9px;
+  }
+  .gardener-bubble{
+    background:#eaf6ff; border:1.5px solid #cdeaff; border-radius:16px;
+    padding:10px 14px; font-size:13px; font-weight:700; color:#2d5e74;
+    display:flex; align-items:center; gap:8px;
+  }
+  .gardener-bubble .who{ flex-shrink:0; font-size:15px; }
 
   .plant-stage-svg{
     width: 78%;
@@ -214,7 +237,6 @@
     white-space:nowrap;
   }
 
-  /* ====== 성격 뱃지 ====== */
   .personality-badge{
     position:absolute; top:6px; right:6px;
     background:rgba(255,255,255,0.85); padding:4px 9px;
@@ -222,13 +244,19 @@
     color:#43543e; white-space:nowrap;
   }
 
-  /* ====== 화분 표정 (흙 위 작은 얼굴) ====== */
+  .speed-badge{
+    position:absolute; top:6px; left:6px;
+    background:rgba(255,193,77,0.92); padding:4px 9px;
+    border-radius:999px; font-size:10.5px; font-weight:800; z-index:7;
+    color:#7a4d00; white-space:nowrap; display:none;
+  }
+  .speed-badge.show{ display:block; }
+
   .pot-face-eye{ fill:#3a3530; }
   .pot-face-mouth{ stroke:#3a3530; stroke-width:2.4; fill:none; stroke-linecap:round; }
   .pot-face-blush{ fill:#f4a89a; opacity:0.55; }
   .pot-face-sweat{ fill:#8fd3ec; }
 
-  /* ====== 업적 토스트 ====== */
   .achievement-toast{
     position:absolute; top:54px; left:50%; transform:translateX(-50%) translateY(-12px);
     background:#3a4636; color:#fff; padding:10px 16px; border-radius:14px;
@@ -242,7 +270,6 @@
   }
   .achievement-toast-icon{ font-size:17px; }
 
-  /* ====== 업적 모달 그리드 ====== */
   .achv-grid{ display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; margin-bottom:8px; }
   .achv-row{
     display:flex; align-items:center; gap:10px;
@@ -259,7 +286,6 @@
     font-size:12px; font-weight:700; color:var(--leaf-deep); text-align:center;
   }
 
-  /* ====== 일기 모달 ====== */
   .diary-entry{
     background:var(--card-soft); border-radius:13px; padding:11px 14px; margin-bottom:8px;
     border:1.5px solid #e1f0d8; text-align:left;
@@ -284,17 +310,20 @@
     50%{ transform: translateX(-50%) translateY(-4px); }
   }
 
-  /* ====== 💬 말걸기 인라인 입력 바 (모달 없이 즉시 답하고 사라지는 방식) ====== */
   .talk-inline-bar{
     position:relative; z-index:6;
-    display:flex; align-items:center; gap:7px;
+    display:flex; flex-direction:column; gap:5px;
     margin:0 14px 9px;
     max-height:0; opacity:0; overflow:hidden;
     transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
   }
   .talk-inline-bar.show{
-    max-height:60px; opacity:1;
+    max-height:96px; opacity:1;
   }
+  .talk-badword-mini{
+    font-size:10px; font-weight:800; color:#e4583c; text-align:center;
+  }
+  .talk-input-row{ display:flex; align-items:center; gap:7px; }
   .talk-inline-input{
     flex:1; min-width:0; padding:11px 14px; border:1.5px solid #e1f0d8; border-radius:999px;
     outline:none; font-size:16px; background:#fff; box-shadow: var(--shadow-soft);
@@ -306,37 +335,37 @@
     font-size:15px; transition: transform 0.1s;
   }
   .talk-inline-send{ background:var(--leaf); color:#fff; }
+  .talk-inline-send:disabled{ opacity:0.5; }
   .talk-inline-close{ background:#fff; color:#8a978a; box-shadow: var(--shadow-soft); }
   .talk-inline-send:active, .talk-inline-close:active{ transform: scale(0.9); }
 
-  /* ====== 하단 컨트롤 메뉴 ====== */
   .control-menu{
     position:relative; z-index:6;
     display:grid; grid-template-columns:repeat(3,1fr); gap:7px;
     padding: 0 14px 7px;
   }
   .control-menu.row2{
+    grid-template-columns:repeat(5,1fr);
     padding: 0 14px calc(16px + env(safe-area-inset-bottom, 0px));
   }
   .menu-btn{
     background:#fff; border:none; border-radius:15px; padding:10px 0;
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    font-size:10px; font-weight:700; color:#43543e;
+    font-size:9.5px; font-weight:700; color:#43543e;
     box-shadow: var(--shadow-soft);
     cursor:pointer; transition: transform 0.12s, background 0.12s;
     position:relative;
   }
   .menu-btn:active{ transform: scale(0.94); background:#f2f8ee; }
-  .menu-btn-icon{ font-size:18px; }
+  .menu-btn-icon{ font-size:17px; }
   .menu-btn-badge{
-    position:absolute; top:4px; right:8px;
-    background:var(--tomato); color:#fff; font-size:9.5px; font-weight:800;
-    width:16px; height:16px; border-radius:50%;
+    position:absolute; top:4px; right:6px;
+    background:var(--tomato); color:#fff; font-size:9px; font-weight:800;
+    width:15px; height:15px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 2px 4px rgba(228,88,60,0.4);
   }
 
-  /* ====== 모달 ====== */
   .modal-overlay{
     position:absolute; inset:0; z-index:100;
     background: rgba(30,45,35,0.45);
@@ -365,6 +394,7 @@
   .modal-opt-btn.active{ background:#dff1d2; border-color:var(--leaf); }
   .modal-opt-btn:hover{ background:#e7f5dd; }
   .modal-opt-sub{ font-size:9.5px; font-weight:600; display:block; margin-top:2px; }
+  .modal-opt-btn:disabled, .modal-opt-btn.disabled{ opacity:0.4; cursor:not-allowed; }
 
   .action-btn{
     display:block; width:100%; box-sizing:border-box; font-size:13.5px;
@@ -380,7 +410,6 @@
   }
   .close-modal-btn:hover{ background:#d7e4d3; }
 
-  /* ====== 설정 토글 스위치 ====== */
   .setting-row{
     display:flex; justify-content:space-between; align-items:center;
     background:var(--card-soft); border-radius:13px; padding:11px 14px; margin-bottom:9px;
@@ -401,10 +430,7 @@
 
   .bad-word-counter{ font-size:10.5px; color:#e4583c; margin-top:10px; font-weight:700; text-align:center; }
 
-  /* ====== 수확 보관함 ====== */
-  .basket-empty{
-    text-align:center; padding:26px 10px; color:var(--ink-soft);
-  }
+  .basket-empty{ text-align:center; padding:26px 10px; color:var(--ink-soft); }
   .basket-empty-icon{ font-size:38px; display:block; margin-bottom:10px; opacity:0.6; }
   .basket-empty-text{ font-size:12.5px; line-height:1.6; }
   .basket-summary{
@@ -420,12 +446,26 @@
   }
   .basket-tomato{
     background:var(--card-soft); border-radius:13px; padding:8px 4px 7px;
-    text-align:center; border:1.5px solid #ffe2d8; position:relative;
+    text-align:center; border:1.5px solid #ffe2d8; position:relative; cursor:pointer;
+    transition: transform 0.12s;
   }
+  .basket-tomato:active{ transform: scale(0.93); }
   .basket-tomato-icon{ font-size:24px; display:block; margin-bottom:3px; }
   .basket-tomato-day{ font-size:9px; color:var(--ink-soft); font-weight:700; }
 
-  /* ====== 죽음 화면 ====== */
+  /* 🍅 토마토 상세정보 모달 */
+  .detail-face{ font-size:54px; text-align:center; display:block; margin-bottom:6px; }
+  .detail-name{ font-size:15px; font-weight:800; color:var(--tomato-deep); text-align:center; margin-bottom:2px; }
+  .detail-sub{ font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:12px; }
+  .detail-stat-row{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--card-soft); border-radius:11px; padding:9px 12px; margin-bottom:7px;
+    font-size:12px; font-weight:700; color:#3a4a35;
+  }
+  .detail-stat-row span:last-child{ color:var(--leaf-deep); }
+  .affection-bar-bg{ background:#eef3ea; border-radius:6px; height:8px; overflow:hidden; margin-top:4px; }
+  .affection-bar-fill{ height:100%; background:linear-gradient(90deg,#ffb199,#e4583c); border-radius:6px; }
+
   .death-screen{
     position:absolute; inset:0; z-index:999;
     background: rgba(35,35,32,0.97);
@@ -440,7 +480,6 @@
   }
   .restart-btn:active{ transform: translateY(2px); }
 
-  /* ====== 수확 축하 오버레이 ====== */
   .harvest-celebrate{
     position:absolute; inset:0; z-index:998;
     background: rgba(255,247,235,0.97);
@@ -461,7 +500,20 @@
   }
   .harvest-confirm-btn:active{ transform: translateY(4px); box-shadow:none; }
 
-  /* ====== PC 베젤 ====== */
+  /* ⏩ 업데이트 알림 토스트 */
+  .update-toast{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    background:#2c3a2c; color:#fff; padding:11px 14px; border-radius:14px;
+    font-size:12px; font-weight:700; z-index:200; display:none;
+    align-items:center; gap:10px; box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    white-space:nowrap;
+  }
+  .update-toast.show{ display:flex; }
+  .update-toast button{
+    background:var(--leaf); border:none; color:#fff; font-weight:800; font-size:11px;
+    padding:7px 12px; border-radius:999px; cursor:pointer;
+  }
+
   @media (min-width:1024px){
     body{ background-color:#cfe8d6; }
     .game-container{
@@ -470,7 +522,6 @@
       box-shadow: 0 22px 44px rgba(0,0,0,0.2);
     }
   }
-  /* 작은 모바일 화면 보정 */
   @media (max-height:680px){
     .speech-bubble-wrap{ bottom:54%; }
     .plant-stage-svg{ max-width:190px; }
@@ -488,6 +539,11 @@
   <div class="achievement-toast" id="achievement-toast">
     <span class="achievement-toast-icon">🏆</span>
     <span id="achievement-toast-text"></span>
+  </div>
+
+  <div class="update-toast" id="update-toast">
+    <span>🔄 새 업데이트가 있어요!</span>
+    <button onclick="applyUpdate()">새로고침</button>
   </div>
 
   <!-- 💀 죽음 화면 -->
@@ -535,6 +591,7 @@
   <!-- 식물 스테이지 -->
   <div class="garden-stage" id="touch-stage">
     <span class="personality-badge" id="personality-badge">😊 활발함</span>
+    <span class="speed-badge" id="speed-badge">⏩ x1</span>
     <div class="harvest-hint" id="harvest-hint">🍅 토마토를 눌러서 수확하기!</div>
     <div class="speech-bubble-wrap" id="chat-bubble-wrap">
       <div class="speech-bubble" id="chat-bubble">안녕하세요!</div>
@@ -543,11 +600,19 @@
     <div class="location-tag" id="current-location-tag">📍 창가</div>
   </div>
 
-  <!-- 💬 말걸기 인라인 입력 바 (모달 없이 슬라이드로 등장) -->
+  <!-- 🧑‍🌾 내가 한 말 (입력창 위치에서 뜸) -->
+  <div class="gardener-bubble-wrap" id="gardener-bubble-wrap">
+    <div class="gardener-bubble"><span class="who" id="gardener-bubble-profile">🧑‍🌾</span><span id="gardener-bubble-text"></span></div>
+  </div>
+
+  <!-- 💬 말걸기 인라인 입력 바 -->
   <div class="talk-inline-bar" id="talk-inline-bar">
-    <input type="text" class="talk-inline-input" id="talk-inline-input" placeholder="말을 걸어보세요..." maxlength="30">
-    <button class="talk-inline-send" onclick="processSpeech()" aria-label="전송">➤</button>
-    <button class="talk-inline-close" onclick="closeTalkInput()" aria-label="닫기">✕</button>
+    <div class="talk-badword-mini">⚠️ 나쁜 말 누적 <span id="badword-mini-count">0</span>/20</div>
+    <div class="talk-input-row">
+      <input type="text" class="talk-inline-input" id="talk-inline-input" placeholder="말을 걸어보세요..." maxlength="30">
+      <button class="talk-inline-send" id="talk-send-btn" onclick="processSpeech()" aria-label="전송">➤</button>
+      <button class="talk-inline-close" onclick="closeTalkInput()" aria-label="닫기">✕</button>
+    </div>
   </div>
 
   <!-- 하단 컨트롤 메뉴 -->
@@ -556,7 +621,10 @@
     <div class="menu-btn" onclick="openModal('move')"><span class="menu-btn-icon">📦</span>옮기기</div>
     <div class="menu-btn" onclick="openTalkInput()"><span class="menu-btn-icon">💬</span>말걸기</div>
   </div>
-  <div class="control-menu row2" style="grid-template-columns:repeat(4,1fr);">
+  <div class="control-menu row2">
+    <div class="menu-btn" onclick="openModal('speed')" id="speed-menu-btn">
+      <span class="menu-btn-icon">⏩</span>배속
+    </div>
     <div class="menu-btn" onclick="openModal('diary')" id="diary-menu-btn">
       <span class="menu-btn-icon">📒</span>일기
       <span class="menu-btn-badge" id="diary-badge" style="display:none;">!</span>
@@ -585,9 +653,6 @@ function safeSet(key,val){ try{ localStorage.setItem(key,val); }catch(e){} }
 function safeRemove(key){ try{ localStorage.removeItem(key); }catch(e){} }
 
 /* ================= 기본 정보 로드 ================= */
-// URL 파라미터로 처음 들어올 때 nickname/profile/plantName/personality를 받습니다.
-// 이후 새로고침하거나 즐겨찾기 등으로 URL 파라미터 없이 재방문해도 동일한 정원으로
-// 이어지도록, 닉네임을 알게 되는 즉시 plantName/personality를 닉네임별 키로 저장해둡니다.
 const urlParams = new URLSearchParams(window.location.search);
 const nickname = urlParams.get('nickname') || safeGet('miniGarden_nickname') || '정원사';
 const profile  = urlParams.get('profile')  || safeGet('miniGarden_profile')  || '👨‍🌾';
@@ -598,16 +663,16 @@ const PERSONALITY_KEY_STORAGE = `miniGarden_personality_tomato_${nickname}`;
 const plantName = urlParams.get('plantName') || safeGet(PLANTNAME_KEY) || '방울이';
 const personalityKey = urlParams.get('personality') || safeGet(PERSONALITY_KEY_STORAGE) || 'active';
 
-// 닉네임/프로필도 다시 한번 저장 (이 화면으로 바로 들어온 경우를 대비)
+// 닉네임/프로필/현재 키우는 식물 기록 (재접속 시 바로 이어가기 위함)
 safeSet('miniGarden_nickname', nickname);
 safeSet('miniGarden_profile', profile);
 safeSet(PLANTNAME_KEY, plantName);
 safeSet(PERSONALITY_KEY_STORAGE, personalityKey);
+safeSet(`miniGarden_currentPlantDir_${nickname}`, 'Tomato');
 
 /* ================= 게임 상수 ================= */
-const TOTAL_GROWTH_DAYS = 90;          // 씨앗→수확까지 현실 90일
+const TOTAL_GROWTH_DAYS = 90;
 const GROWTH_PER_DAY = 100 / TOTAL_GROWTH_DAYS;
-// 하루~며칠에 한 번 물을 주는 정도면 안정적으로 90일에 수확되도록 맞춘 수치입니다.
 const WATER_DRY_PER_DAY = { '테라스':14, '창가':8, '책상':4, '마당':16 };
 const SUN_GAIN_PER_DAY  = { '테라스':12, '창가':8,  '책상':3, '마당':13 };
 const WEATHER_TABLE = [
@@ -622,7 +687,11 @@ const ENV_BACKGROUNDS = {
   '책상':'images/desk.jpg',
   '마당':'images/yard.jpg'
 };
-const WATER_CAP = 96; // 과습사를 막기 위한 의도적인 물주기 상한선 (100%까지는 절대 못 올라가게 막아둠)
+const WATER_CAP = 96;
+
+/* ⏩ 배속: 하루(현실시간 기준) 최대 사용 가능한 "보너스 분" 한도 */
+const SPEED_OPTIONS = [1, 2, 4, 8];
+const DAILY_SPEED_BUDGET_MIN = 120; // 하루에 배속으로 당길 수 있는 보너스 분(分) 총량
 
 /* ================= 성격 시스템 ================= */
 const PERSONALITY_TABLE = {
@@ -639,7 +708,7 @@ function getPersonality(){
   return PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
 }
 
-/* ================= 일기 문구 풀 (성격별 말투) ================= */
+/* ================= 일기 문구 풀 ================= */
 const DIARY_LINES = {
   active: {
     sunny:   ['오늘은 햇빛이 따뜻해서 기분이 정말 좋았어요!','맑은 날씨 덕분에 신나게 쑥쑥 자란 것 같아요!'],
@@ -707,18 +776,24 @@ let plantState = {
   isDead:false, deathReason:'',
   chatLog: [],
   isHarvestable:false,
-  harvestedBasket: [],   // { day, dateStr, plantName, isGolden }
-  diary: [],             // { dateStr, dayNum, text }
+  harvestedBasket: [],
+  diary: [],
   lastDiaryDay: null,
-  achievements: {},      // { key: true }
+  achievements: {},
+  speedMultiplier: 1,
+  speedBudgetUsedMin: 0,
+  speedBudgetDay: null,
   stats: {
     waterCount: 0,
     talkGoodCount: 0,
     totalBadWordEver: 0,
-    wateredOnlyOnRain: true,   // 이번 작물 동안 비 오는 날에만 물을 줬는지 추적
+    wateredOnlyOnRain: true,
     hasWateredAnyDay: false,
-    currentRunHadBadWord: false,  // 오늘 욕을 했는지 (일기 문구 선택용, 하루 단위로 리셋)
-    runHasBadWord: false          // 이번 작물을 키우는 동안 한 번이라도 욕을 했는지 (업적 판정용, 수확 시 리셋)
+    currentRunHadBadWord: false,
+    runHasBadWord: false,
+    runWaterCount: 0,
+    runTalkGoodCount: 0,
+    runBadWordCount: 0
   }
 };
 
@@ -726,18 +801,21 @@ let petCount = 0, petResetTimer = null;
 let audioCtx = null, ambientSound = null;
 let soundOn = false;
 let isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+let isAiReplying = false;
 
 /* ================= 초기화 ================= */
 window.onload = function(){
   document.getElementById('view-nickname').innerText = nickname;
   document.getElementById('view-profile').innerText = profile;
   document.getElementById('view-plant-name').innerText = plantName;
+  document.getElementById('gardener-bubble-profile').innerText = profile;
 
   const p = getPersonality();
   document.getElementById('personality-badge').innerText = `${p.emoji} ${p.label.replace('토마토','')}`;
 
   createAmbientLeaves();
   loadPlantState();
+  resetSpeedBudgetIfNewDay();
   applyLocationVisual(true);
   rollWeatherIfNewDay();
   applyWeatherVisual(true);
@@ -746,13 +824,16 @@ window.onload = function(){
   updateBasketBadge();
   updateDiaryBadge();
   updateAchvBadge();
+  updateSpeedBadge();
 
   setTimeout(()=>{ showBubble(pickRandom(p.greeting)); }, 700);
 
-  // 1분마다 정기 체크 (현실시간 1:1이므로 너무 잦은 연산 불필요)
   setInterval(gameTick, 60 * 1000);
-  gameTick(); // 진입 즉시 한 번 보정
+  gameTick();
   writeDiaryIfNewDay();
+
+  setupPwaInstall();
+  setupUpdateWatcher();
 };
 
 /* ================= 저장/로드 ================= */
@@ -766,9 +847,14 @@ function loadPlantState(){
       if(!Array.isArray(plantState.diary)) plantState.diary = [];
       if(!plantState.achievements || typeof plantState.achievements !== 'object') plantState.achievements = {};
       if(!plantState.stats || typeof plantState.stats !== 'object'){
-        plantState.stats = { waterCount:0, talkGoodCount:0, totalBadWordEver:0, wateredOnlyOnRain:true, hasWateredAnyDay:false, currentRunHadBadWord:false, runHasBadWord:false };
+        plantState.stats = { waterCount:0, talkGoodCount:0, totalBadWordEver:0, wateredOnlyOnRain:true, hasWateredAnyDay:false, currentRunHadBadWord:false, runHasBadWord:false, runWaterCount:0, runTalkGoodCount:0, runBadWordCount:0 };
       }
       if(typeof plantState.stats.runHasBadWord !== 'boolean') plantState.stats.runHasBadWord = false;
+      if(typeof plantState.stats.runWaterCount !== 'number') plantState.stats.runWaterCount = 0;
+      if(typeof plantState.stats.runTalkGoodCount !== 'number') plantState.stats.runTalkGoodCount = 0;
+      if(typeof plantState.stats.runBadWordCount !== 'number') plantState.stats.runBadWordCount = 0;
+      if(typeof plantState.speedMultiplier !== 'number') plantState.speedMultiplier = 1;
+      if(typeof plantState.speedBudgetUsedMin !== 'number') plantState.speedBudgetUsedMin = 0;
     }catch(e){}
   } else {
     plantState.lastRealTick = Date.now();
@@ -806,7 +892,7 @@ function getWeatherInfo(){
   return WEATHER_TABLE.find(w=>w.type===plantState.weather) || WEATHER_TABLE[0];
 }
 
-/* ================= 일기 시스템 (하루 1회, 1~2문장, 성격별 말투) ================= */
+/* ================= 일기 시스템 ================= */
 function writeDiaryIfNewDay(){
   const today = getDayIndex(Date.now());
   if(plantState.lastDiaryDay === today) return;
@@ -962,20 +1048,71 @@ function applyLocationVisual(){
   document.getElementById('current-location-tag').innerText = `📍 ${plantState.location}`;
 }
 
-/* ================= 게임 틱 (현실시간 기반) ================= */
+/* ================= ⏩ 배속 시스템 ================= */
+function resetSpeedBudgetIfNewDay(){
+  const today = getDayIndex(Date.now());
+  if(plantState.speedBudgetDay !== today){
+    plantState.speedBudgetDay = today;
+    plantState.speedBudgetUsedMin = 0;
+  }
+}
+function getSpeedBudgetRemaining(){
+  resetSpeedBudgetIfNewDay();
+  return Math.max(0, DAILY_SPEED_BUDGET_MIN - plantState.speedBudgetUsedMin);
+}
+function setSpeed(mult){
+  resetSpeedBudgetIfNewDay();
+  if(mult > 1 && getSpeedBudgetRemaining() <= 0){
+    showBubble('오늘 배속 한도를 다 썼어요! 내일 다시 써보세요⏳');
+    return;
+  }
+  plantState.speedMultiplier = mult;
+  updateSpeedBadge();
+  savePlantState();
+  closeModal();
+  if(mult > 1) showBubble(`⏩ x${mult} 배속 시작!`);
+}
+function updateSpeedBadge(){
+  const badge = document.getElementById('speed-badge');
+  if(plantState.speedMultiplier > 1){
+    badge.classList.add('show');
+    badge.innerText = `⏩ x${plantState.speedMultiplier}`;
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+/* ================= 게임 틱 (현실시간 기반 + 배속 보너스) ================= */
 function gameTick(){
   if(plantState.isDead) return;
 
   rollWeatherIfNewDay();
+  resetSpeedBudgetIfNewDay();
   applyWeatherVisual();
   writeDiaryIfNewDay();
 
   const now = Date.now();
   const elapsedMs = now - plantState.lastRealTick;
-  const elapsedDays = elapsedMs / (24*60*60*1000);
+  let elapsedDays = elapsedMs / (24*60*60*1000);
+
+  // ⏩ 배속 보너스: 분당 (mult-1)분만큼 추가 시간을 당겨오되, 하루 한도(DAILY_SPEED_BUDGET_MIN)를 넘지 않습니다.
+  if(plantState.speedMultiplier > 1 && elapsedMs > 0){
+    const elapsedMin = elapsedMs / 60000;
+    const wantBonusMin = elapsedMin * (plantState.speedMultiplier - 1);
+    const remain = getSpeedBudgetRemaining();
+    const usedBonusMin = Math.min(wantBonusMin, remain);
+    plantState.speedBudgetUsedMin += usedBonusMin;
+    elapsedDays += (usedBonusMin * 60000) / (24*60*60*1000);
+    if(usedBonusMin < wantBonusMin){
+      // 한도 소진 -> 자동으로 1배속 복귀
+      plantState.speedMultiplier = 1;
+      updateSpeedBadge();
+      showBubble('⏳ 오늘의 배속 한도를 모두 썼어요! 1배속으로 돌아가요.');
+    }
+  }
+
   if(elapsedDays <= 0){ updateUI(); return; }
 
-  // 이미 수확 가능한 상태라면(=다 자람) 더 이상 자원 소모/성장 계산을 하지 않고 대기시킵니다.
   if(plantState.isHarvestable){
     plantState.lastRealTick = now;
     updateUI();
@@ -986,15 +1123,13 @@ function gameTick(){
 
   const p = getPersonality();
   const w = getWeatherInfo();
-  const rainRelief = w.type === 'rainy' ? 0.5 : 1; // 비 오는 날은 수분이 덜 마름
+  const rainRelief = w.type === 'rainy' ? 0.5 : 1;
   const dry = (WATER_DRY_PER_DAY[plantState.location] || 10) * elapsedDays * rainRelief * p.dryMul;
   const sunTarget = (SUN_GAIN_PER_DAY[plantState.location] || 8) * w.sunMul;
 
   plantState.water = clamp(plantState.water - dry, 0, 100);
-  // 일조량은 하루 단위로 "감쇠 후 그날의 일조를 더하는" 방식 — 장소·날씨가 그대로 반영되지만 100%에 쉽게 박히지 않음
   plantState.sun = clamp(plantState.sun*Math.pow(0.85, elapsedDays) + sunTarget*elapsedDays, 0, 100);
 
-  // 수분/일조 밸런스가 맞을 때만 성장 (너무 마르거나 너무 흠뻑 젖으면 성장 정지)
   if(plantState.water > 10 && plantState.water < 95){
     let growthGain = GROWTH_PER_DAY * elapsedDays * w.growthMul * p.growthMul;
     const sunFactor = clamp(plantState.sun/50, 0.35, 1.3);
@@ -1007,7 +1142,6 @@ function gameTick(){
     plantState.growth = 100;
   }
 
-  // 🔥 장난꾸러기 성격: 물이 부족할 때 가끔 투정을 부립니다.
   if(personalityKey === 'playful' && plantState.water < 35 && Math.random() < p.complainChance){
     showBubble('물 주세요!! 목 말라요!!-_-');
   }
@@ -1024,7 +1158,7 @@ function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 /* ================= 죽음 판정 ================= */
 function checkDeathConditions(){
-  if(plantState.isHarvestable) return; // 다 자란 뒤에는 시들지 않음 (수확 대기 상태 보호)
+  if(plantState.isHarvestable) return;
   if(plantState.water <= 0){
     triggerDeath("물을 너무 오래 주지 않아서 바짝 말라버렸어요. 규칙적으로 물을 주는 게 중요해요.");
   } else if(plantState.water >= 100){
@@ -1042,7 +1176,7 @@ function triggerDeath(reason){
 }
 function restartToGardenSelect(){
   safeRemove(`miniGarden_save_tomato_${nickname}`);
-  // 식물 고르기부터 다시 — 한 단계 상위(정원 초대장/식물 선택) 화면으로 이동
+  safeRemove(`miniGarden_currentPlantDir_${nickname}`);
   window.location.href = '../../index.html';
 }
 
@@ -1077,6 +1211,7 @@ function updateUI(){
   }
 
   updateBasketBadge();
+  document.getElementById('badword-mini-count').innerText = plantState.badWordCount;
 }
 
 function updateBasketBadge(){
@@ -1092,33 +1227,21 @@ function updateBasketBadge(){
 
 /* ================= 성장 단계 (12단계) ================= */
 function getStageInfo(growth){
-  const idx = Math.min(11, Math.floor(growth/(100/12))); // 0~11
+  const idx = Math.min(11, Math.floor(growth/(100/12)));
   const labels = [
-    '씨앗',        // 0
-    '발아 중',      // 1
-    '첫 새싹',      // 2
-    '줄기 뻗음',    // 3
-    '잎 늘어남',    // 4
-    '튼튼한 줄기',  // 5
-    '꽃대 올라옴',  // 6
-    '꽃 만개',      // 7
-    '열매 맺힘',    // 8
-    '열매 커짐',    // 9
-    '색 변하는 중', // 10
-    '🍅 수확 가능'  // 11
+    '씨앗','발아 중','첫 새싹','줄기 뻗음','잎 늘어남','튼튼한 줄기',
+    '꽃대 올라옴','꽃 만개','열매 맺힘','열매 커짐','색 변하는 중','🍅 수확 가능'
   ];
   return { idx, label: labels[idx] };
 }
 
 /* ================= 식물 SVG 렌더링 ================= */
-/* 12단계로 줄기 높이/잎 개수/꽃·열매 표현을 점진적으로 변화시켜 그림 */
 function renderPlant(){
   const { idx } = getStageInfo(plantState.growth);
   const svg = document.getElementById('plant-svg');
   svg.innerHTML = buildPlantSVG(idx) + buildPotFace();
 }
 
-/* ================= 화분 표정 (흙 위 작은 얼굴, 상태 반영) ================= */
 function getPotMood(){
   if(plantState.isDead) return 'dead';
   if(plantState.isHarvestable) return 'happy';
@@ -1131,7 +1254,7 @@ function getPotMood(){
 
 function buildPotFace(){
   const mood = getPotMood();
-  const cx = 100, cy = 212; // pot ellipse is at (100,213); outer <g> already applies translate(0,-70)
+  const cx = 100, cy = 212;
   const eyeY = cy - 1;
   const eyeDX = 11;
 
@@ -1176,13 +1299,11 @@ function buildPotFace(){
 }
 
 function buildPlantSVG(stage){
-// stage: 0~11 (12단계)
 const stemH = 14 + stage*15;
 const baseY = 220;
 const topY = baseY - stemH;
 const leafCount = Math.min(8, stage+1);
 const hasFlower = stage === 6 || stage === 7;
-// 8: 열매 맺힘(작게 1~2개), 9: 커짐(2~3개), 10: 색변화(3~4개), 11: 수확가능(4개, 잘 익음)
 const fruitCount = stage >= 8 ? Math.min(4, stage - 6) : 0;
 const fruitColor = stage <= 9 ? '#7fae5a' : stage === 10 ? '#d98a3d' : '#e4583c';
 const fruitRipe = stage >= 11;
@@ -1234,18 +1355,15 @@ return `     <g transform="translate(0,-70)">
 function waterPlant(){
   if(plantState.isDead) return;
 
-  // 🚫 이미 충분히 촉촉한 상태라면(96% 이상) 물을 더 주지 않고 안내만 띄웁니다.
-  // (과습으로 뿌리가 썩는 걸 막기 위해 100%까지는 절대 못 올라가게 일부러 막아둔 거예요)
   if(plantState.water >= WATER_CAP){
     showBubble("지금은 충분히 촉촉해요! 조금 마르면 다시 줄게요.");
     return;
   }
 
-  // 이미 충분히 젖어있다면 살짝만 더하고, 말라있었다면 70%까지 끌어올립니다.
-  // (매일 줘도 과습으로 죽지 않으면서, 너무 자주 연타해도 100%로 바로 안 치솟습니다)
   plantState.water = clamp(Math.max(plantState.water, 70) + 4, 0, WATER_CAP);
 
   plantState.stats.waterCount = (plantState.stats.waterCount || 0) + 1;
+  plantState.stats.runWaterCount = (plantState.stats.runWaterCount || 0) + 1;
   plantState.stats.hasWateredAnyDay = true;
   plantState.stats.wateredToday = true;
   if(getWeatherInfo().type !== 'rainy'){
@@ -1297,6 +1415,25 @@ function showBubble(msg){
   showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 2400);
 }
 
+/* 🤔 식물이 답변을 "생각 중"일 때 — 점 3개가 움직이는 말풍선을 계속 띄워둡니다 (자동으로 사라지지 않음) */
+function showThinkingBubble(){
+  const wrap = document.getElementById('chat-bubble-wrap');
+  const bubble = document.getElementById('chat-bubble');
+  clearTimeout(showBubble._t);
+  bubble.innerHTML = '<span class="thinking-dots"><span></span><span></span><span></span></span>';
+  wrap.classList.add('show');
+}
+
+/* 🧑‍🌾 정원사(나)가 한 말 — 식물 위가 아니라 입력창이 있던 자리에서 뜨고 사라짐 */
+function showGardenerBubble(msg){
+  const wrap = document.getElementById('gardener-bubble-wrap');
+  const text = document.getElementById('gardener-bubble-text');
+  text.innerText = msg;
+  wrap.classList.add('show');
+  clearTimeout(showGardenerBubble._t);
+  showGardenerBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 2200);
+}
+
 /* ================= 수확 ================= */
 let pendingGoldenTomato = false;
 
@@ -1304,7 +1441,7 @@ function startHarvest(){
   document.getElementById('harvest-hint').classList.remove('show');
   const dayNum = Math.max(1, Math.floor((Date.now() - plantState.startDate) / (24*60*60*1000)) + 1);
 
-  pendingGoldenTomato = Math.random() < 0.01; // 1% 확률로 황금 토마토
+  pendingGoldenTomato = Math.random() < 0.01;
 
   const bigTomatoEl = document.querySelector('#harvest-celebrate-screen .big-tomato');
   if(pendingGoldenTomato){
@@ -1320,6 +1457,20 @@ function startHarvest(){
   document.getElementById('harvest-celebrate-screen').style.display = 'flex';
 }
 
+/* 🍅 애정도 점수 계산: 물주기/대화 빈도(일수 대비) - 나쁜말 페널티 */
+function computeAffection(dayNum, waterCount, talkGoodCount, badWordCount){
+  const ratio = (waterCount + talkGoodCount*1.4) / Math.max(1, dayNum);
+  let score = clamp(ratio * 55, 0, 100);
+  score -= badWordCount * 8;
+  score = clamp(score, 0, 100);
+  let tier, face, freshness;
+  if(score >= 75){ tier='최상'; face='😍'; freshness='아주 신선하고 탱탱해요'; }
+  else if(score >= 50){ tier='좋음'; face='🙂'; freshness='싱싱하고 좋은 상태예요'; }
+  else if(score >= 25){ tier='보통'; face='😐'; freshness='적당히 잘 익었어요'; }
+  else { tier='아쉬움'; face='😟'; freshness='조금 무관심 속에서 자랐어요'; }
+  return { score, tier, face, freshness };
+}
+
 function confirmHarvest(){
   const dayNum = Math.max(1, Math.floor((Date.now() - plantState.startDate) / (24*60*60*1000)) + 1);
   const d = new Date();
@@ -1329,7 +1480,11 @@ function confirmHarvest(){
     day: dayNum,
     dateStr: dateStr,
     plantName: plantName,
-    isGolden: pendingGoldenTomato
+    isGolden: pendingGoldenTomato,
+    personalityKey: personalityKey,
+    waterCount: plantState.stats.runWaterCount || 0,
+    talkGoodCount: plantState.stats.runTalkGoodCount || 0,
+    badWordCount: plantState.stats.runBadWordCount || 0
   });
 
   unlockAchievement('first_harvest');
@@ -1338,7 +1493,6 @@ function confirmHarvest(){
   if(!plantState.stats.runHasBadWord) unlockAchievement('no_bad_word');
   if(plantState.stats.hasWateredAnyDay && plantState.stats.wateredOnlyOnRain) unlockAchievement('rainy_only');
 
-  // 다음 작물을 다시 씨앗부터 키울 수 있도록 리셋 (작물별 카운터도 함께 리셋)
   plantState.growth = 0;
   plantState.water = 50;
   plantState.sun = 50;
@@ -1349,6 +1503,9 @@ function confirmHarvest(){
   plantState.stats.hasWateredAnyDay = false;
   plantState.stats.currentRunHadBadWord = false;
   plantState.stats.runHasBadWord = false;
+  plantState.stats.runWaterCount = 0;
+  plantState.stats.runTalkGoodCount = 0;
+  plantState.stats.runBadWordCount = 0;
   pendingGoldenTomato = false;
 
   document.getElementById('harvest-celebrate-screen').style.display = 'none';
@@ -1383,6 +1540,21 @@ function openModal(type){
       </div>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
+  } else if(type === 'speed'){
+    resetSpeedBudgetIfNewDay();
+    const remain = getSpeedBudgetRemaining();
+    content.innerHTML = `
+      <div class="modal-title">⏩ 시간 배속</div>
+      <p class="modal-sub">시간을 빠르게 흘려보내요.<br>오늘 남은 배속 한도: <b>${Math.floor(remain)}분</b> / ${DAILY_SPEED_BUDGET_MIN}분</p>
+      <div class="modal-options-grid">
+        ${SPEED_OPTIONS.map(m=>`
+          <div class="modal-opt-btn ${plantState.speedMultiplier===m?'active':''} ${(m>1 && remain<=0)?'disabled':''}"
+               onclick="${(m>1 && remain<=0) ? '' : `setSpeed(${m})`}">
+            ⏩ x${m}
+          </div>`).join('')}
+      </div>
+      <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+    `;
   } else if(type === 'basket'){
     content.innerHTML = renderBasketModal();
   } else if(type === 'diary'){
@@ -1402,7 +1574,7 @@ function openModal(type){
           <span class="switch-track"></span>
         </label>
       </div>
-      <div class="bad-word-counter" style="margin-top:0; margin-bottom:14px;">⚠️ 나쁜 말 누적 ${plantState.badWordCount}/20</div>
+      <button class="action-btn" style="background:var(--leaf-deep);" onclick="installApp()">📲 앱 설치하기</button>
       <button class="action-btn" style="background:var(--sky-deep);" onclick="shareGarden()">🎫 친구에게 자랑하기</button>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
@@ -1437,6 +1609,7 @@ function renderBasketModal(){
   const goldenCount = basket.filter(b=>b.isGolden).length;
   return `
     <div class="modal-title">🧺수확 바구니🧺</div>
+    <p class="modal-sub" style="margin-bottom:10px;">토마토를 눌러서 상세정보를 확인해보세요!</p>
     <div class="basket-summary">
       <div class="basket-summary-item">
         <span class="basket-summary-num">${basket.length}</span>
@@ -1453,13 +1626,48 @@ function renderBasketModal(){
       </div>` : ''}
     </div>
     <div class="basket-grid">
-      ${basket.slice().reverse().map(b=>`
-        <div class="basket-tomato">
+      ${basket.slice().reverse().map((b)=>{
+        const realIdx = basket.indexOf(b);
+        return `
+        <div class="basket-tomato" onclick="openTomatoDetail(${realIdx})">
           <span class="basket-tomato-icon">${b.isGolden ? '🌟' : '🍅'}</span>
           <span class="basket-tomato-day">${b.day}일째</span>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+
+/* 🍅 토마토 상세정보: 이름/성격/애정도/신선도에 따라 표정이 달라짐 */
+function openTomatoDetail(idx){
+  const b = plantState.harvestedBasket[idx];
+  if(!b) return;
+  const overlay = document.getElementById('global-modal');
+  const content = document.getElementById('modal-content-area');
+  overlay.style.display = 'flex';
+
+  const pInfo = PERSONALITY_TABLE[b.personalityKey] || PERSONALITY_TABLE.active;
+  const aff = computeAffection(b.day, b.waterCount||0, b.talkGoodCount||0, b.badWordCount||0);
+  const face = b.isGolden ? '🌟' : aff.face;
+
+  content.innerHTML = `
+    <span class="detail-face">${face}</span>
+    <div class="detail-name">${escapeHtml(b.plantName)}${b.isGolden ? ' (황금 토마토)' : ''}</div>
+    <div class="detail-sub">${pInfo.emoji} ${pInfo.label} · ${b.day}일 동안 자람</div>
+
+    <div class="detail-stat-row"><span>신선도</span><span>${aff.freshness}</span></div>
+    <div class="detail-stat-row"><span>수확일</span><span>${b.dateStr}</span></div>
+    <div class="detail-stat-row"><span>물 준 횟수</span><span>${b.waterCount||0}회</span></div>
+    <div class="detail-stat-row"><span>다정한 대화</span><span>${b.talkGoodCount||0}회</span></div>
+    ${(b.badWordCount||0) > 0 ? `<div class="detail-stat-row"><span>속상한 말</span><span>${b.badWordCount}회</span></div>` : ''}
+
+    <div class="detail-stat-row" style="display:block;">
+      <div style="display:flex; justify-content:space-between;"><span>애정도</span><span>${aff.tier} (${Math.round(aff.score)}점)</span></div>
+      <div class="affection-bar-bg"><div class="affection-bar-fill" style="width:${aff.score}%;"></div></div>
+    </div>
+
+    <button class="close-modal-btn" onclick="openModal('basket')">← 바구니로</button>
   `;
 }
 
@@ -1512,11 +1720,12 @@ function renderAchievementsModal(){
   `;
 }
 
-/* ================= 말걸기 (모달 없이 인라인 입력 + 말풍선 응답) ================= */
+/* ================= 말걸기 (모달 없이 인라인 입력 + AI 응답) ================= */
 function openTalkInput(){
   if(plantState.isDead) return;
   const bar = document.getElementById('talk-inline-bar');
   const input = document.getElementById('talk-inline-input');
+  document.getElementById('badword-mini-count').innerText = plantState.badWordCount;
   bar.classList.add('show');
   if(!isMobile) setTimeout(()=>input.focus(), 50);
 }
@@ -1528,60 +1737,61 @@ function closeTalkInput(){
   input.blur();
 }
 function escapeHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 document.getElementById('talk-inline-input').addEventListener('keydown', function(e){
-  // PC에서는 엔터로 즉시 전송. 모바일은 화면키보드 특성상 전송 버튼으로만 보냅니다.
   if(e.key === 'Enter' && !isMobile){
     e.preventDefault();
     processSpeech();
   }
 });
 
-function processSpeech(){
+// 🚫 나쁜말 카운트는 항상 이 하드코딩된 키워드 목록으로만 판정합니다 (AI 응답 내용과 무관)
+const GOOD_WORDS = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭'];
+const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져'];
+
+async function processSpeech(){
+  if(isAiReplying) return;
   const inputField = document.getElementById('talk-inline-input');
   if(!inputField) return;
   const text = inputField.value.trim();
   if(!text) return;
 
-  const goodWords = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭'];
-  const badWords = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져'];
-
-  const isGood = goodWords.some(w=>text.includes(w));
-  const isBad = badWords.some(w=>text.includes(w));
+  const isGood = GOOD_WORDS.some(w=>text.includes(w));
+  const isBad = BAD_WORDS.some(w=>text.includes(w));
   const p = getPersonality();
 
-  const replyPool = {
-    active:  { good:'그 말 들으니 완전 신나요!', bad:'그런 말은... 그래도 금방 잊을게요!', neutral:'정원사님 목소리 들으니 기운 나요!' },
-    lazy:    { good:'음... 기분 좋아요... 헤헤.', bad:'속상해요... 그냥 잘래요.', neutral:'...그렇구나...(이제 가주세요..)' },
-    shy:     { good:'그런 말... 부끄러워요. 고마워요.', bad:'그 말은 좀 아팠어요...', neutral:'말 걸어줘서... 좋아요.' },
-    playful: { good:'헤헤! 또 말해줘요!', bad:'삐졌어요! 그래도 화해해요!', neutral:'심심했는데 잘됐다! 또 놀아줘요!' }
-  };
-  const pool = replyPool[personalityKey] || replyPool.active;
-
-  let reply = '';
+  // 성장치/카운트는 하드코딩 판정 그대로 유지
   if(isGood){
     plantState.growth = clamp(plantState.growth + 0.3 + p.talkBonus, 0, 100);
-    reply = pool.good;
     plantState.stats.talkGoodCount = (plantState.stats.talkGoodCount || 0) + 1;
+    plantState.stats.runTalkGoodCount = (plantState.stats.runTalkGoodCount || 0) + 1;
   } else if(isBad){
     plantState.badWordCount += 1;
     plantState.stats.totalBadWordEver = (plantState.stats.totalBadWordEver || 0) + 1;
+    plantState.stats.runBadWordCount = (plantState.stats.runBadWordCount || 0) + 1;
     plantState.stats.currentRunHadBadWord = true;
     plantState.stats.runHasBadWord = true;
-    reply = pool.bad;
   } else {
     plantState.growth = clamp(plantState.growth + p.talkBonus * 0.4, 0, 100);
-    reply = pool.neutral;
   }
   plantState.stats.talkedToday = true;
 
-  // 입력바를 닫고, 내가 한 말을 말풍선에 잠깐 보여준 뒤 식물의 답변으로 자연스럽게 이어집니다.
   inputField.value = '';
   closeTalkInput();
-  showBubble(`💬 "${text}"`);
-  setTimeout(()=>{ showBubble(reply); }, 1300);
+  showGardenerBubble(text);
+  showThinkingBubble();
+
+  isAiReplying = true;
+  document.getElementById('talk-send-btn').disabled = true;
+
+  let reply = await getAiReply(text, isGood, isBad);
+
+  isAiReplying = false;
+  document.getElementById('talk-send-btn').disabled = false;
+
+  showBubble(reply);
 
   if(plantState.growth >= 100 && !plantState.isHarvestable){
     plantState.isHarvestable = true;
@@ -1592,6 +1802,53 @@ function processSpeech(){
   checkDeathConditions();
   checkAchievements();
   savePlantState();
+}
+
+/* 🤖 AI를 통한 식물 답변 생성. 실패 시 기존 하드코딩 답변으로 자동 대체됩니다. */
+const FALLBACK_REPLIES = {
+  active:  { good:'그 말 들으니 완전 신나요!', bad:'그런 말은... 그래도 금방 잊을게요!', neutral:'정원사님 목소리 들으니 기운 나요!' },
+  lazy:    { good:'음... 기분 좋아요... 헤헤.', bad:'속상해요... 그냥 잘래요.', neutral:'...그렇구나...(이제 가주세요..)' },
+  shy:     { good:'그런 말... 부끄러워요. 고마워요.', bad:'그 말은 좀 아팠어요...', neutral:'말 걸어줘서... 좋아요.' },
+  playful: { good:'헤헤! 또 말해줘요!', bad:'삐졌어요! 그래도 화해해요!', neutral:'심심했는데 잘됐다! 또 놀아줘요!' }
+};
+function getFallbackReply(isGood, isBad){
+  const pool = FALLBACK_REPLIES[personalityKey] || FALLBACK_REPLIES.active;
+  return isGood ? pool.good : isBad ? pool.bad : pool.neutral;
+}
+
+async function getAiReply(userText, isGood, isBad){
+  const p = getPersonality();
+  const moodHint = isBad ? '정원사가 다소 차가운 말을 했어요. 살짝 속상하지만 이 식물의 성격답게 반응하세요.'
+                   : isGood ? '정원사가 다정한 말을 했어요. 기쁘게 반응하세요.'
+                   : '정원사가 평범한 말을 건넸어요. 성격에 맞게 자연스럽게 반응하세요.';
+
+  const systemPrompt =
+`너는 "${plantName}"이라는 이름의 ${p.label}(이)야. 성격: ${p.label}. 정원사 닉네임: ${nickname}.
+정원사가 너에게 말을 걸었을 때, 너의 성격에 맞는 말투로 1문장(최대 35자 이내), 한국어로 짧고 자연스럽게 대답해.
+이모티콘은 0~1개만 사용. 따옴표나 설명 없이 대답 텍스트만 출력해.
+${moodHint}`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 100,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userText }]
+      })
+    });
+    if(!response.ok) throw new Error('api error');
+    const data = await response.json();
+    const textBlock = (data.content || []).find(c=>c.type==='text');
+    let out = textBlock ? textBlock.text.trim() : '';
+    out = out.replace(/^["'“”]+|["'“”]+$/g,'');
+    if(!out) throw new Error('empty reply');
+    return out.length > 60 ? out.slice(0,60) : out;
+  }catch(e){
+    return getFallbackReply(isGood, isBad);
+  }
 }
 
 /* ================= 설정: 사운드 ================= */
@@ -1619,6 +1876,83 @@ function toggleSynthesizer(){
     ambientSound.start();
   } else {
     if(ambientSound){ try{ ambientSound.stop(); }catch(e){} ambientSound = null; }
+  }
+}
+
+/* ================= 📲 PWA 설치 ================= */
+let deferredInstallPrompt = null;
+function setupPwaInstall(){
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+}
+function isIos(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function isInStandaloneMode(){
+  return (window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+async function installApp(){
+  if(isInStandaloneMode()){
+    alert('이미 앱으로 설치되어 실행 중이에요! 🌿');
+    return;
+  }
+  if(deferredInstallPrompt){
+    // 📱 Android/PC 크롬, 엣지 등
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if(outcome === 'accepted'){
+      showBubble('🎉 정원 앱이 설치됐어요!');
+    }
+    return;
+  }
+  if(isIos()){
+    alert('📲 아이폰/아이패드에서 설치하는 방법\n\n1. 하단의 [공유] 버튼(⬆️)을 눌러주세요\n2. "홈 화면에 추가"를 선택해주세요\n3. "추가"를 누르면 설치 완료!');
+    return;
+  }
+  alert('이 브라우저에서는 설치 버튼을 직접 지원하지 않을 수 있어요.\n브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 찾아보세요!');
+}
+
+/* ================= 🔄 업데이트 감지 팝업 ================= */
+function setupUpdateWatcher(){
+  if(!('serviceWorker' in navigator)) return;
+  let reloadedAfterUpdate = false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(reloadedAfterUpdate) return;
+    reloadedAfterUpdate = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register('../../sw.js').then((reg)=>{
+    if(!reg) return;
+    reg.addEventListener('updatefound', ()=>{
+      const newWorker = reg.installing;
+      if(!newWorker) return;
+      newWorker.addEventListener('statechange', ()=>{
+        if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+          document.getElementById('update-toast').classList.add('show');
+        }
+      });
+    });
+    // 주기적으로 새 버전 있는지 확인
+    setInterval(()=>{ reg.update().catch(()=>{}); }, 60*1000);
+  }).catch(err => console.error('SW registration failed:', err));
+}
+function applyUpdate(){
+  document.getElementById('update-toast').classList.remove('show');
+  if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(reg && reg.waiting){
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        // controllerchange 리스너가 보통 새로고침을 처리하지만, 혹시 못 받을 경우를 위한 안전장치
+        setTimeout(()=>{ window.location.reload(); }, 1500);
+      } else {
+        window.location.reload();
+      }
+    }).catch(()=>{ window.location.reload(); });
+  } else {
+    window.location.reload();
   }
 }
 
@@ -1653,15 +1987,6 @@ function createAmbientLeaves(){
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden) gameTick();
 });
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('../../sw.js')
-        .then(() => console.log('PWA service worker registered'))
-        .catch(err => console.error('SW registration failed:', err));
-    });
-  }
 </script>
 </body>
 </html>

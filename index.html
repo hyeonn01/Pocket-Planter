@@ -11,7 +11,6 @@
     <link rel="apple-touch-icon" href="icons/icon-180.png">
     <title>My Mini Garden</title>
     <style>
-        /* 전체 화면 정중앙 대칭 정렬 고정 */
         html, body {
             width: 100%;
             height: 100%;
@@ -31,7 +30,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 📱 스마트폰 모양의 모바일 전용 컨테이너 프레임 */
         .game-container {
             width: 100%;
             height: 100vh;
@@ -48,11 +46,6 @@
             z-index: 2;
         }
 
-        .game-container::before {
-            display: none;
-        }
-
-        /* 🔋 스마트폰 상단 가짜 상태바 및 사운드 토글 */
         .status-bar {
             position: absolute;
             top: calc(15px + env(safe-area-inset-top, 0px));
@@ -75,7 +68,6 @@
             user-select: none;
         }
 
-        /* 🟢 기본 화이트 카드 스타일 */
         .screen-card {
             background-color: #ffffff;
             padding: 35px 24px;
@@ -93,14 +85,12 @@
             overflow-y: auto;
         }
 
-        /* 🎫 1단계 전용 비밀 정원 초대장 테마 스타일 */
         .invitation-card {
             background: #fdf5e6; 
             border: 2px double #d7ccc8;
             box-shadow: 0 10px 30px rgba(141, 110, 99, 0.15);
         }
 
-        /* 💌 편지 전용 아늑한 양식지 스타일 고도화 */
         .letter-paper {
             background-color: #fffdf0; 
             border: 2px double #bcaaa4; 
@@ -121,9 +111,7 @@
             text-align: center;
             letter-spacing: -0.5px;
         }
-        .invitation-card h1 {
-            color: #5d4037; 
-        }
+        .invitation-card h1 { color: #5d4037; }
         p {
             color: #616161;
             font-size: 15px;
@@ -131,8 +119,6 @@
             margin-bottom: 25px;
             text-align: center;
         }
-        
-        /* 편지 내부 본문 텍스트 좌측 정렬 */
         .letter-text {
             color: #5d4037;
             font-family: 'Malgun Gothic', sans-serif;
@@ -144,11 +130,7 @@
             display: block;
             width: 100%;
         }
-        /* 타자기 커서 깜빡임 효과 */
-        .typing-cursor::after {
-            content: '|';
-            animation: blink 0.8s infinite;
-        }
+        .typing-cursor::after { content: '|'; animation: blink 0.8s infinite; }
 
         button {
             font-size: 18px;
@@ -163,23 +145,31 @@
             box-shadow: 0 4px 0 #388e3c; 
             transition: all 0.1s;
         }
-        button:active {
-            transform: translateY(4px);
-            box-shadow: none;
-        }
-        .invitation-card button {
-            background-color: #8d6e63;
-            box-shadow: 0 4px 0 #5d4037;
-        }
+        button:active { transform: translateY(4px); box-shadow: none; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .invitation-card button { background-color: #8d6e63; box-shadow: 0 4px 0 #5d4037; }
         .select-btn {
             background-color: #81c784;
             box-shadow: 0 4px 0 #66bb6a;
             width: 100%; 
             margin: 10px auto; 
             display: block;
+            position: relative;
         }
-        .select-btn:active {
-            box-shadow: none;
+        .select-btn:active { box-shadow: none; }
+        .select-btn.locked {
+            background: linear-gradient(135deg, #b0bec5, #cfd8dc);
+            box-shadow: 0 4px 0 #90a4ae;
+            color: #607d8b;
+            filter: grayscale(0.6) blur(0.2px);
+            text-shadow: none;
+        }
+        .select-btn.locked:active { transform: none; box-shadow: 0 4px 0 #90a4ae; }
+        .lock-badge {
+            position: absolute;
+            right: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 12px; background: rgba(255,255,255,0.55);
+            padding: 3px 9px; border-radius: 999px; font-weight: 800;
         }
         input[type="text"] {
             font-size: 18px;
@@ -195,228 +185,90 @@
             transition: border-color 0.2s;
             background-color: #fafafa;
         }
-        .invitation-card input[type="text"] {
-            border-color: #d7ccc8;
-            background-color: #fafafa;
-        }
-        input[type="text"]:focus {
-            border-color: #4caf50;
-            background-color: #ffffff;
-        }
-        .invitation-card input[type="text"]:focus {
-            border-color: #8d6e63;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background: #e0e0e0;
-            margin: 20px auto;
-            width: 100%;
-        }
+        .invitation-card input[type="text"] { border-color: #d7ccc8; background-color: #fafafa; }
+        input[type="text"]:focus { border-color: #4caf50; background-color: #ffffff; }
+        .invitation-card input[type="text"]:focus { border-color: #8d6e63; }
+        hr { border: 0; height: 1px; background: #e0e0e0; margin: 20px auto; width: 100%; }
 
-        /* 👨‍🌾 프로필 캐릭터 선택기 스타일 */
-        .profile-selector {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+        .profile-selector { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
         .profile-option {
-            font-size: 28px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid #e0e0e0;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            background-color: #fafafa;
+            font-size: 28px; width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid #e0e0e0; border-radius: 50%; cursor: pointer;
+            transition: all 0.2s; background-color: #fafafa;
         }
         .profile-option.selected {
-            border-color: #4caf50;
-            background-color: #e8f5e9;
-            transform: scale(1.15);
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+            border-color: #4caf50; background-color: #e8f5e9;
+            transform: scale(1.15); box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
         }
         .invitation-card .profile-option.selected {
-            border-color: #8d6e63;
-            background-color: #efebe9;
+            border-color: #8d6e63; background-color: #efebe9;
             box-shadow: 0 4px 10px rgba(141, 110, 99, 0.3);
         }
 
-        /* 🌟 성격 선택기 스타일 (이름 짓기 화면) */
-        .personality-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+        .personality-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .personality-option {
-            border: 2px solid #e0e0e0;
-            border-radius: 14px;
-            padding: 12px 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background-color: #fafafa;
-            text-align: center;
+            border: 2px solid #e0e0e0; border-radius: 14px; padding: 12px 8px;
+            cursor: pointer; transition: all 0.2s; background-color: #fafafa; text-align: center;
         }
         .personality-option.selected {
-            border-color: #4caf50;
-            background-color: #e8f5e9;
-            transform: scale(1.04);
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
+            border-color: #4caf50; background-color: #e8f5e9;
+            transform: scale(1.04); box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
         }
-        .personality-emoji {
-            font-size: 26px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .personality-name {
-            font-size: 13px;
-            font-weight: bold;
-            color: #43543e;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .personality-desc {
-            font-size: 10.5px;
-            color: #8a978a;
-            display: block;
-            line-height: 1.4;
-        }
+        .personality-emoji { font-size: 26px; display: block; margin-bottom: 4px; }
+        .personality-name { font-size: 13px; font-weight: bold; color: #43543e; display: block; margin-bottom: 2px; }
+        .personality-desc { font-size: 10.5px; color: #8a978a; display: block; line-height: 1.4; }
 
-        /* 📮 우체통 및 편지 오픈 레이아웃 */
-        .mailbox-container {
-            cursor: pointer;
-            margin: 20px auto;
-            display: inline-block;
-            transition: transform 0.2s;
-        }
-        .mailbox-container:hover {
-            transform: scale(1.05);
-        }
-        .mailbox-img {
-            font-size: 80px;
-            display: block;
-            margin-bottom: 10px;
-        }
-        .mailbox-text {
-            font-size: 14px;
-            color: #795548;
-            font-weight: bold;
-            animation: pulse 1.5s infinite;
-        }
+        .mailbox-container { cursor: pointer; margin: 20px auto; display: inline-block; transition: transform 0.2s; }
+        .mailbox-container:hover { transform: scale(1.05); }
+        .mailbox-img { font-size: 80px; display: block; margin-bottom: 10px; }
+        .mailbox-text { font-size: 14px; color: #795548; font-weight: bold; animation: pulse 1.5s infinite; }
 
         .letter-box {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.8s ease-in-out, opacity 0.5s ease-in-out;
-            margin-top: 0;
+            max-height: 0; opacity: 0; overflow: hidden;
+            transition: max-height 0.8s ease-in-out, opacity 0.5s ease-in-out; margin-top: 0;
         }
-        .letter-box.open {
-            max-height: 500px; 
-            opacity: 1;
-            margin-top: 20px;
-        }
+        .letter-box.open { max-height: 500px; opacity: 1; margin-top: 20px; }
 
         #login-screen, #select-screen, #name-screen, #mailbox-screen {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100%; display: flex; justify-content: center; align-items: center;
         }
 
-        /* 🍃 나뭇잎 흩날리기 이펙트 요소 클래스 */
         .leaf {
-            position: absolute;
-            top: -20px;
-            color: rgba(76, 175, 80, 0.25);
-            font-size: 20px;
-            pointer-events: none;
-            z-index: 1;
-            animation: fall linear infinite;
+            position: absolute; top: -20px; color: rgba(76, 175, 80, 0.25);
+            font-size: 20px; pointer-events: none; z-index: 1; animation: fall linear infinite;
         }
 
-        /* ✨ 애니메이션 키프레임 */
-        .floating-emoji {
-            display: inline-block;
-            animation: float 2.5s ease-in-out infinite;
-        }
-        .delay-emoji {
-            animation-delay: 0.5s;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-            100% { transform: translateY(0px); }
-        }
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; transform: scale(1.02); }
-            100% { opacity: 0.6; }
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        .floating-emoji { display: inline-block; animation: float 2.5s ease-in-out infinite; }
+        .delay-emoji { animation-delay: 0.5s; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.6; } }
+        @keyframes blink { 50% { opacity: 0; } }
         @keyframes fall {
-            0% {
-                transform: translateY(0) rotate(0deg) translateX(0);
-                opacity: 0;
-            }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% {
-                transform: translateY(105vh) rotate(720deg) translateX(50px);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 0; }
+            10% { opacity: 1; } 90% { opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg) translateX(50px); opacity: 0; }
         }
 
-        /* 💻 데스크톱 PC 브라우저 베젤 활성화 */
         @media (min-width: 1024px) {
-            body {
-                background-color: #dcedc8; 
-            }
+            body { background-color: #dcedc8; }
             .game-container {
-                width: 360px;       
-                height: 740px;      
-                border: 8px solid #333333; 
-                border-radius: 36px;       
+                width: 360px; height: 740px;
+                border: 8px solid #333333; border-radius: 36px;
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             }
             .game-container::before {
-                content: '';
-                position: absolute;
-                top: 10px;
-                width: 60px;
-                height: 6px;
-                background-color: #333333;
-                border-radius: 3px;
-                z-index: 10;
-                display: block;
+                content: ''; position: absolute; top: 10px; width: 60px; height: 6px;
+                background-color: #333333; border-radius: 3px; z-index: 10; display: block;
             }
-            .status-bar {
-                top: 22px;
-            }
+            .status-bar { top: 22px; }
         }
 
-        /* 📱 작은 모바일 화면(낮은 높이) 보정 — 카드 내부 여백을 줄여 답답하지 않게 */
         @media (max-height: 680px) {
-            .screen-card {
-                padding: 22px 20px;
-            }
-            h1 {
-                font-size: 22px;
-                margin-bottom: 10px;
-            }
-            p {
-                margin-bottom: 16px;
-            }
-            .personality-selector {
-                margin-bottom: 14px;
-            }
+            .screen-card { padding: 22px 20px; }
+            h1 { font-size: 22px; margin-bottom: 10px; }
+            p { margin-bottom: 16px; }
+            .personality-selector { margin-bottom: 14px; }
         }
     </style>
 </head>
@@ -460,10 +312,10 @@
                 <p><span id="user-profile" style="font-size: 20px; margin-right: 4px;"></span><span id="user-greeting" style="font-weight: bold; color: #2e7d32;"></span> 정원사님,<br>식물을 골라주세요!</p>
                 <hr>
                 <button class="select-btn" onclick="selectPlant('Tomato', '토마토')">🍅 토마토</button>
-                <button class="select-btn" onclick="selectPlant('Carrot', '당근')">🥕 당근</button>
-                <button class="select-btn" onclick="selectPlant('Avocado', '아보카도')">🥑 아보카도</button>
-                <button class="select-btn" onclick="selectPlant('Strawberry', '딸기')">🍓 딸기</button>
-                <button class="select-btn" onclick="selectPlant('Mushroom', '버섯')">🍄 버섯</button>
+                <button class="select-btn locked" onclick="lockedPlantAlert()">🥕 당근 <span class="lock-badge">🔒 준비중</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert()">🥑 아보카도 <span class="lock-badge">🔒 준비중</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert()">🍓 딸기 <span class="lock-badge">🔒 준비중</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert()">🍄 버섯 <span class="lock-badge">🔒 준비중</span></button>
             </div>
         </div>
 
@@ -536,6 +388,10 @@
         let isPlaying = false;
         let noiseNode = null;
 
+        function lockedPlantAlert(){
+            alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요. 지금은 🍅 토마토를 키워보세요!');
+        }
+
         window.onload = function() {
             createLeaves(); 
             const savedNickname = safeGet('miniGarden_nickname');
@@ -563,14 +419,25 @@
             }
         };
 
-        // 저장된 닉네임/프로필 그대로 식물 선택 화면으로 이동
+        // ✅ [수정] 키우고 있던 식물이 있다면(=아직 수확 전) 식물 선택 화면을 건너뛰고
+        // 바로 키우던 정원 화면으로 직행합니다. 식물 선택부터 다시 하던 문제 해결!
         function continueAsReturningUser() {
             nickname = safeGet('miniGarden_nickname') || '';
             selectedProfile = safeGet('miniGarden_profile') || '👨‍🌾';
 
+            const currentPlantDir = safeGet(`miniGarden_currentPlantDir_${nickname}`);
+
+            if (currentPlantDir) {
+                const plantName = safeGet(`miniGarden_plantName_${currentPlantDir.toLowerCase()}_${nickname}`) || '';
+                const personality = safeGet(`miniGarden_personality_${currentPlantDir.toLowerCase()}_${nickname}`) || 'active';
+                const url = `Plant/${currentPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(personality)}`;
+                window.location.href = url;
+                return;
+            }
+
+            // 키우던 식물 기록이 없다면(처음 입장 등) 식물 선택 화면으로
             document.getElementById('user-profile').innerText = selectedProfile;
             document.getElementById('user-greeting').innerText = nickname;
-
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('select-screen').style.display = 'block';
         }
@@ -727,8 +594,12 @@
             type();
         }
 
-        // 🔗 [경로 수정 완료] 실제 대소문자 구조(Plant/Tomato)에 정확히 맞춤
+        // 🔗 새 식물 시작 시, "현재 키우는 식물" 기록을 남겨서 다음 재접속 때 바로 이어가게 합니다.
         function goToPlantGame() {
+            safeSet(`miniGarden_currentPlantDir_${nickname}`, selectedPlantDir);
+            safeSet(`miniGarden_plantName_${selectedPlantDir.toLowerCase()}_${nickname}`, plantName);
+            safeSet(`miniGarden_personality_${selectedPlantDir.toLowerCase()}_${nickname}`, selectedPersonality);
+
             const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(selectedPersonality)}`;
             window.location.href = url;
         }
