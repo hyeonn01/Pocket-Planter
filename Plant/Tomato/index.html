@@ -1557,7 +1557,8 @@ function renderSpeedModalContent(){
         ? '지금 바로 x8 배속을 켤 수 있어요.'
         : `다음 충전까지 ${formatCooldown(cooldownMs)} 남았어요.`);
   const extraNote = (!isSpeedOn && cooldownMs > 0)
-    ? `1시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`:
+    ? `1시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`
+    : '';
 
   content.innerHTML = `
     <div class="modal-title">시간 배속</div>
