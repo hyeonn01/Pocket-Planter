@@ -106,15 +106,91 @@
   }
   .weather-chip{
     display:flex; align-items:center; gap:4px;
-    background:rgba(255,255,255,0.75); border-radius:999px; padding:4px 10px;
-    backdrop-filter: blur(2px);
+    background:rgba(255,255,255,0.8); border-radius:999px; padding:5px 11px;
+    backdrop-filter: blur(6px); box-shadow:0 2px 8px rgba(70,110,70,0.08);
   }
+  .status-bar-right{ display:flex; align-items:center; gap:8px; }
+  .coin-chip{
+    display:flex; align-items:center; gap:5px;
+    background:rgba(255,248,220,0.92); border-radius:999px; padding:5px 11px;
+    color:#8a5a00; box-shadow:0 2px 8px rgba(160,120,20,0.14);
+    font-weight:800;
+  }
+  .coin-chip-icon{ font-size:13px; }
+
+  .floating-coin-layer{
+    position:absolute; inset:0; z-index:9; pointer-events:none; overflow:hidden;
+  }
+  .floating-coin{
+    position:absolute; width:44px; height:44px; border:none; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #fff7b1 0%, #ffd54f 45%, #f5b300 100%);
+    color:#8a5a00; font-size:20px; font-weight:900; cursor:pointer;
+    box-shadow:0 10px 18px rgba(185,140,0,0.28);
+    animation: coin-pop 0.35s ease, coin-float 2.1s ease-in-out infinite;
+    pointer-events:auto;
+  }
+  .floating-coin::after{
+    content:'+10'; position:absolute; right:-6px; top:-6px;
+    background:#fff; color:#d97706; border-radius:999px;
+    padding:2px 6px; font-size:10px; font-weight:900;
+    box-shadow:0 4px 10px rgba(0,0,0,0.12);
+  }
+  @keyframes coin-pop{
+    0%{ transform:scale(0.35); opacity:0; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+  @keyframes coin-float{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-8px); }
+  }
+
+  .utility-actions{
+    position:absolute; top:34px; left:6px; z-index:7; display:flex; gap:8px;
+  }
+  .utility-icon-btn{
+    width:36px; height:36px; border:none; border-radius:50%;
+    background:rgba(255,255,255,0.92); color:var(--leaf-deep);
+    box-shadow:0 8px 18px rgba(70,110,70,0.16);
+    font-size:18px; display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .utility-icon-btn:active{ transform:scale(0.94); }
+  .utility-icon-btn.hidden{ display:none; }
+  .utility-icon-btn.shake{ animation: clover-shake 0.55s ease; }
+  @keyframes clover-shake{
+    0%,100%{ transform:rotate(0deg) scale(1); }
+    20%{ transform:rotate(-14deg) scale(1.05); }
+    40%{ transform:rotate(12deg) scale(1.08); }
+    60%{ transform:rotate(-10deg) scale(1.05); }
+    80%{ transform:rotate(8deg) scale(1.03); }
+  }
+
+  .coin-balance-card{
+    background:#fff8e8; color:#8a5a00; border-radius:16px; padding:11px 14px;
+    margin-bottom:12px; text-align:center; font-size:13px; font-weight:800;
+    border:1.5px solid #ffe3a0;
+  }
+  .shop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:10px; }
+  .shop-card{
+    background:var(--card-soft); border:1.5px solid #e1f0d8; border-radius:16px;
+    padding:12px 10px; text-align:center;
+  }
+  .shop-card-title{ display:block; font-size:12.5px; color:#39523b; font-weight:800; margin-bottom:4px; }
+  .shop-card-desc{ display:block; font-size:10.5px; color:var(--ink-soft); line-height:1.45; min-height:30px; margin-bottom:7px; }
+  .shop-card-price{ display:block; font-size:11px; color:#d97706; font-weight:900; margin-bottom:8px; }
+  .shop-buy-btn{
+    border:none; border-radius:999px; padding:7px 10px; width:100%;
+    background:var(--leaf); color:#fff; font-size:11px; font-weight:800; cursor:pointer;
+  }
+  .shop-buy-btn.expensive{ background:#e58a3c; }
+  .shop-buy-btn:disabled{ background:#c8d6c5; color:#6f7a6d; cursor:not-allowed; }
 
   .dashboard{
     position:relative; z-index:6;
-    background: rgba(255,255,255,0.92);
-    border-radius:18px; margin:10px 14px 0; padding:14px 14px 12px;
+    background: rgba(255,255,255,0.94);
+    border-radius:20px; margin:10px 14px 0; padding:14px 14px 12px;
     box-shadow: var(--shadow-soft);
+    border:1px solid rgba(60,100,60,0.05);
   }
   .info-header{
     display:flex; justify-content:space-between; align-items:center;
@@ -130,15 +206,16 @@
   }
   .status-row > span:first-child{ flex-shrink:0; white-space:nowrap; width:88px; }
   .progress-bar-bg{
-    flex:1; height:8px; background:#eef3ea; border-radius:6px; overflow:hidden;
+    flex:1; height:8px; background:#eef3ea; border-radius:999px; overflow:hidden;
   }
   .progress-bar-fill{
-    height:100%; border-radius:6px; width:0%;
+    height:100%; border-radius:999px; width:0%;
     background: linear-gradient(90deg, var(--leaf), var(--leaf-deep));
     transition: width 0.5s ease;
   }
   .water-fill{ background: linear-gradient(90deg, #8fd3ec, #4fa9d6); }
   .sun-fill{ background: linear-gradient(90deg, #ffe49a, #ffc14d); }
+  .speed-fill{ background: linear-gradient(90deg, #ffcf7a, #ff9a3c); transition: width 0.4s linear; }
 
   .garden-stage{
     flex:1; min-height:0; position:relative; z-index:5;
@@ -350,31 +427,45 @@
     padding: 0 14px calc(16px + env(safe-area-inset-bottom, 0px));
   }
   .menu-btn{
-    background:#fff; border:none; border-radius:15px; padding:10px 0;
-    display:flex; flex-direction:column; align-items:center; gap:3px;
-    font-size:9.5px; font-weight:700; color:#43543e;
+    background:#fff; border:none; border-radius:16px; padding:9px 0 8px;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-size:9.5px; font-weight:700; color:#4a5a44;
     box-shadow: var(--shadow-soft);
     cursor:pointer; transition: transform 0.12s, background 0.12s;
-    position:relative;
+    position:relative; letter-spacing:-0.1px;
   }
-  .menu-btn:active{ transform: scale(0.94); background:#f2f8ee; }
+  .menu-btn:active{ transform: scale(0.94); background:#f5faf1; }
   .menu-btn-icon{ font-size:17px; }
+  .menu-btn-icon-wrap{
+    width:32px; height:32px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .menu-btn-icon-wrap svg{ width:17px; height:17px; }
+  .icon-water{ background:#e7f5fc; color:#2f9fd8; }
+  .icon-move{ background:#fbf0e2; color:#c67a2e; }
+  .icon-talk{ background:#eaf7ea; color:#4f9a5a; }
+  .icon-speed{ background:#fff0dd; color:#e0862e; }
+  .icon-diary{ background:#eef0fb; color:#6070c8; }
+  .icon-basket{ background:#fdebe6; color:var(--tomato-deep); }
+  .icon-trophy{ background:#fdf6df; color:#c99a1c; }
+  .icon-settings{ background:#edf1ee; color:#57665e; }
   .menu-btn-badge{
     position:absolute; top:4px; right:6px;
     background:var(--tomato); color:#fff; font-size:9px; font-weight:800;
-    width:15px; height:15px; border-radius:50%;
+    min-width:15px; height:15px; padding:0 3px; border-radius:999px;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 2px 4px rgba(228,88,60,0.4);
   }
 
   .modal-overlay{
     position:absolute; inset:0; z-index:100;
-    background: rgba(30,45,35,0.45);
+    background: rgba(25,38,30,0.4);
+    backdrop-filter: blur(3px);
     display:none; justify-content:center; align-items:center;
     border-radius: inherit;
   }
   .modal-content{
-    background:#fff; border-radius:20px; padding:22px 20px;
+    background:#fff; border-radius:22px; padding:22px 20px;
     width:84%; max-width:280px; box-sizing:border-box;
     box-shadow: 0 16px 34px rgba(0,0,0,0.2);
     animation: modal-pop 0.18s ease-out;
@@ -416,6 +507,9 @@
     background:var(--card-soft); border-radius:13px; padding:11px 14px; margin-bottom:9px;
   }
   .setting-label{ font-size:12.5px; font-weight:700; color:#3a4a35; }
+  .speed-budget-block{ background:var(--card-soft); border-radius:13px; padding:11px 14px; margin-bottom:9px; }
+  .speed-budget-label{ display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:7px; }
+  .speed-budget-label span:last-child{ color:#e0862e; font-variant-numeric:tabular-nums; }
   .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
   .switch input{ opacity:0; width:0; height:0; }
   .switch-track{
@@ -428,6 +522,8 @@
   }
   .switch input:checked + .switch-track{ background: var(--leaf); }
   .switch input:checked + .switch-track::before{ transform: translateX(18px); }
+  .switch input:disabled + .switch-track{ background:#e3e8df; cursor:not-allowed; opacity:0.72; }
+  .switch input:disabled + .switch-track::before{ box-shadow:none; }
 
   .bad-word-counter{ font-size:10.5px; color:#e4583c; margin-top:10px; font-weight:700; text-align:center; }
 
@@ -581,6 +677,7 @@
   <div class="rain-layer" id="rain-layer"></div>
   <div class="lightning-flash" id="lightning-flash"></div>
   <div id="leaf-container" style="position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:3; border-radius:inherit;"></div>
+  <div id="floating-coin-layer" class="floating-coin-layer"></div>
   <div class="achievement-toast" id="achievement-toast">
     <span class="achievement-toast-icon">🏆</span>
     <span id="achievement-toast-text"></span>
@@ -613,7 +710,10 @@
   <!-- 상단 상태바 -->
   <div class="status-bar">
     <span id="game-date-display">2026.01.01 (1일차)</span>
-    <span class="weather-chip" id="weather-chip">☀️ 맑음</span>
+    <div class="status-bar-right">
+      <span class="coin-chip" id="coin-chip"><span class="coin-chip-icon">🪙</span><span id="coin-total">0</span></span>
+      <span class="weather-chip" id="weather-chip">☀️ 맑음</span>
+    </div>
   </div>
 
   <!-- 🌱🌱 식물 탭 (최대 2개) -->
@@ -644,6 +744,10 @@
   <div class="garden-stage" id="touch-stage">
     <span class="personality-badge" id="personality-badge">😊 활발함</span>
     <span class="speed-badge" id="speed-badge">⏩ x1</span>
+    <div class="utility-actions">
+      <button class="utility-icon-btn" id="shop-btn" onclick="openModal('shop')" aria-label="상점">🛒</button>
+      <button class="utility-icon-btn" id="daily-free-coin-btn" onclick="claimDailyFreeCoin()" aria-label="오늘의 무료 코인">🍀</button>
+    </div>
     <div class="harvest-hint" id="harvest-hint">🍅 토마토를 눌러서 수확하기!</div>
     <div class="speech-bubble-wrap" id="chat-bubble-wrap">
       <div class="speech-bubble" id="chat-bubble">안녕하세요!</div>
@@ -669,27 +773,36 @@
 
   <!-- 하단 컨트롤 메뉴 -->
   <div class="control-menu">
-    <div class="menu-btn" onclick="waterPlant()"><span class="menu-btn-icon">💧</span>물주기</div>
-    <div class="menu-btn" onclick="openModal('move')"><span class="menu-btn-icon">📦</span>옮기기</div>
-    <div class="menu-btn" onclick="openTalkInput()"><span class="menu-btn-icon">💬</span>말걸기</div>
+    <div class="menu-btn" onclick="waterPlant()">
+      <span class="menu-btn-icon-wrap icon-water"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.5 4.6 7 8.9 7 12.6a7 7 0 1 1-14 0c0-3.7 3.5-8 7-12.6z"/></svg></span>물주기
+    </div>
+    <div class="menu-btn" onclick="openModal('move')">
+      <span class="menu-btn-icon-wrap icon-move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3L12 3z"/><path d="M4.3 7.3L12 11.5l7.7-4.2"/><path d="M12 11.5V21"/></svg></span>옮기기
+    </div>
+    <div class="menu-btn" onclick="openTalkInput()">
+      <span class="menu-btn-icon-wrap icon-talk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10.5H8.2L4 20V5.5z"/></svg></span>말걸기
+    </div>
   </div>
   <div class="control-menu row2">
     <div class="menu-btn" onclick="openModal('speed')" id="speed-menu-btn">
-      <span class="menu-btn-icon">⏩</span>배속
+      <span class="menu-btn-icon-wrap icon-speed"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5v14l9-7-9-7z"/><path d="M13 5v14l9-7-9-7z"/></svg></span>배속
+      <span class="menu-btn-badge" id="speed-mini-badge" style="display:none;">ON</span>
     </div>
     <div class="menu-btn" onclick="openModal('diary')" id="diary-menu-btn">
-      <span class="menu-btn-icon">📒</span>일기
+      <span class="menu-btn-icon-wrap icon-diary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.4"/><path d="M9 8h6M9 12h6M9 16h3.5"/></svg></span>일기
       <span class="menu-btn-badge" id="diary-badge" style="display:none;">!</span>
     </div>
     <div class="menu-btn" onclick="openModal('basket')" id="basket-menu-btn">
-      <span class="menu-btn-icon">🧺</span>바구니
+      <span class="menu-btn-icon-wrap icon-basket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 9h15.6l-1.5 10.2a2 2 0 0 1-2 1.8H7.7a2 2 0 0 1-2-1.8L4.2 9z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg></span>바구니
       <span class="menu-btn-badge" id="basket-badge" style="display:none;">0</span>
     </div>
     <div class="menu-btn" onclick="openModal('achievements')" id="achv-menu-btn">
-      <span class="menu-btn-icon">🏆</span>업적
+      <span class="menu-btn-icon-wrap icon-trophy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M6 6H4.5A2 2 0 0 0 6.5 10"/><path d="M18 6h1.5A2 2 0 0 1 17.5 10"/><path d="M12 13v3"/><path d="M9.3 20h5.4"/><path d="M10.2 17h3.6v3h-3.6z"/></svg></span>업적
       <span class="menu-btn-badge" id="achv-badge" style="display:none;">0</span>
     </div>
-    <div class="menu-btn" onclick="openModal('settings')"><span class="menu-btn-icon">⚙️</span>설정</div>
+    <div class="menu-btn" onclick="openModal('settings')">
+      <span class="menu-btn-icon-wrap icon-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 0 0 0-2l1.9-1.4-2-3.4-2.3.6a8 8 0 0 0-1.7-1L15 3.7h-6l-.3 2.1a8 8 0 0 0-1.7 1l-2.3-.6-2 3.4L4.6 11a7.9 7.9 0 0 0 0 2l-1.9 1.4 2 3.4 2.3-.6a8 8 0 0 0 1.7 1l.3 2.1h6l.3-2.1a8 8 0 0 0 1.7-1l2.3.6 2-3.4L19.4 13z"/></svg></span>설정
+    </div>
   </div>
 
   <!-- 모달 -->
@@ -850,19 +963,35 @@ const WEATHER_TABLE = [
   { type:'cloudy',  label:'⛅ 흐림',   weight:1, growthMul:0.7,  sunMul:0.5 },
   { type:'rainy',   label:'🌧️ 비',     weight:1, growthMul:0.85, sunMul:0.25 }
 ];
+const OUTDOOR_RAIN_LOCATIONS = ['마당','테라스'];
+const RAIN_WATER_GAIN_PER_DAY = 18;
+const FLOATING_COIN_VALUE = 10;
+const FLOATING_COIN_MIN_DELAY_MS = 4.5 * 60 * 1000;
+const FLOATING_COIN_MAX_DELAY_MS = 7.5 * 60 * 1000;
+const DAILY_FREE_COIN_MIN = 10;
+const DAILY_FREE_COIN_MAX = 50;
+const DAILY_FREE_COIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const SHOP_ITEMS = [
+  { key:'nutrient', icon:'🧪', title:'영양제', cost:500, desc:'성장 +3% · 수분 +8% · 일조 +8%' },
+  { key:'dehumidifier', icon:'🫧', title:'수분제거', cost:500, desc:'수분량 -25% (과습 완화)' },
+  { key:'sunlight', icon:'☀️', title:'일조량 추가', cost:500, desc:'일조량 +25%' },
+  { key:'growth_booster', icon:'🚀', title:'성장촉진제', cost:1000, desc:'성장도 +12%' }
+];
 // 🖼️ 배경 이미지를 파일로 분리하지 않고 코드 안에 직접 내장(base64)해서,
 // 별도의 images 폴더 없이도 index.html 파일 하나만으로 항상 정상적으로 보이게 했어요.
 const ENV_BACKGROUNDS = {
   '테라스':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InRlcnJhY2VTa3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y3ZTNlNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmYmVlZjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InRlcnJhY2VGbG9vciIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYTk3NTRjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzhmNWYzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iNTYwIiBmaWxsPSJ1cmwoI3RlcnJhY2VTa3kpIi8+CgogIDwhLS0g67Cw6rK9IOuCmOustOuTpCAtLT4KICA8ZyBvcGFjaXR5PSIwLjg1Ij4KICAgIDxjaXJjbGUgY3g9IjMwIiBjeT0iMjMwIiByPSI4MCIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMjU1IiByPSI5NSIgZmlsbD0iIzdmYmI4MCIvPgogICAgPGNpcmNsZSBjeD0iMjUwIiBjeT0iMjUwIiByPSIxMDAiIGZpbGw9IiM4ZmM3OGYiLz4KICAgIDxjaXJjbGUgY3g9IjM3MCIgY3k9IjIzNSIgcj0iODAiIGZpbGw9IiM3ZmJiODAiLz4KICA8L2c+CiAgPHJlY3QgeD0iMCIgeT0iMzMwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIzMCIgZmlsbD0iI2ZiZWVmMCIvPgogIDxyZWN0IHg9IjAiIHk9IjMzMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIyMzAiIGZpbGw9IiM4ZmM3OGYiIG9wYWNpdHk9IjAuMjgiLz4KCiAgPCEtLSDsobDrqoUg7KSEIC0tPgogIDxwYXRoIGQ9Ik0tMTAsNTAgUTEwMCwxMTAgMjEwLDU1IFEzMjAsMCA0MTAsNjAiIHN0cm9rZT0iI2Q5YjZhMyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjciLz4KICA8ZyBmaWxsPSIjZmZlMDhhIj4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iNTYiIHI9IjUiLz48Y2lyY2xlIGN4PSI2MCIgY3k9IjgyIiByPSI1Ii8+PGNpcmNsZSBjeD0iMTEwIiBjeT0iOTgiIHI9IjUiLz4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9Ijg4IiByPSI1Ii8+PGNpcmNsZSBjeD0iMjEwIiBjeT0iNTgiIHI9IjUiLz48Y2lyY2xlIGN4PSIyNjAiIGN5PSIzMCIgcj0iNSIvPgogICAgPGNpcmNsZSBjeD0iMzEwIiBjeT0iMjQiIHI9IjUiLz48Y2lyY2xlIGN4PSIzNjAiIGN5PSI0MCIgcj0iNSIvPgogIDwvZz4KCiAgPCEtLSDrgpjrrLQg67CU64ulIC0tPgogIDxyZWN0IHg9IjAiIHk9IjU1NSIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIyNDUiIGZpbGw9InVybCgjdGVycmFjZUZsb29yKSIvPgogIDxnIHN0cm9rZT0iIzdhNGQyZSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjYiPgogICAgPGxpbmUgeDE9IjAiIHkxPSI2MDAiIHgyPSI0MDAiIHkyPSI2MDAiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iNjUwIiB4Mj0iNDAwIiB5Mj0iNjUwIi8+CiAgICA8bGluZSB4MT0iMCIgeTE9IjcwMCIgeDI9IjQwMCIgeTI9IjcwMCIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSI3NTAiIHgyPSI0MDAiIHkyPSI3NTAiLz4KICAgIDxsaW5lIHgxPSI5MCIgeTE9IjU1NSIgeDI9IjkwIiB5Mj0iODAwIi8+CiAgICA8bGluZSB4MT0iMjIwIiB5MT0iNTU1IiB4Mj0iMjIwIiB5Mj0iODAwIi8+CiAgICA8bGluZSB4MT0iMzIwIiB5MT0iNTU1IiB4Mj0iMzIwIiB5Mj0iODAwIi8+CiAgPC9nPgoKCiAgPCEtLSDsmbzsqr0g7IaM7YyMIOyLpOujqOyXoyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDAsNDcwKSI+CiAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSI3MCIgcng9IjE4IiBmaWxsPSIjZGZlNmVhIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjQ1IiByeD0iMTgiIGZpbGw9IiNlZWYyZjQiLz4KICAgIDxjaXJjbGUgY3g9IjMwIiBjeT0iMzAiIHI9IjIwIiBmaWxsPSIjZjZjOWM5Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIzMCIgcj0iMjAiIGZpbGw9IiNmZmU2YjgiLz4KICA8L2c+CgogIDwhLS0g7LSb67aIIC0tPgogIDxnIGZpbGw9IiNmZmU5YTgiIG9wYWNpdHk9IjAuOSI+CiAgICA8ZWxsaXBzZSBjeD0iMzQ1IiBjeT0iNjEyIiByeD0iMTAiIHJ5PSIxNCIgb3BhY2l0eT0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMzQ1IiBjeT0iNjEyIiByeD0iNSIgcnk9IjgiLz4KICA8L2c+Cjwvc3ZnPgo=',
   '창가':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbldhbGwiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZiZTNjZCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmNmQ1YjgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbkZsb29yIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjOTlhNzEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYTk3YzU2Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9InVybCgjd2luV2FsbCkiLz4KCiAgPCEtLSDssL3rrLgg7ZSE66CI7J6EIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYwLDkwKSI+CiAgICA8cmVjdCB4PSItMTQiIHk9Ii0xNCIgd2lkdGg9IjMwOCIgaGVpZ2h0PSIzNTgiIHJ4PSI2IiBmaWxsPSIjZmZmZmZmIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjMzMCIgZmlsbD0iI2RjZWRmMyIvPgogICAgPCEtLSDtlZjripggLS0+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2RjZWRmMyIvPgogICAgPCEtLSDsiJjtkoAgLS0+CiAgICA8cGF0aCBkPSJNMCwzMzAgTDAsMjMwIFEzNSwyMDUgNzAsMjI1IFE5NSwxOTAgMTMwLDIyMCBRMTYwLDE5NSAxOTAsMjIyIFEyMjAsMTk4IDI1MCwyMjQgUTI2NSwyMTUgMjgwLDIyMCBMMjgwLDMzMCBaIiBmaWxsPSIjYTljZjdlIi8+CiAgICA8cGF0aCBkPSJNMCwzMzAgTDAsMjcwIFE0MCwyNTAgODAsMjY4IFExMjAsMjQ4IDE2MCwyNjggUTIwMCwyNDYgMjQwLDI2OCBRMjYwLDI1OCAyODAsMjY0IEwyODAsMzMwIFoiIGZpbGw9IiM5M2JkNjgiLz4KICAgIDwhLS0g7LC97YuAIOyLreyekCAtLT4KICAgIDxyZWN0IHg9IjEzMiIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjMzMCIgZmlsbD0iI2ZmZmZmZiIvPgogICAgPHJlY3QgeD0iMCIgeT0iMTU3IiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE2IiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgoKICA8IS0tIOywve2LgCDslYTrnpgg7YSxKHNpbGwpIC0tPgogIDxyZWN0IHg9IjAiIHk9IjQ0MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMCIgZmlsbD0iI2YwY2VhZSIvPgogIDxyZWN0IHg9IjAiIHk9IjQ0MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI2IiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjYiLz4KCiAgPCEtLSDrsJTri6UgLS0+CiAgPHJlY3QgeD0iMCIgeT0iNTYwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI0MCIgZmlsbD0idXJsKCN3aW5GbG9vcikiLz4KICA8cmVjdCB4PSIwIiB5PSI1NjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iOCIgZmlsbD0iIzhhNjE0MiIvPgoKPC9zdmc+Cg==',
   '책상':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImRlc2tXYWxsIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjM2VjYzQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYTlkZmFlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJkZXNrVG9wIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmN2VjZGQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZWVkZGM0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1NjAiIGZpbGw9InVybCgjZGVza1dhbGwpIi8+CiAgPHJlY3QgeD0iMCIgeT0iNTQwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjOThjZjlkIi8+CgogIDwhLS0g7LGF7IOBIOyDge2MkCAtLT4KICA8cmVjdCB4PSIwIiB5PSI1NTUiIHdpZHRoPSI0MDAiIGhlaWdodD0iMjQ1IiBmaWxsPSJ1cmwoI2Rlc2tUb3ApIi8+CiAgPHJlY3QgeD0iMCIgeT0iNTU1IiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSDssYXsg4Eg7ISc656NIOu4lOuhnSAtLT4KICA8cmVjdCB4PSIxMjAiIHk9IjY5MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxMTAiIGZpbGw9IiNlMmNiYTkiLz4KICA8cmVjdCB4PSIxMjAiIHk9IjY5MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI2IiBmaWxsPSIjZDZiZDk3Ii8+CiAgPHJlY3QgeD0iMTgwIiB5PSI3MjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iI2MzYTk3ZSIvPgoKCiAgPCEtLSDsnpHsnYAg64uk7Jyh7Iud66y8IO2ZlOu2hCAo7Jm87Kq9IOq1rOyEnSkgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDgsNTY1KSI+CiAgICA8cmVjdCB4PSItMTYiIHk9IjEwIiB3aWR0aD0iMzIiIGhlaWdodD0iMjQiIHJ4PSI0IiBmaWxsPSIjNmI0YTM0Ii8+CiAgICA8cGF0aCBkPSJNMCwtNiBDIC0xMiwtMiAtMTAsMTQgMCwxMCBDIDEwLDE0IDEyLC0yIDAsLTYgWiIgZmlsbD0iIzRjOGE1YSIvPgogICAgPHBhdGggZD0iTS00LC0xNCBDIC0xNCwtMTAgLTEyLDQgLTIsMiBDIC02LC02IC04LC0xMiAtNCwtMTQgWiIgZmlsbD0iIzVmYWU2YyIvPgogICAgPHBhdGggZD0iTTQsLTE0IEMgMTQsLTEwIDEyLDQgMiwyIEMgNiwtNiA4LC0xMiA0LC0xNCBaIiBmaWxsPSIjNWZhZTZjIi8+CiAgPC9nPgoKICA8IS0tIOuFuO2KuOyZgCDtjpwgKOyYpOuluOyqvSDqtazshJ0pIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMzMCw1NzIpIj4KICAgIDxyZWN0IHg9Ii0yNiIgeT0iMCIgd2lkdGg9IjUyIiBoZWlnaHQ9IjM2IiByeD0iMyIgZmlsbD0iIzVmYWU2YyIgdHJhbnNmb3JtPSJyb3RhdGUoLTYpIi8+CiAgICA8cmVjdCB4PSItMjIiIHk9IjQiIHdpZHRoPSI0NCIgaGVpZ2h0PSIyOCIgcng9IjIiIGZpbGw9IiM3ZmNmOGMiIHRyYW5zZm9ybT0icm90YXRlKC02KSIvPgogICAgPHJlY3QgeD0iMTAiIHk9Ii0xMCIgd2lkdGg9IjYiIGhlaWdodD0iNDIiIHJ4PSIzIiBmaWxsPSIjNGM3ZmFlIiB0cmFuc2Zvcm09InJvdGF0ZSgxOCkiLz4KICA8L2c+Cjwvc3ZnPgo=',
-  '마당':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRTa3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2JmZTNmNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkY2YwZjciLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRHcmFzcyIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYjhkZDhjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlkY2I3MiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iODAwIiBmaWxsPSJ1cmwoI3lhcmRTa3kpIi8+CgogIDwhLS0g6rWs66aEIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuOSI+CiAgICA8ZWxsaXBzZSBjeD0iODAiIGN5PSI5MCIgcng9IjQyIiByeT0iMTgiLz4KICAgIDxlbGxpcHNlIGN4PSIxMTUiIGN5PSI4MCIgcng9IjMwIiByeT0iMTYiLz4KICAgIDxlbGxpcHNlIGN4PSIzMDAiIGN5PSIxMzAiIHJ4PSIzNiIgcnk9IjE1Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMzMwIiBjeT0iMTIwIiByeD0iMjQiIHJ5PSIxMyIvPgogIDwvZz4KCiAgPCEtLSDsp5EgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjMwLDEyMCkiPgogICAgPHJlY3QgeD0iMCIgeT0iNDAiIHdpZHRoPSIxNzAiIGhlaWdodD0iMjcwIiBmaWxsPSIjZjRlZGUxIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSIxNiIgZmlsbD0iI2M4YTk3ZSIvPgogICAgPHJlY3QgeD0iMTUiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjMwIiBmaWxsPSIjYmZlM2Y1Ii8+CiAgICA8cmVjdCB4PSIxNSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIyMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgICA8bGluZSB4MT0iNDUiIHkxPSI3MCIgeDI9IjQ1IiB5Mj0iMzAwIiBzdHJva2U9IiNjOGE5N2UiIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iMTg1IiB4Mj0iNzUiIHkyPSIxODUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSI5NSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNiZmUzZjUiLz4KICAgIDxyZWN0IHg9Ijk1IiB5PSI3MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjQiLz4KICAgIDxsaW5lIHgxPSIxMjUiIHkxPSI3MCIgeDI9IjEyNSIgeTI9IjE5MCIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8L2c+CgogIDwhLS0g7Jm87Kq9IOuCmOustCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0NSwyNzApIj4KICAgIDxyZWN0IHg9Ii05IiB5PSIwIiB3aWR0aD0iMTgiIGhlaWdodD0iOTAiIGZpbGw9IiM4YTVhMzQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSItMzAiIHI9IjcwIiBmaWxsPSIjN2ZiYjgwIi8+CiAgICA8Y2lyY2xlIGN4PSItNDUiIGN5PSIwIiByPSI0MiIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iNDUiIGN5PSIwIiByPSI0MiIgZmlsbD0iIzhmYzc4ZiIvPgogIDwvZz4KCiAgPCEtLSDtnbAg7Jq47YOA66asIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2UyZTJlMiIgc3Ryb2tlLXdpZHRoPSIxLjUiPgogICAgPHJlY3QgeD0iMCIgeT0iNDE4IiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwIi8+CiAgICA8cmVjdCB4PSIwIiB5PSI0NDAiIHdpZHRoPSI0MDAiIGhlaWdodD0iOCIvPgogICAgPGcgaWQ9InBpY2tldCI+CiAgICAgIDxyZWN0IHg9IjAiIHk9IjQwMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjU1IiByeD0iMiIvPgogICAgPC9nPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIxMCIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iNDUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjgwIi8+CiAgICA8dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjExNSIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMTUwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIxODUiLz4KICAgIDx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMjIwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIyNTUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjI5MCIvPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIzMjUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjM2MCIvPgogIDwvZz4KCiAgPCEtLSDsnpTrlJQgLS0+CiAgPHJlY3QgeD0iMCIgeT0iNDUyIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjM0OCIgZmlsbD0idXJsKCN5YXJkR3Jhc3MpIi8+CiAgPGcgZmlsbD0iIzg5Yjg2OSIgb3BhY2l0eT0iMC41NSI+CiAgICA8ZWxsaXBzZSBjeD0iNjAiIGN5PSI1MjAiIHJ4PSIzMCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIzMzAiIGN5PSI1NjAiIHJ4PSIzNCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIxNjAiIGN5PSI3MDAiIHJ4PSI0MCIgcnk9IjkiLz4KICAgIDxlbGxpcHNlIGN4PSIzMjAiIGN5PSI3NDAiIHJ4PSIzMCIgcnk9IjgiLz4KICA8L2c+Cgo8L3N2Zz4K'
+  '마당':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRTa3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2JmZTNmNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkY2YwZjciLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRHcmFzcyIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYjhkZDhjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlkY2I3MiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iODAwIiBmaWxsPSJ1cmwoI3lhcmRTa3kpIi8+CgogIDwhLS0g6rWs66aEIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuOSI+CiAgICA8ZWxsaXBzZSBjeD0iODAiIGN5PSI5MCIgcng9IjQyIiByeT0iMTgiLz4KICAgIDxlbGxpcHNlIGN4PSIxMTUiIGN5PSI4MCIgcng9IjMwIiByeT0iMTYiLz4KICAgIDxlbGxpcHNlIGN4PSIzMDAiIGN5PSIxMzAiIHJ4PSIzNiIgcnk9IjE1Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMzMwIiBjeT0iMTIwIiByeD0iMjQiIHJ5PSIxMyIvPgogIDwvZz4KCiAgPCEtLSDsp5EgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjMwLDEyMCkiPgogICAgPHJlY3QgeD0iMCIgeT0iNDAiIHdpZHRoPSIxNzAiIGhlaWdodD0iMjcwIiBmaWxsPSIjZjRlZGUxIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSIxNiIgZmlsbD0iI2M4YTk3ZSIvPgogICAgPHJlY3QgeD0iMTUiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjMwIiBmaWxsPSIjYmZlM2Y1Ii8+CiAgICA8cmVjdCB4PSIxNSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIyMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgICA8bGluZSB4MT0iNDUiIHkxPSI3MCIgeDI9IjQ1IiB5Mj0iMzAwIiBzdHJva2U9IiNjOGE5N2UiIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iMTg1IiB4Mj0iNzUiIHkyPSIxODUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSI5NSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNiZmUzZjUiLz4KICAgIDxyZWN0IHg9Ijk1IiB5PSI3MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjQiLz4KICAgIDxsaW5lIHgxPSIxMjUiIHkxPSI3MCIgeDI9IjEyNSIgeTI9IjE5MCIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8L2c+CgogIDwhLS0g7Jm87Kq9IOuCmOustCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5MiwzMDUpIj4KICAgIDxlbGxpcHNlIGN4PSI0IiBjeT0iOTQiIHJ4PSI0NiIgcnk9IjEyIiBmaWxsPSIjN2NhYjYzIiBvcGFjaXR5PSIwLjQyIi8+CiAgICA8cmVjdCB4PSItMTAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5MiIgcng9IjQiIGZpbGw9IiM4YTVhMzQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSItMzQiIHI9IjcyIiBmaWxsPSIjN2ZiYjgwIi8+CiAgICA8Y2lyY2xlIGN4PSItNDIiIGN5PSIyIiByPSI0MCIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iNDQiIGN5PSI0IiByPSI0MCIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iNiIgY3k9IjE4IiByPSIzNCIgZmlsbD0iIzk4ZDE5NiIgb3BhY2l0eT0iMC45NSIvPgogIDwvZz4KCiAgPCEtLSDtnbAg7Jq47YOA66asIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2UyZTJlMiIgc3Ryb2tlLXdpZHRoPSIxLjUiPgogICAgPHJlY3QgeD0iMCIgeT0iNDE4IiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwIi8+CiAgICA8cmVjdCB4PSIwIiB5PSI0NDAiIHdpZHRoPSI0MDAiIGhlaWdodD0iOCIvPgogICAgPGcgaWQ9InBpY2tldCI+CiAgICAgIDxyZWN0IHg9IjAiIHk9IjQwMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjU1IiByeD0iMiIvPgogICAgPC9nPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIxMCIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iNDUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjgwIi8+CiAgICA8dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjExNSIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMTUwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIxODUiLz4KICAgIDx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMjIwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIyNTUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjI5MCIvPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIzMjUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjM2MCIvPgogIDwvZz4KCiAgPCEtLSDsnpTrlJQgLS0+CiAgPHJlY3QgeD0iMCIgeT0iNDUyIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjM0OCIgZmlsbD0idXJsKCN5YXJkR3Jhc3MpIi8+CiAgPGcgZmlsbD0iIzg5Yjg2OSIgb3BhY2l0eT0iMC41NSI+CiAgICA8ZWxsaXBzZSBjeD0iNjAiIGN5PSI1MjAiIHJ4PSIzMCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIzMzAiIGN5PSI1NjAiIHJ4PSIzNCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIxNjAiIGN5PSI3MDAiIHJ4PSI0MCIgcnk9IjkiLz4KICAgIDxlbGxpcHNlIGN4PSIzMjAiIGN5PSI3NDAiIHJ4PSIzMCIgcnk9IjgiLz4KICA8L2c+Cgo8L3N2Zz4K'
 };
 const WATER_CAP = 96;
 
-/* ⏩ 배속: 하루(현실시간 기준) 최대 사용 가능한 "보너스 분" 한도 */
-const SPEED_OPTIONS = [1, 2, 4, 8];
-const DAILY_SPEED_BUDGET_MIN = 120; // 하루에 배속으로 당길 수 있는 보너스 분(分) 총량
+/* ⏩ 배속: 하루 24시간 중 최대 1시간까지만 x8 배속을 사용할 수 있어요.
+   1시간을 다 쓰면, 그 시점부터 24시간이 지나야 다시 1시간이 충전됩니다. */
+const FIXED_SPEED_MULTIPLIER = 8;
+const SPEED_BUDGET_TOTAL_MS = 60 * 60 * 1000;   // 하루에 쓸 수 있는 배속 예산(1시간)
+const SPEED_CYCLE_MS = 24 * 60 * 60 * 1000;      // 예산을 다 쓰면 24시간 후 재충전
 
 /* ================= 성격 시스템 ================= */
 const PERSONALITY_TABLE = {
@@ -940,6 +1069,9 @@ let plantState = {
   growth:0, water:50, sun:50,
   location:'창가',
   badWordCount:0,
+  coins:0,
+  lastFreeCoinClaimAt:null,
+  nextFloatingCoinAt:null,
   lastRealTick: Date.now(),
   lastWeatherDay: null,
   weather: 'sunny',
@@ -952,8 +1084,9 @@ let plantState = {
   lastDiaryDay: null,
   achievements: {},
   speedMultiplier: 1,
-  speedBudgetUsedMin: 0,
-  speedBudgetDay: null,
+  speedBudgetMs: SPEED_BUDGET_TOTAL_MS,
+  speedCheckpoint: null,
+  speedExhaustedAt: null,
   stats: {
     waterCount: 0,
     talkGoodCount: 0,
@@ -1012,7 +1145,6 @@ window.onload = function(){
   createAmbientLeaves();
   renderPlantTabs();
   loadPlantState();
-  resetSpeedBudgetIfNewDay();
   applyLocationVisual(true);
   rollWeatherIfNewDay();
   applyWeatherVisual(true);
@@ -1022,6 +1154,9 @@ window.onload = function(){
   updateDiaryBadge();
   updateAchvBadge();
   updateSpeedBadge();
+  updateCoinUI();
+  refreshDailyFreeCoinButton();
+  initFloatingCoinSystem();
 
   setTimeout(()=>{ showBubble(pickRandom(p.greeting)); }, 700);
 
@@ -1051,7 +1186,14 @@ function loadPlantState(){
       if(typeof plantState.stats.runTalkGoodCount !== 'number') plantState.stats.runTalkGoodCount = 0;
       if(typeof plantState.stats.runBadWordCount !== 'number') plantState.stats.runBadWordCount = 0;
       if(typeof plantState.speedMultiplier !== 'number') plantState.speedMultiplier = 1;
-      if(typeof plantState.speedBudgetUsedMin !== 'number') plantState.speedBudgetUsedMin = 0;
+      if(plantState.speedMultiplier > 1) plantState.speedMultiplier = FIXED_SPEED_MULTIPLIER;
+      if(typeof plantState.speedBudgetMs !== 'number') plantState.speedBudgetMs = SPEED_BUDGET_TOTAL_MS;
+      if(typeof plantState.speedExhaustedAt !== 'number') plantState.speedExhaustedAt = null;
+      if(typeof plantState.speedCheckpoint !== 'number') plantState.speedCheckpoint = (plantState.speedMultiplier > 1) ? Date.now() : null;
+      if(typeof plantState.coins !== 'number') plantState.coins = 0;
+      if(typeof plantState.lastFreeCoinClaimAt !== 'number') plantState.lastFreeCoinClaimAt = null;
+      if(typeof plantState.nextFloatingCoinAt !== 'number') plantState.nextFloatingCoinAt = null;
+      delete plantState.lastSpeedActivatedAt;
     }catch(e){}
   } else {
     plantState.lastRealTick = Date.now();
@@ -1060,6 +1202,9 @@ function loadPlantState(){
 }
 function savePlantState(){
   plantState.lastRealTick = Date.now();
+  safeSet(SAVE_KEY, JSON.stringify(plantState));
+}
+function savePlantStateSoft(){
   safeSet(SAVE_KEY, JSON.stringify(plantState));
 }
 
@@ -1259,46 +1404,178 @@ function applyLocationVisual(){
   document.getElementById('current-location-tag').innerText = `📍 ${plantState.location}`;
 }
 
-/* ================= ⏩ 배속 시스템 ================= */
-function resetSpeedBudgetIfNewDay(){
-  const today = getDayIndex(Date.now());
-  if(plantState.speedBudgetDay !== today){
-    plantState.speedBudgetDay = today;
-    plantState.speedBudgetUsedMin = 0;
+/* ================= ⏩ 배속 시스템 (24시간 중 1시간만 사용 가능) ================= */
+/* 배속을 켠 뒤 "실시간으로" 예산이 얼마나 남았는지 계산 (저장은 하지 않는 순수 조회용) */
+function getLiveSpeedBudgetMs(nowTs){
+  nowTs = nowTs || Date.now();
+  let budget = typeof plantState.speedBudgetMs === 'number' ? plantState.speedBudgetMs : SPEED_BUDGET_TOTAL_MS;
+  if(plantState.speedMultiplier > 1 && plantState.speedCheckpoint){
+    budget = budget - (nowTs - plantState.speedCheckpoint);
   }
+  return Math.max(0, Math.min(SPEED_BUDGET_TOTAL_MS, budget));
 }
-function getSpeedBudgetRemaining(){
-  resetSpeedBudgetIfNewDay();
-  return Math.max(0, DAILY_SPEED_BUDGET_MIN - plantState.speedBudgetUsedMin);
+/* 예산을 다 쓴 뒤 다음 충전까지 남은 대기 시간 */
+function getSpeedCooldownRemainingMs(nowTs){
+  nowTs = nowTs || Date.now();
+  if(!plantState.speedExhaustedAt) return 0;
+  return Math.max(0, SPEED_CYCLE_MS - (nowTs - plantState.speedExhaustedAt));
 }
-function setSpeed(mult){
-  resetSpeedBudgetIfNewDay();
-  if(mult > 1 && getSpeedBudgetRemaining() <= 0){
-    showInfoToast('⏳ 오늘 배속 한도를 다 썼어요! 내일 다시 써보세요.');
-    return;
+function formatCooldown(ms){
+  const totalMin = Math.max(1, Math.ceil(ms / 60000));
+  const hours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  if(hours > 0 && mins > 0) return `${hours}시간 ${mins}분`;
+  if(hours > 0) return `${hours}시간`;
+  return `${mins}분`;
+}
+function formatMMSS(ms){
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+/* 🔋 경계 상황(예산 소진 / 24시간 재충전)만 실제로 상태에 반영합니다.
+   켜져 있는 동안의 "실시간 소모"는 getLiveSpeedBudgetMs()로 계산만 하고,
+   여기서는 확정된 시점(끄기/게임틱/24시간 경과)에만 저장해서 성장 계산에 영향이 없도록 합니다. */
+function refreshSpeedState(nowTs){
+  nowTs = nowTs || Date.now();
+  let changed = false;
+
+  if(plantState.speedExhaustedAt && (nowTs - plantState.speedExhaustedAt) >= SPEED_CYCLE_MS){
+    plantState.speedBudgetMs = SPEED_BUDGET_TOTAL_MS;
+    plantState.speedExhaustedAt = null;
+    changed = true;
   }
-  plantState.speedMultiplier = mult;
+
+  if(plantState.speedMultiplier > 1 && getLiveSpeedBudgetMs(nowTs) <= 0){
+    plantState.speedMultiplier = 1;
+    plantState.speedBudgetMs = 0;
+    plantState.speedCheckpoint = null;
+    plantState.speedExhaustedAt = nowTs;
+    showInfoToast('⏳ 배속 1시간을 모두 사용했어요. 24시간 후 다시 충전돼요.');
+    changed = true;
+  }
+
+  if(changed){
+    updateSpeedBadge();
+    updateSpeedModalIfOpen();
+    savePlantState();
+  }
+  return changed;
+}
+function toggleSpeedMode(enabled){
+  const now = Date.now();
+  refreshSpeedState(now);
+
+  if(enabled){
+    if(plantState.speedMultiplier > 1){
+      openModal('speed');
+      return;
+    }
+    const cooldownMs = getSpeedCooldownRemainingMs(now);
+    if(cooldownMs > 0){
+      showInfoToast(`⏳ 배속 1시간을 모두 사용했어요. ${formatCooldown(cooldownMs)} 후 다시 사용할 수 있어요.`);
+      openModal('speed');
+      return;
+    }
+    if(getLiveSpeedBudgetMs(now) <= 0){
+      showInfoToast('⏳ 오늘 사용할 수 있는 배속 시간이 없어요.');
+      openModal('speed');
+      return;
+    }
+    plantState.speedMultiplier = FIXED_SPEED_MULTIPLIER;
+    plantState.speedCheckpoint = now;
+    showBubble(`⏩ x${FIXED_SPEED_MULTIPLIER} 배속 시작!`);
+  } else {
+    // 지금까지 사용한 만큼만 예산에서 확정해서 차감하고 끕니다 (남은 시간은 계속 보존됨)
+    plantState.speedBudgetMs = getLiveSpeedBudgetMs(now);
+    plantState.speedMultiplier = 1;
+    plantState.speedCheckpoint = null;
+    showInfoToast('⏸️ x8 배속을 껐어요.');
+  }
   updateSpeedBadge();
   savePlantState();
-  closeModal();
-  if(mult > 1) showBubble(`⏩ x${mult} 배속 시작!`);
+  openModal('speed');
 }
 function updateSpeedBadge(){
   const badge = document.getElementById('speed-badge');
-  if(plantState.speedMultiplier > 1){
-    badge.classList.add('show');
-    badge.innerText = `⏩ x${plantState.speedMultiplier}`;
-  } else {
-    badge.classList.remove('show');
+  const miniBadge = document.getElementById('speed-mini-badge');
+  const isOn = plantState.speedMultiplier > 1;
+  if(badge){
+    if(isOn){
+      badge.classList.add('show');
+      badge.innerText = `⏩ x${FIXED_SPEED_MULTIPLIER} · ${formatMMSS(getLiveSpeedBudgetMs())}`;
+    } else {
+      badge.classList.remove('show');
+    }
+  }
+  if(miniBadge){
+    miniBadge.style.display = isOn ? 'flex' : 'none';
   }
 }
+/* 배속 모달이 열려 있을 때 1초마다 실시간으로 다시 그려서 바가 줄어드는 걸 보여줍니다 */
+function updateSpeedModalIfOpen(){
+  const overlay = document.getElementById('global-modal');
+  if(!overlay || overlay.style.display !== 'flex') return;
+  if(!document.getElementById('speed-budget-fill')) return;
+  renderSpeedModalContent();
+}
+function renderSpeedModalContent(){
+  const content = document.getElementById('modal-content-area');
+  if(!content) return;
+  const now = Date.now();
+  const isSpeedOn = plantState.speedMultiplier > 1;
+  const liveBudget = getLiveSpeedBudgetMs(now);
+  const pct = Math.max(0, Math.min(100, (liveBudget / SPEED_BUDGET_TOTAL_MS) * 100));
+  const cooldownMs = getSpeedCooldownRemainingMs(now);
+  const canTurnOn = isSpeedOn || (liveBudget > 0 && cooldownMs <= 0);
+  const speedGuide = isSpeedOn
+    ? '지금 x8 배속으로 자라는 중이에요.'
+    : (canTurnOn
+        ? '지금 바로 x8 배속을 켤 수 있어요.'
+        : `다음 충전까지 ${formatCooldown(cooldownMs)} 남았어요.`);
+  const extraNote = (!isSpeedOn && cooldownMs > 0)
+    ? `1시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`
+    : '배속을 꺼도 남은 시간은 그대로 보존돼요.';
+
+  content.innerHTML = `
+    <div class="modal-title">⏩ 시간 배속</div>
+    <p class="modal-sub">배속은 <b>x8</b> 고정이며, 하루 24시간 중 <b>최대 1시간</b>까지 쓸 수 있어요.</p>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">x8 배속 스위치</div>
+        <div class="modal-opt-sub">${speedGuide}</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="speed-toggle" ${isSpeedOn?'checked':''} ${(!isSpeedOn && !canTurnOn)?'disabled':''} onchange="toggleSpeedMode(this.checked)">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <div class="speed-budget-block">
+      <div class="speed-budget-label">
+        <span>오늘 남은 배속 시간</span>
+        <span id="speed-budget-text">${formatMMSS(liveBudget)}</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill speed-fill" id="speed-budget-fill" style="width:${pct}%"></div></div>
+    </div>
+    <p class="modal-sub" style="margin-top:10px;">${extraNote}</p>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+/* ⏱️ 배지/모달의 남은 시간 표시를 1초마다 갱신 (실제 저장은 여기서 하지 않아요 - 성장 계산용 시각과 분리) */
+setInterval(()=>{
+  if(plantState.isDead) return;
+  refreshSpeedState(Date.now());
+  updateSpeedBadge();
+  updateSpeedModalIfOpen();
+}, 1000);
 
 /* ================= 게임 틱 (현실시간 기반 + 배속 보너스) ================= */
 function gameTick(){
   if(plantState.isDead) return;
 
+  refreshSpeedState(Date.now());
   rollWeatherIfNewDay();
-  resetSpeedBudgetIfNewDay();
   applyWeatherVisual();
   writeDiaryIfNewDay();
 
@@ -1306,20 +1583,8 @@ function gameTick(){
   const elapsedMs = now - plantState.lastRealTick;
   let elapsedDays = elapsedMs / (24*60*60*1000);
 
-  // ⏩ 배속 보너스: 분당 (mult-1)분만큼 추가 시간을 당겨오되, 하루 한도(DAILY_SPEED_BUDGET_MIN)를 넘지 않습니다.
   if(plantState.speedMultiplier > 1 && elapsedMs > 0){
-    const elapsedMin = elapsedMs / 60000;
-    const wantBonusMin = elapsedMin * (plantState.speedMultiplier - 1);
-    const remain = getSpeedBudgetRemaining();
-    const usedBonusMin = Math.min(wantBonusMin, remain);
-    plantState.speedBudgetUsedMin += usedBonusMin;
-    elapsedDays += (usedBonusMin * 60000) / (24*60*60*1000);
-    if(usedBonusMin < wantBonusMin){
-      // 한도 소진 -> 자동으로 1배속 복귀
-      plantState.speedMultiplier = 1;
-      updateSpeedBadge();
-      showInfoToast('⏳ 오늘의 배속 한도를 모두 썼어요! 1배속으로 돌아가요.');
-    }
+    elapsedDays *= FIXED_SPEED_MULTIPLIER;
   }
 
   if(elapsedDays <= 0){ updateUI(); return; }
@@ -1337,8 +1602,9 @@ function gameTick(){
   const rainRelief = w.type === 'rainy' ? 0.5 : 1;
   const dry = (WATER_DRY_PER_DAY[plantState.location] || 10) * elapsedDays * rainRelief * p.dryMul;
   const sunTarget = (SUN_GAIN_PER_DAY[plantState.location] || 8) * w.sunMul;
+  const rainGain = (w.type === 'rainy' && OUTDOOR_RAIN_LOCATIONS.includes(plantState.location)) ? (RAIN_WATER_GAIN_PER_DAY * elapsedDays) : 0;
 
-  plantState.water = clamp(plantState.water - dry, 0, 100);
+  plantState.water = clamp(plantState.water - dry + rainGain, 0, 100);
   plantState.sun = clamp(plantState.sun*Math.pow(0.85, elapsedDays) + sunTarget*elapsedDays, 0, 100);
 
   /* 🩺 죽기 전에 미리 "아파요" 신호를 보내줘요 (표정 변화 + 말풍선 경고, 상태가 나아지면 다시 알려줄 수 있도록 리셋) */
@@ -1467,7 +1733,141 @@ function updateUI(){
   }
 
   updateBasketBadge();
+  updateCoinUI();
+  refreshDailyFreeCoinButton();
   document.getElementById('badword-mini-count').innerText = plantState.badWordCount;
+}
+
+function updateCoinUI(){
+  const coinEl = document.getElementById('coin-total');
+  if(coinEl) coinEl.innerText = Math.floor(plantState.coins || 0);
+}
+function getDailyFreeCoinRemainingMs(){
+  if(!plantState.lastFreeCoinClaimAt) return 0;
+  return Math.max(0, DAILY_FREE_COIN_COOLDOWN_MS - (Date.now() - plantState.lastFreeCoinClaimAt));
+}
+function refreshDailyFreeCoinButton(){
+  const btn = document.getElementById('daily-free-coin-btn');
+  if(!btn) return;
+  btn.classList.toggle('hidden', getDailyFreeCoinRemainingMs() > 0);
+}
+function scheduleNextFloatingCoinTime(baseTs){
+  const base = typeof baseTs === 'number' ? baseTs : Date.now();
+  plantState.nextFloatingCoinAt = base + FLOATING_COIN_MIN_DELAY_MS + Math.random() * (FLOATING_COIN_MAX_DELAY_MS - FLOATING_COIN_MIN_DELAY_MS);
+}
+function initFloatingCoinSystem(){
+  if(typeof plantState.nextFloatingCoinAt !== 'number' || !plantState.nextFloatingCoinAt){
+    scheduleNextFloatingCoinTime();
+    savePlantStateSoft();
+  }
+  clearInterval(initFloatingCoinSystem._timer);
+  initFloatingCoinSystem._timer = setInterval(checkFloatingCoinSpawn, 30 * 1000);
+  checkFloatingCoinSpawn();
+}
+function checkFloatingCoinSpawn(){
+  if(document.hidden || plantState.isDead) return;
+  if(typeof plantState.nextFloatingCoinAt !== 'number' || !plantState.nextFloatingCoinAt){
+    scheduleNextFloatingCoinTime();
+    savePlantStateSoft();
+    return;
+  }
+  if(Date.now() >= plantState.nextFloatingCoinAt){
+    spawnFloatingCoin();
+    scheduleNextFloatingCoinTime();
+    savePlantStateSoft();
+  }
+}
+function spawnFloatingCoin(){
+  const layer = document.getElementById('floating-coin-layer');
+  if(!layer || layer.querySelector('.floating-coin')) return;
+  const coin = document.createElement('button');
+  coin.type = 'button';
+  coin.className = 'floating-coin';
+  coin.innerText = '🪙';
+  coin.style.left = (Math.random() * 68 + 10) + '%';
+  coin.style.top = (Math.random() * 44 + 18) + '%';
+  coin.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    coin.remove();
+    plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + FLOATING_COIN_VALUE);
+    updateCoinUI();
+    showInfoToast(`🪙 랜덤 코인 +${FLOATING_COIN_VALUE}원 획득!`);
+    savePlantStateSoft();
+  });
+  layer.appendChild(coin);
+  setTimeout(()=>{ if(coin.isConnected) coin.remove(); }, 18000);
+}
+function claimDailyFreeCoin(){
+  if(getDailyFreeCoinRemainingMs() > 0) return;
+  const btn = document.getElementById('daily-free-coin-btn');
+  if(btn) btn.classList.add('shake');
+  const reward = Math.floor(Math.random() * (DAILY_FREE_COIN_MAX - DAILY_FREE_COIN_MIN + 1)) + DAILY_FREE_COIN_MIN;
+  setTimeout(()=>{
+    if(btn) btn.classList.remove('shake');
+    plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + reward);
+    plantState.lastFreeCoinClaimAt = Date.now();
+    updateCoinUI();
+    refreshDailyFreeCoinButton();
+    showInfoToast(`🍀 오늘의 무료 코인! +${reward}원 획득했어요!`);
+    savePlantStateSoft();
+  }, 420);
+}
+function renderShopModal(){
+  const coins = Math.floor(plantState.coins || 0);
+  return `
+    <div class="modal-title">🛒 코인 상점</div>
+    <div class="coin-balance-card">보유 코인 · 🪙 ${coins}원</div>
+    <div class="shop-grid">
+      ${SHOP_ITEMS.map(item=>`
+        <div class="shop-card">
+          <span class="shop-card-title">${item.icon} ${item.title}</span>
+          <span class="shop-card-desc">${item.desc}</span>
+          <span class="shop-card-price">${item.cost}원</span>
+          <button class="shop-buy-btn ${item.cost >= 1000 ? 'expensive' : ''}" onclick="buyShopItem('${item.key}')" ${coins < item.cost ? 'disabled' : ''}>구매하기</button>
+        </div>
+      `).join('')}
+    </div>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+function buyShopItem(key){
+  const item = SHOP_ITEMS.find(v=>v.key === key);
+  if(!item) return;
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < item.cost){
+    showInfoToast('🪙 코인이 부족해요!');
+    return;
+  }
+  if(key === 'dehumidifier' && plantState.water <= 15){
+    showInfoToast('💧 지금은 수분제거가 필요 없어요.');
+    return;
+  }
+  plantState.coins = coins - item.cost;
+  if(key === 'nutrient'){
+    plantState.growth = clamp(plantState.growth + 3, 0, 100);
+    plantState.water = clamp(plantState.water + 8, 0, WATER_CAP);
+    plantState.sun = clamp(plantState.sun + 8, 0, 100);
+    showBubble('영양이 쏙쏙 들어와요!');
+  } else if(key === 'dehumidifier'){
+    plantState.water = clamp(plantState.water - 25, 0, 100);
+    showBubble('과한 수분이 정리돼서 한결 가벼워요!');
+  } else if(key === 'sunlight'){
+    plantState.sun = clamp(plantState.sun + 25, 0, 100);
+    showBubble('햇살을 듬뿍 받았어요!');
+  } else if(key === 'growth_booster'){
+    plantState.growth = clamp(plantState.growth + 12, 0, 100);
+    showBubble('쑥쑥 자랄 힘이 생겼어요!');
+  }
+  if(plantState.growth >= 100 && !plantState.isHarvestable){
+    plantState.growth = 100;
+    plantState.isHarvestable = true;
+  }
+  updateUI();
+  renderPlant();
+  checkDeathConditions();
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+  savePlantState();
 }
 
 function updateBasketBadge(){
@@ -1845,20 +2245,10 @@ function openModal(type){
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
   } else if(type === 'speed'){
-    resetSpeedBudgetIfNewDay();
-    const remain = getSpeedBudgetRemaining();
-    content.innerHTML = `
-      <div class="modal-title">⏩ 시간 배속</div>
-      <p class="modal-sub">시간을 빠르게 흘려보내요.<br>오늘 남은 배속 한도: <b>${Math.floor(remain)}분</b> / ${DAILY_SPEED_BUDGET_MIN}분</p>
-      <div class="modal-options-grid">
-        ${SPEED_OPTIONS.map(m=>`
-          <div class="modal-opt-btn ${plantState.speedMultiplier===m?'active':''} ${(m>1 && remain<=0)?'disabled':''}"
-               onclick="${(m>1 && remain<=0) ? '' : `setSpeed(${m})`}">
-            ⏩ x${m}
-          </div>`).join('')}
-      </div>
-      <button class="close-modal-btn" onclick="closeModal()">닫기</button>
-    `;
+    refreshSpeedState(Date.now());
+    renderSpeedModalContent();
+  } else if(type === 'shop'){
+    content.innerHTML = renderShopModal();
   } else if(type === 'basket'){
     content.innerHTML = renderBasketModal();
   } else if(type === 'diary'){
@@ -2300,7 +2690,9 @@ function applyUpdate(){
 
 /* ================= 공유 ================= */
 function shareGarden(){
-  const shareText = `[비밀의 정원] ${nickname} 정원사가 키우는 토마토 "${plantName}"가 ${Math.floor(plantState.growth)}% 자랐어요! 함께 가드닝 해요 🌱`;
+  const shareUrl = 'https://pocket-planter-mu.vercel.app/';
+  const shareText = `[비밀의 정원] ${nickname} 정원사가 키우는 토마토 "${plantName}"가 ${Math.floor(plantState.growth)}% 자랐어요! 함께 가드닝 해요 🌱
+${shareUrl}`;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(shareText).then(()=>{
       alert('클립보드에 복사했어요! 친구에게 공유해보세요 🌿');
@@ -2327,8 +2719,14 @@ function createAmbientLeaves(){
 
 /* ================= 화면 복귀 시 즉시 보정 ================= */
 document.addEventListener('visibilitychange', function(){
-  if(!document.hidden) gameTick();
+  if(!document.hidden){
+    gameTick();
+    checkFloatingCoinSpawn();
+    refreshDailyFreeCoinButton();
+  }
 });
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
