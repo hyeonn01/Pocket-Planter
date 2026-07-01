@@ -51,7 +51,7 @@
 
   .scene-bg{
     position:absolute; inset:0;
-    background-size:cover; background-position:center;
+    background-size:cover; background-position:center bottom;
     transition: filter 1.2s ease, background-image 0.6s ease;
     z-index:0;
   }
@@ -141,7 +141,7 @@
   .sun-fill{ background: linear-gradient(90deg, #ffe49a, #ffc14d); }
 
   .garden-stage{
-    flex:1; position:relative; z-index:5;
+    flex:1; min-height:0; position:relative; z-index:5;
     display:flex; align-items:flex-end; justify-content:center;
     margin:6px 0 4px;
   }
@@ -850,11 +850,13 @@ const WEATHER_TABLE = [
   { type:'cloudy',  label:'⛅ 흐림',   weight:1, growthMul:0.7,  sunMul:0.5 },
   { type:'rainy',   label:'🌧️ 비',     weight:1, growthMul:0.85, sunMul:0.25 }
 ];
+// 🖼️ 배경 이미지를 파일로 분리하지 않고 코드 안에 직접 내장(base64)해서,
+// 별도의 images 폴더 없이도 index.html 파일 하나만으로 항상 정상적으로 보이게 했어요.
 const ENV_BACKGROUNDS = {
-  '테라스':'images/terrace.jpg',
-  '창가':'images/window.jpg',
-  '책상':'images/desk.jpg',
-  '마당':'images/yard.jpg'
+  '테라스':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InRlcnJhY2VTa3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y3ZTNlNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmYmVlZjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InRlcnJhY2VGbG9vciIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYTk3NTRjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzhmNWYzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iNTYwIiBmaWxsPSJ1cmwoI3RlcnJhY2VTa3kpIi8+CgogIDwhLS0g67Cw6rK9IOuCmOustOuTpCAtLT4KICA8ZyBvcGFjaXR5PSIwLjg1Ij4KICAgIDxjaXJjbGUgY3g9IjMwIiBjeT0iMjMwIiByPSI4MCIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMjU1IiByPSI5NSIgZmlsbD0iIzdmYmI4MCIvPgogICAgPGNpcmNsZSBjeD0iMjUwIiBjeT0iMjUwIiByPSIxMDAiIGZpbGw9IiM4ZmM3OGYiLz4KICAgIDxjaXJjbGUgY3g9IjM3MCIgY3k9IjIzNSIgcj0iODAiIGZpbGw9IiM3ZmJiODAiLz4KICA8L2c+CiAgPHJlY3QgeD0iMCIgeT0iMzMwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIzMCIgZmlsbD0iI2ZiZWVmMCIvPgogIDxyZWN0IHg9IjAiIHk9IjMzMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIyMzAiIGZpbGw9IiM4ZmM3OGYiIG9wYWNpdHk9IjAuMjgiLz4KCiAgPCEtLSDsobDrqoUg7KSEIC0tPgogIDxwYXRoIGQ9Ik0tMTAsNTAgUTEwMCwxMTAgMjEwLDU1IFEzMjAsMCA0MTAsNjAiIHN0cm9rZT0iI2Q5YjZhMyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjciLz4KICA8ZyBmaWxsPSIjZmZlMDhhIj4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iNTYiIHI9IjUiLz48Y2lyY2xlIGN4PSI2MCIgY3k9IjgyIiByPSI1Ii8+PGNpcmNsZSBjeD0iMTEwIiBjeT0iOTgiIHI9IjUiLz4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9Ijg4IiByPSI1Ii8+PGNpcmNsZSBjeD0iMjEwIiBjeT0iNTgiIHI9IjUiLz48Y2lyY2xlIGN4PSIyNjAiIGN5PSIzMCIgcj0iNSIvPgogICAgPGNpcmNsZSBjeD0iMzEwIiBjeT0iMjQiIHI9IjUiLz48Y2lyY2xlIGN4PSIzNjAiIGN5PSI0MCIgcj0iNSIvPgogIDwvZz4KCiAgPCEtLSDrgpjrrLQg67CU64ulIC0tPgogIDxyZWN0IHg9IjAiIHk9IjU1NSIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIyNDUiIGZpbGw9InVybCgjdGVycmFjZUZsb29yKSIvPgogIDxnIHN0cm9rZT0iIzdhNGQyZSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjYiPgogICAgPGxpbmUgeDE9IjAiIHkxPSI2MDAiIHgyPSI0MDAiIHkyPSI2MDAiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iNjUwIiB4Mj0iNDAwIiB5Mj0iNjUwIi8+CiAgICA8bGluZSB4MT0iMCIgeTE9IjcwMCIgeDI9IjQwMCIgeTI9IjcwMCIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSI3NTAiIHgyPSI0MDAiIHkyPSI3NTAiLz4KICAgIDxsaW5lIHgxPSI5MCIgeTE9IjU1NSIgeDI9IjkwIiB5Mj0iODAwIi8+CiAgICA8bGluZSB4MT0iMjIwIiB5MT0iNTU1IiB4Mj0iMjIwIiB5Mj0iODAwIi8+CiAgICA8bGluZSB4MT0iMzIwIiB5MT0iNTU1IiB4Mj0iMzIwIiB5Mj0iODAwIi8+CiAgPC9nPgoKCiAgPCEtLSDsmbzsqr0g7IaM7YyMIOyLpOujqOyXoyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDAsNDcwKSI+CiAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSI3MCIgcng9IjE4IiBmaWxsPSIjZGZlNmVhIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjQ1IiByeD0iMTgiIGZpbGw9IiNlZWYyZjQiLz4KICAgIDxjaXJjbGUgY3g9IjMwIiBjeT0iMzAiIHI9IjIwIiBmaWxsPSIjZjZjOWM5Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIzMCIgcj0iMjAiIGZpbGw9IiNmZmU2YjgiLz4KICA8L2c+CgogIDwhLS0g7LSb67aIIC0tPgogIDxnIGZpbGw9IiNmZmU5YTgiIG9wYWNpdHk9IjAuOSI+CiAgICA8ZWxsaXBzZSBjeD0iMzQ1IiBjeT0iNjEyIiByeD0iMTAiIHJ5PSIxNCIgb3BhY2l0eT0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMzQ1IiBjeT0iNjEyIiByeD0iNSIgcnk9IjgiLz4KICA8L2c+Cjwvc3ZnPgo=',
+  '창가':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbldhbGwiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZiZTNjZCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmNmQ1YjgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbkZsb29yIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjOTlhNzEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYTk3YzU2Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9InVybCgjd2luV2FsbCkiLz4KCiAgPCEtLSDssL3rrLgg7ZSE66CI7J6EIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYwLDkwKSI+CiAgICA8cmVjdCB4PSItMTQiIHk9Ii0xNCIgd2lkdGg9IjMwOCIgaGVpZ2h0PSIzNTgiIHJ4PSI2IiBmaWxsPSIjZmZmZmZmIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjMzMCIgZmlsbD0iI2RjZWRmMyIvPgogICAgPCEtLSDtlZjripggLS0+CiAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2RjZWRmMyIvPgogICAgPCEtLSDsiJjtkoAgLS0+CiAgICA8cGF0aCBkPSJNMCwzMzAgTDAsMjMwIFEzNSwyMDUgNzAsMjI1IFE5NSwxOTAgMTMwLDIyMCBRMTYwLDE5NSAxOTAsMjIyIFEyMjAsMTk4IDI1MCwyMjQgUTI2NSwyMTUgMjgwLDIyMCBMMjgwLDMzMCBaIiBmaWxsPSIjYTljZjdlIi8+CiAgICA8cGF0aCBkPSJNMCwzMzAgTDAsMjcwIFE0MCwyNTAgODAsMjY4IFExMjAsMjQ4IDE2MCwyNjggUTIwMCwyNDYgMjQwLDI2OCBRMjYwLDI1OCAyODAsMjY0IEwyODAsMzMwIFoiIGZpbGw9IiM5M2JkNjgiLz4KICAgIDwhLS0g7LC97YuAIOyLreyekCAtLT4KICAgIDxyZWN0IHg9IjEzMiIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjMzMCIgZmlsbD0iI2ZmZmZmZiIvPgogICAgPHJlY3QgeD0iMCIgeT0iMTU3IiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE2IiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgoKICA8IS0tIOywve2LgCDslYTrnpgg7YSxKHNpbGwpIC0tPgogIDxyZWN0IHg9IjAiIHk9IjQ0MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMCIgZmlsbD0iI2YwY2VhZSIvPgogIDxyZWN0IHg9IjAiIHk9IjQ0MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI2IiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjYiLz4KCiAgPCEtLSDrsJTri6UgLS0+CiAgPHJlY3QgeD0iMCIgeT0iNTYwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI0MCIgZmlsbD0idXJsKCN3aW5GbG9vcikiLz4KICA8cmVjdCB4PSIwIiB5PSI1NjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iOCIgZmlsbD0iIzhhNjE0MiIvPgoKPC9zdmc+Cg==',
+  '책상':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImRlc2tXYWxsIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjM2VjYzQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYTlkZmFlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJkZXNrVG9wIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmN2VjZGQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZWVkZGM0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1NjAiIGZpbGw9InVybCgjZGVza1dhbGwpIi8+CiAgPHJlY3QgeD0iMCIgeT0iNTQwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjOThjZjlkIi8+CgogIDwhLS0g7LGF7IOBIOyDge2MkCAtLT4KICA8cmVjdCB4PSIwIiB5PSI1NTUiIHdpZHRoPSI0MDAiIGhlaWdodD0iMjQ1IiBmaWxsPSJ1cmwoI2Rlc2tUb3ApIi8+CiAgPHJlY3QgeD0iMCIgeT0iNTU1IiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSDssYXsg4Eg7ISc656NIOu4lOuhnSAtLT4KICA8cmVjdCB4PSIxMjAiIHk9IjY5MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxMTAiIGZpbGw9IiNlMmNiYTkiLz4KICA8cmVjdCB4PSIxMjAiIHk9IjY5MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI2IiBmaWxsPSIjZDZiZDk3Ii8+CiAgPHJlY3QgeD0iMTgwIiB5PSI3MjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iI2MzYTk3ZSIvPgoKCiAgPCEtLSDsnpHsnYAg64uk7Jyh7Iud66y8IO2ZlOu2hCAo7Jm87Kq9IOq1rOyEnSkgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDgsNTY1KSI+CiAgICA8cmVjdCB4PSItMTYiIHk9IjEwIiB3aWR0aD0iMzIiIGhlaWdodD0iMjQiIHJ4PSI0IiBmaWxsPSIjNmI0YTM0Ii8+CiAgICA8cGF0aCBkPSJNMCwtNiBDIC0xMiwtMiAtMTAsMTQgMCwxMCBDIDEwLDE0IDEyLC0yIDAsLTYgWiIgZmlsbD0iIzRjOGE1YSIvPgogICAgPHBhdGggZD0iTS00LC0xNCBDIC0xNCwtMTAgLTEyLDQgLTIsMiBDIC02LC02IC04LC0xMiAtNCwtMTQgWiIgZmlsbD0iIzVmYWU2YyIvPgogICAgPHBhdGggZD0iTTQsLTE0IEMgMTQsLTEwIDEyLDQgMiwyIEMgNiwtNiA4LC0xMiA0LC0xNCBaIiBmaWxsPSIjNWZhZTZjIi8+CiAgPC9nPgoKICA8IS0tIOuFuO2KuOyZgCDtjpwgKOyYpOuluOyqvSDqtazshJ0pIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMzMCw1NzIpIj4KICAgIDxyZWN0IHg9Ii0yNiIgeT0iMCIgd2lkdGg9IjUyIiBoZWlnaHQ9IjM2IiByeD0iMyIgZmlsbD0iIzVmYWU2YyIgdHJhbnNmb3JtPSJyb3RhdGUoLTYpIi8+CiAgICA8cmVjdCB4PSItMjIiIHk9IjQiIHdpZHRoPSI0NCIgaGVpZ2h0PSIyOCIgcng9IjIiIGZpbGw9IiM3ZmNmOGMiIHRyYW5zZm9ybT0icm90YXRlKC02KSIvPgogICAgPHJlY3QgeD0iMTAiIHk9Ii0xMCIgd2lkdGg9IjYiIGhlaWdodD0iNDIiIHJ4PSIzIiBmaWxsPSIjNGM3ZmFlIiB0cmFuc2Zvcm09InJvdGF0ZSgxOCkiLz4KICA8L2c+Cjwvc3ZnPgo=',
+  '마당':'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAwIDgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1heCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRTa3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2JmZTNmNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkY2YwZjciLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InlhcmRHcmFzcyIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYjhkZDhjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlkY2I3MiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAiIGhlaWdodD0iODAwIiBmaWxsPSJ1cmwoI3lhcmRTa3kpIi8+CgogIDwhLS0g6rWs66aEIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuOSI+CiAgICA8ZWxsaXBzZSBjeD0iODAiIGN5PSI5MCIgcng9IjQyIiByeT0iMTgiLz4KICAgIDxlbGxpcHNlIGN4PSIxMTUiIGN5PSI4MCIgcng9IjMwIiByeT0iMTYiLz4KICAgIDxlbGxpcHNlIGN4PSIzMDAiIGN5PSIxMzAiIHJ4PSIzNiIgcnk9IjE1Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMzMwIiBjeT0iMTIwIiByeD0iMjQiIHJ5PSIxMyIvPgogIDwvZz4KCiAgPCEtLSDsp5EgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjMwLDEyMCkiPgogICAgPHJlY3QgeD0iMCIgeT0iNDAiIHdpZHRoPSIxNzAiIGhlaWdodD0iMjcwIiBmaWxsPSIjZjRlZGUxIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSIxNiIgZmlsbD0iI2M4YTk3ZSIvPgogICAgPHJlY3QgeD0iMTUiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjMwIiBmaWxsPSIjYmZlM2Y1Ii8+CiAgICA8cmVjdCB4PSIxNSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIyMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgICA8bGluZSB4MT0iNDUiIHkxPSI3MCIgeDI9IjQ1IiB5Mj0iMzAwIiBzdHJva2U9IiNjOGE5N2UiIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iMTg1IiB4Mj0iNzUiIHkyPSIxODUiIHN0cm9rZT0iI2M4YTk3ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSI5NSIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNiZmUzZjUiLz4KICAgIDxyZWN0IHg9Ijk1IiB5PSI3MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjQiLz4KICAgIDxsaW5lIHgxPSIxMjUiIHkxPSI3MCIgeDI9IjEyNSIgeTI9IjE5MCIgc3Ryb2tlPSIjYzhhOTdlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8L2c+CgogIDwhLS0g7Jm87Kq9IOuCmOustCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0NSwyNzApIj4KICAgIDxyZWN0IHg9Ii05IiB5PSIwIiB3aWR0aD0iMTgiIGhlaWdodD0iOTAiIGZpbGw9IiM4YTVhMzQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSItMzAiIHI9IjcwIiBmaWxsPSIjN2ZiYjgwIi8+CiAgICA8Y2lyY2xlIGN4PSItNDUiIGN5PSIwIiByPSI0MiIgZmlsbD0iIzhmYzc4ZiIvPgogICAgPGNpcmNsZSBjeD0iNDUiIGN5PSIwIiByPSI0MiIgZmlsbD0iIzhmYzc4ZiIvPgogIDwvZz4KCiAgPCEtLSDtnbAg7Jq47YOA66asIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2UyZTJlMiIgc3Ryb2tlLXdpZHRoPSIxLjUiPgogICAgPHJlY3QgeD0iMCIgeT0iNDE4IiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwIi8+CiAgICA8cmVjdCB4PSIwIiB5PSI0NDAiIHdpZHRoPSI0MDAiIGhlaWdodD0iOCIvPgogICAgPGcgaWQ9InBpY2tldCI+CiAgICAgIDxyZWN0IHg9IjAiIHk9IjQwMCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjU1IiByeD0iMiIvPgogICAgPC9nPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIxMCIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iNDUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjgwIi8+CiAgICA8dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjExNSIvPjx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMTUwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIxODUiLz4KICAgIDx1c2UgaHJlZj0iI3BpY2tldCIgeD0iMjIwIi8+PHVzZSBocmVmPSIjcGlja2V0IiB4PSIyNTUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjI5MCIvPgogICAgPHVzZSBocmVmPSIjcGlja2V0IiB4PSIzMjUiLz48dXNlIGhyZWY9IiNwaWNrZXQiIHg9IjM2MCIvPgogIDwvZz4KCiAgPCEtLSDsnpTrlJQgLS0+CiAgPHJlY3QgeD0iMCIgeT0iNDUyIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjM0OCIgZmlsbD0idXJsKCN5YXJkR3Jhc3MpIi8+CiAgPGcgZmlsbD0iIzg5Yjg2OSIgb3BhY2l0eT0iMC41NSI+CiAgICA8ZWxsaXBzZSBjeD0iNjAiIGN5PSI1MjAiIHJ4PSIzMCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIzMzAiIGN5PSI1NjAiIHJ4PSIzNCIgcnk9IjgiLz4KICAgIDxlbGxpcHNlIGN4PSIxNjAiIGN5PSI3MDAiIHJ4PSI0MCIgcnk9IjkiLz4KICAgIDxlbGxpcHNlIGN4PSIzMjAiIGN5PSI3NDAiIHJ4PSIzMCIgcnk9IjgiLz4KICA8L2c+Cgo8L3N2Zz4K'
 };
 const WATER_CAP = 96;
 
@@ -1104,16 +1106,18 @@ function writeDiaryIfNewDay(){
   let mainPool;
   if(plantState.stats.currentRunHadBadWord){
     mainPool = lines.badword;
-    plantState.stats.currentRunHadBadWord = false;
   } else if(plantState.stats.talkedToday){
     mainPool = lines.talk;
-    plantState.stats.talkedToday = false;
   } else if(plantState.stats.wateredToday){
     mainPool = lines.water;
-    plantState.stats.wateredToday = false;
   } else {
     mainPool = weatherPool;
   }
+  // 🛠️ 오늘 있었던 이벤트 플래그는 일기를 쓴 뒤 전부 초기화해야
+  // 다음날 일기에 어제 있었던 일(예: 나쁜 말)이 잘못 이어져 쓰이지 않아요
+  plantState.stats.currentRunHadBadWord = false;
+  plantState.stats.talkedToday = false;
+  plantState.stats.wateredToday = false;
 
   // 📝 성격별 문장 풀을 조합해서 3~4줄짜리 일기를 만들어요 (같은 문장이 겹치지 않게)
   const used = new Set();
@@ -1128,7 +1132,9 @@ function writeDiaryIfNewDay(){
   addLine(mainPool);
   if(mainPool !== weatherPool) addLine(weatherPool);
   addLine(lines.default);
-  addLine(mainPool !== weatherPool ? mainPool : lines.talk);
+  // 🛠️ 오늘 특별한 일이 없었다면(=mainPool이 날씨 문장과 같다면) 실제로 없었던
+  // "대화" 문장을 억지로 넣지 않고, 마무리 문장을 하나 더 자연스럽게 이어줘요
+  addLine(mainPool !== weatherPool ? mainPool : lines.default);
 
   const d = new Date();
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
@@ -1560,6 +1566,12 @@ function buildPotFace(){
             <path class="pot-face-mouth" d="M${cx+eyeDX-3},${eyeY} l 6,0" />`;
     mouth = `<ellipse class="pot-face-eye" cx="${cx}" cy="${cy+8}" rx="3.4" ry="2.6"/>`;
     extra = `<ellipse class="pot-face-sweat" cx="${cx+17}" cy="${cy-7}" rx="2" ry="3"/><ellipse class="pot-face-sweat" cx="${cx-17}" cy="${cy-6}" rx="1.6" ry="2.4"/>`;
+  } else if(mood === 'angry'){
+    /* 💢 너무 많이 쓰다듬어서 화가 났을 때 */
+    eyes = `<path class="pot-face-mouth" d="M${cx-eyeDX-4},${eyeY-4} l 7,3" />
+            <path class="pot-face-mouth" d="M${cx+eyeDX+3},${eyeY-4} l -7,3" />`;
+    mouth = `<path class="pot-face-mouth" d="M${cx-6},${cy+9} q 6,-4 12,0" />`;
+    extra = `<path class="pot-face-mouth" d="M${cx+16},${cy-14} l 5,-3 m -5,0 l 5,3 m -8,-1 l 4,-4 m -4,0 l 4,4" style="stroke:var(--tomato); stroke-width:1.6;"/>`;
   } else {
     eyes = `<circle class="pot-face-eye" cx="${cx-eyeDX}" cy="${eyeY}" r="1.8"/>
             <circle class="pot-face-eye" cx="${cx+eyeDX}" cy="${eyeY}" r="1.8"/>`;
@@ -1611,7 +1623,10 @@ fruits += `      <g transform="translate(${fx},${fy})">         <circle r="${r}"
         ${fruitRipe ?`<ellipse cx="${-r*0.3}" cy="${-r*0.3}" rx="${r*0.25}" ry="${r*0.15}" fill="rgba(255,255,255,0.35)"/>` : ''}       </g>`;
 }
 
+let groundShadow = `     <ellipse cx="100" cy="243" rx="48" ry="8" fill="#000000" opacity="0.16"/>`;
+
 return `     <g transform="translate(0,-70)">
+      ${groundShadow}
       ${pot}
       ${seedStage}
       ${stem}
@@ -1667,18 +1682,19 @@ function petPlant(){
   setTimeout(()=>{ svg.classList.remove('pet-shake'); svg.classList.add('sway'); }, 600);
 
   // 💚 만졌을 때 잠깐 기분 좋은 표정으로 바뀌었다가 원래 상태로 돌아와요
+  // 💢 단, 너무 많이(7번 이상 연속) 만지면 화난 표정으로 바뀌어요
+  const willBeTooMuch = petCount >= 7;
   if(!plantState.isHarvestable){
-    tempMoodOverride = 'pleased';
+    tempMoodOverride = willBeTooMuch ? 'angry' : 'pleased';
     renderPlant();
     clearTimeout(petPlant._moodTimer);
-    petPlant._moodTimer = setTimeout(()=>{ tempMoodOverride = null; renderPlant(); }, 1800);
+    petPlant._moodTimer = setTimeout(()=>{ tempMoodOverride = null; renderPlant(); }, willBeTooMuch ? 2200 : 1800);
   }
 
-  showBubble("정원사님의 따뜻한 손길! 💚");
+  showBubble(willBeTooMuch ? "너무 많이 만지지 마세요! 💢" : "정원사님의 따뜻한 손길! 💚");
 
   clearTimeout(petResetTimer);
   if(petCount >= 7){
-    showBubble("너무 많이 만져서 살짝 피곤해요! 💢");
     petCount = 0;
   } else {
     petResetTimer = setTimeout(()=>{ petCount = 0; }, 3000);
