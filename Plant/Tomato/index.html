@@ -116,7 +116,10 @@
     color:#8a5a00; box-shadow:0 2px 8px rgba(160,120,20,0.14);
     font-weight:800;
   }
-  .coin-chip-icon{ font-size:13px; }
+  .coin-icon{
+    width:1em; height:1em; display:inline-block;
+    vertical-align:-0.15em; flex-shrink:0;
+  }
 
   .floating-coin-layer{
     position:absolute; inset:0; z-index:9; pointer-events:none; overflow:hidden;
@@ -145,7 +148,7 @@
   }
 
   .utility-actions{
-    position:absolute; top:34px; left:6px; z-index:7; display:flex; gap:8px;
+    position:absolute; top:6px; left:6px; z-index:7; display:flex; gap:8px;
   }
   .utility-icon-btn{
     width:36px; height:36px; border:none; border-radius:50%;
@@ -323,7 +326,7 @@
   }
 
   .speed-badge{
-    position:absolute; top:6px; left:6px;
+    position:absolute; top:48px; left:6px;
     background:rgba(255,193,77,0.92); padding:4px 9px;
     border-radius:999px; font-size:10.5px; font-weight:800; z-index:7;
     color:#7a4d00; white-space:nowrap; display:none;
@@ -671,6 +674,16 @@
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="coinGrad" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#fff7b1"/>
+      <stop offset="45%" stop-color="#ffd54f"/>
+      <stop offset="100%" stop-color="#f5b300"/>
+    </radialGradient>
+  </defs>
+</svg>
+
 <div class="game-container" id="game-container">
   <div class="scene-bg" id="scene-bg"></div>
   <div class="scene-dim" id="scene-dim"></div>
@@ -711,7 +724,7 @@
   <div class="status-bar">
     <span id="game-date-display">2026.01.01 (1일차)</span>
     <div class="status-bar-right">
-      <span class="coin-chip" id="coin-chip"><span class="coin-chip-icon">🪙</span><span id="coin-total">0</span></span>
+      <span class="coin-chip" id="coin-chip"><svg class="coin-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="url(#coinGrad)" stroke="#c98a00" stroke-width="1.3"/><text x="12" y="16.3" text-anchor="middle" font-size="12" font-weight="900" fill="#8a5a00">₩</text></svg><span id="coin-total">0</span></span>
       <span class="weather-chip" id="weather-chip">☀️ 맑음</span>
     </div>
   </div>
@@ -1485,13 +1498,13 @@ function toggleSpeedMode(enabled){
     }
     plantState.speedMultiplier = FIXED_SPEED_MULTIPLIER;
     plantState.speedCheckpoint = now;
-    showBubble(`⏩ x${FIXED_SPEED_MULTIPLIER} 배속 시작!`);
+    showBubble(`⏩ 배속 시작!`);
   } else {
     // 지금까지 사용한 만큼만 예산에서 확정해서 차감하고 끕니다 (남은 시간은 계속 보존됨)
     plantState.speedBudgetMs = getLiveSpeedBudgetMs(now);
     plantState.speedMultiplier = 1;
     plantState.speedCheckpoint = null;
-    showInfoToast('⏸️ x8 배속을 껐어요.');
+    showInfoToast('⏸ 배속을 껐어요.');
   }
   updateSpeedBadge();
   savePlantState();
@@ -1530,9 +1543,9 @@ function renderSpeedModalContent(){
   const cooldownMs = getSpeedCooldownRemainingMs(now);
   const canTurnOn = isSpeedOn || (liveBudget > 0 && cooldownMs <= 0);
   const speedGuide = isSpeedOn
-    ? '지금 x8 배속으로 자라는 중이에요.'
+    ? '더 빨리 자라는 중이에요.'
     : (canTurnOn
-        ? '지금 바로 x8 배속을 켤 수 있어요.'
+        ? '지금 바로 배속을 켤 수 있어요.'
         : `다음 충전까지 ${formatCooldown(cooldownMs)} 남았어요.`);
   const extraNote = (!isSpeedOn && cooldownMs > 0)
     ? `1시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`
@@ -1540,10 +1553,10 @@ function renderSpeedModalContent(){
 
   content.innerHTML = `
     <div class="modal-title">⏩ 시간 배속</div>
-    <p class="modal-sub">배속은 <b>x8</b> 고정이며, 하루 24시간 중 <b>최대 1시간</b>까지 쓸 수 있어요.</p>
+    <p class="modal-sub">배속은 하루 24시간 중 <b>최대 1시간</b>까지 쓸 수 있어요.</p>
     <div class="setting-row">
       <div>
-        <div class="setting-label">x8 배속 스위치</div>
+        <div class="setting-label"> 배속 스위치</div>
         <div class="modal-opt-sub">${speedGuide}</div>
       </div>
       <label class="switch">
@@ -1783,7 +1796,7 @@ function spawnFloatingCoin(){
   const coin = document.createElement('button');
   coin.type = 'button';
   coin.className = 'floating-coin';
-  coin.innerText = '🪙';
+  coin.innerText = '₩';
   coin.style.left = (Math.random() * 68 + 10) + '%';
   coin.style.top = (Math.random() * 44 + 18) + '%';
   coin.addEventListener('click', function(ev){
@@ -1791,7 +1804,7 @@ function spawnFloatingCoin(){
     coin.remove();
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + FLOATING_COIN_VALUE);
     updateCoinUI();
-    showInfoToast(`🪙 랜덤 코인 +${FLOATING_COIN_VALUE}원 획득!`);
+    showInfoToast(`${COIN_ICON_HTML} 랜덤 코인 +${FLOATING_COIN_VALUE}원 획득!`);
     savePlantStateSoft();
   });
   layer.appendChild(coin);
@@ -1816,7 +1829,7 @@ function renderShopModal(){
   const coins = Math.floor(plantState.coins || 0);
   return `
     <div class="modal-title">🛒 코인 상점</div>
-    <div class="coin-balance-card">보유 코인 · 🪙 ${coins}원</div>
+    <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
     <div class="shop-grid">
       ${SHOP_ITEMS.map(item=>`
         <div class="shop-card">
@@ -1835,7 +1848,7 @@ function buyShopItem(key){
   if(!item) return;
   const coins = Math.floor(plantState.coins || 0);
   if(coins < item.cost){
-    showInfoToast('🪙 코인이 부족해요!');
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
     return;
   }
   if(key === 'dehumidifier' && plantState.water <= 15){
@@ -2101,10 +2114,13 @@ function petPlant(){
   }
 }
 
+/* 🪙 상태바 코인칩과 통일된 금화 아이콘(마크업) — 토스트/모달 등 텍스트 삽입용 */
+const COIN_ICON_HTML = '<svg class="coin-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="url(#coinGrad)" stroke="#c98a00" stroke-width="1.3"/><text x="12" y="16.3" text-anchor="middle" font-size="12" font-weight="900" fill="#8a5a00">₩</text></svg>';
+
 /* ℹ️ 캐릭터가 말하는 게 아닌, 시스템 안내 메시지용 토스트 */
 function showInfoToast(msg){
   const toast = document.getElementById('info-toast');
-  document.getElementById('info-toast-text').innerText = msg;
+  document.getElementById('info-toast-text').innerHTML = msg;
   toast.classList.add('show');
   clearTimeout(showInfoToast._t);
   showInfoToast._t = setTimeout(()=>{ toast.classList.remove('show'); }, 2600);
@@ -2116,7 +2132,7 @@ function showBubble(msg){
   bubble.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showBubble._t);
-  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 5000);
+  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 7000);
 }
 
 /* 🤔 식물이 답변을 "생각 중"일 때 — 점 3개가 움직이는 말풍선을 계속 띄워둡니다 (자동으로 사라지지 않음) */
