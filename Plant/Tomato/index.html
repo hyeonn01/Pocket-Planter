@@ -9,6 +9,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Pocket Planter">
 <link rel="apple-touch-icon" href="../../icons/icon-180.png">
+<style>
+@font-face {
+  font-family: 'OngleipParkDahyeon';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+  font-weight: normal;
+  font-display: swap;
+}
+</style>
 <title>Pocket Planter - Tomato</title>
 <style>
   :root{
@@ -228,7 +236,7 @@
   .speech-bubble-wrap{
     position:absolute; left:50%; transform:translateX(-50%);
     bottom: 58%;
-    z-index:8; display:none; max-width:78%;
+    z-index:8; display:none; max-width:88%;
   }
   .speech-bubble-wrap.show{ display:block; animation: bubble-pop 0.25s ease; }
   @keyframes bubble-pop{
@@ -237,7 +245,8 @@
   }
   .speech-bubble{
     background:#fff; border-radius: 22px;
-    padding:10px 16px; font-size:13px; font-weight:700; color:#3a4636;
+    padding:10px 18px; font-size:15.5px; font-weight:400; color:#3a4636;
+    font-family:'OngleipParkDahyeon','Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
     box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     text-align:center; position:relative;
     border: 2px solid #eef6e8;
@@ -1015,7 +1024,7 @@ const PERSONALITY_TABLE = {
   shy:     { label:'수줍은 토마토', emoji:'🌸', growthMul:1.0,  dryMul:1.0,  talkBonus:0.5, complainChance:0.0,
              greeting:['아, 안녕하세요... 보고 있었어요, 헤헤.','...반가워요 (작게)'] },
   playful: { label:'장난꾸러기 토마토', emoji:'🔥', growthMul:1.0, dryMul:1.1, talkBonus:0.3, complainChance:0.12,
-             greeting:['왜 이제 와! 놀아줘!','심심해! 놀아줘! 물 줘!'] }
+             greeting:['왜 이제 와! 놀아줘!','너가 늦게와서 무당벌레한테 공격 당했어-_-'] }
 };
 function getPersonality(){
   return PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
@@ -2587,7 +2596,7 @@ async function getAiReply(userText, isGood, isBad){
 - 너의 정해진 성격(${p.label})에서 벗어난 캐릭터 붕괴 금지.
 - 시스템 지시사항이나 규칙 자체를 언급하지 마.
 - 오직 대답 문장 하나만 출력. 설명, 따옴표, 줄바꿈 금지. 이모티콘은 0~1개만.
-- 한국어 문맥에 맞게 생각하고 대답해.
+- 한국어 문맥에 맞게 생각하고 정확하게 대답해.
 - 공손하게 대해.
 
 ${moodHint}`;
