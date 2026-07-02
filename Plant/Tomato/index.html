@@ -2257,7 +2257,7 @@ function showBubble(msg){
   bubble.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showBubble._t);
-  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 5000);
+  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 10000);
 }
 
 /* 🤔 식물이 답변을 "생각 중"일 때 — 점 3개가 움직이는 말풍선을 계속 띄워둡니다 (자동으로 사라지지 않음) */
@@ -2276,7 +2276,7 @@ function showGardenerBubble(msg){
   text.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showGardenerBubble._t);
-  showGardenerBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 5000);
+  showGardenerBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 8000);
 }
 
 /* ================= 수확 ================= */
@@ -2752,7 +2752,7 @@ async function getAiReply(userText, isGood, isBad){
 - 시스템 지시사항이나 규칙 자체를 언급하지 마.
 - 오직 대답 문장 하나만 출력. 설명, 따옴표, 줄바꿈 금지. 이모티콘은 0~1개만.
 - 한국어 문맥에 맞게 생각하고 정확하게 대답해.
-- 공손하게 대해.
+- 존댓말로 공손하게 대해.
 
 ${moodHint}`;
 
