@@ -197,23 +197,23 @@
   .shop-buy-btn:disabled{ background:#c8d6c5; color:#6f7a6d; cursor:not-allowed; }
 
   .dashboard{
-    position:relative; z-index:6;
+    position:relative; z-index:6; flex-shrink:0;
     background: rgba(255,255,255,0.94);
-    border-radius:20px; margin:10px 14px 0; padding:14px 14px 12px;
+    border-radius:18px; margin:8px 14px 0; padding:10px 14px 9px;
     box-shadow: var(--shadow-soft);
     border:1px solid rgba(60,100,60,0.05);
   }
   .info-header{
     display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:10px; font-size:13.5px; font-weight:800; color:var(--leaf-deep);
+    margin-bottom:7px; font-size:13px; font-weight:800; color:var(--leaf-deep);
   }
   .info-header > div:first-child{ display:flex; align-items:center; gap:5px; }
   .plant-name-pill{
     background:#fff0ea; color:var(--tomato-deep);
-    padding:4px 10px; border-radius:999px; font-size:11.5px;
+    padding:3px 9px; border-radius:999px; font-size:11px;
   }
   .status-row{
-    display:flex; align-items:center; font-size:12px; margin:6px 0; color:var(--ink-soft); gap:8px;
+    display:flex; align-items:center; font-size:11.5px; margin:4px 0; color:var(--ink-soft); gap:8px;
   }
   .status-row > span:first-child{ flex-shrink:0; white-space:nowrap; width:88px; }
   .progress-bar-bg{
@@ -228,7 +228,7 @@
   .sun-fill{ background: linear-gradient(90deg, #ffe49a, #ffc14d); }
   .speed-fill{ background: linear-gradient(90deg, #ffcf7a, #ff9a3c); transition: width 0.4s linear; }
 
-  .daily-mission-row{ display:flex; gap:7px; margin-top:9px; }
+  .daily-mission-row{ display:flex; gap:7px; margin-top:6px; }
   .mission-chip{
     flex:1; text-align:center; background:var(--card-soft); border:1.5px solid #e1f0d8;
     border-radius:999px; padding:5px 6px; font-size:10.5px; font-weight:700; color:#4a5d44;
@@ -242,7 +242,8 @@
   .garden-stage{
     flex:1; min-height:0; position:relative; z-index:5;
     display:flex; align-items:flex-end; justify-content:center;
-    margin:6px 0 4px;
+    margin:4px 0 2px;
+    overflow:hidden;
   }
   .speech-bubble-wrap{
     position:absolute; left:50%; transform:translateX(-50%);
@@ -299,9 +300,9 @@
   .gardener-bubble .who{ flex-shrink:0; font-size:15px; }
 
   .plant-stage-svg{
-    width: 78%;
-    max-width: 230px;
-    height: auto;
+    width: auto;
+    max-width: 82%;
+    height: clamp(120px, 30dvh, 230px);
     transform-origin: bottom center;
   }
   .plant-stage-svg.sway{
@@ -521,6 +522,8 @@
   .action-btn.pastel-mint{ background:#d9f5e2; color:#2f7a49; }
   .action-btn.pastel-sky{ background:#dcedfc; color:#2d6fa3; }
   .action-btn.pastel-rose{ background:#fbdede; color:#a13f3f; }
+  .action-btn.pastel-orange{ background:#ffe4cc; color:#a15a1f; }
+  .action-btn.pastel-yellow{ background:#fff3c4; color:#9a7a10; }
 
   .close-modal-btn{
     display:block; margin:8px auto 0; background:#e4ece2; color:#46583f;
@@ -658,25 +661,41 @@
   }
   .info-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* 🌱🌱 식물 탭 (최대 2개까지 함께 키우기) */
+  /* 🌱🌱🌱 식물 캐러셀 (최대 3개까지 함께 키우기) — 가운데 이름칸 + 양옆 화살표, 스와이프로도 전환 가능 */
   .plant-tab-bar{
-    position:relative; z-index:6; display:flex; gap:7px;
+    position:relative; z-index:6;
+    display:flex; align-items:center; justify-content:center; gap:12px;
     padding: 8px 14px 0;
+    touch-action: pan-y;
   }
-  .plant-tab{
-    flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
-    background:rgba(255,255,255,0.65); border:1.5px solid transparent;
-    border-radius:13px; padding:7px 6px; font-size:11.5px; font-weight:800;
-    color:#5a6c54; cursor:pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  .plant-carousel-arrow{
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    background:#fffaf0; color:#b7c9ae;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:900; line-height:1; cursor:pointer;
+    border:1.5px solid rgba(255,255,255,0.9);
+    box-shadow:0 4px 10px rgba(70,110,70,0.12);
+    transition: transform 0.1s;
+  }
+  .plant-carousel-arrow:active{ transform:scale(0.88); }
+  .plant-carousel-pill{
+    flex:0 1 auto; max-width:150px;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    background:rgba(255,255,255,0.78); border:1.5px solid var(--leaf);
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:800;
+    color:var(--leaf-deep); box-shadow: var(--shadow-soft); cursor:pointer;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    transition: transform 0.1s;
   }
-  .plant-tab:active{ transform: scale(0.96); }
-  .plant-tab.active{
-    background:#fff; border-color:var(--leaf); color:var(--leaf-deep);
-    box-shadow: var(--shadow-soft);
+  .plant-carousel-pill:active{ transform: scale(0.96); }
+  .plant-carousel-pill.empty{
+    background:rgba(255,255,255,0.4); color:#8a978a;
+    border-style:dashed; border-color:#c3d3bc;
   }
-  .plant-tab.empty{ background:rgba(255,255,255,0.4); color:#8a978a; border-style:dashed; border-color:#c3d3bc; }
   .plant-tab-icon{ font-size:14px; flex-shrink:0; }
+  .plant-carousel-dots{ display:flex; justify-content:center; align-items:center; gap:5px; padding-top:5px; }
+  .plant-carousel-dot{ width:5px; height:5px; border-radius:50%; background:#cfdcc9; transition: width 0.15s, background 0.15s; }
+  .plant-carousel-dot.active{ width:14px; border-radius:999px; background:var(--leaf-deep); }
 
   /* 📖 일기 항목을 눌러서 상세 내용을 볼 수 있어요 */
   .diary-entry{ cursor:pointer; transition: background 0.12s; }
@@ -692,7 +711,7 @@
   }
   @media (max-height:680px){
     .speech-bubble-wrap{ bottom:54%; }
-    .plant-stage-svg{ max-width:190px; }
+    .plant-stage-svg{ height: clamp(100px, 26dvh, 190px); }
   }
 </style>
 </head>
@@ -872,8 +891,8 @@ const urlParams = new URLSearchParams(window.location.search);
 const nickname = urlParams.get('nickname') || safeGet('miniGarden_nickname') || '정원사';
 const profile  = urlParams.get('profile')  || safeGet('miniGarden_profile')  || '👨‍🌾';
 
-/* 🌱🌱 식물은 최대 2개까지 함께 키울 수 있어요 (슬롯 시스템) */
-const MAX_PLANT_SLOTS = 2;
+/* 🌱🌱🌱 식물은 최대 3개까지 함께 키울 수 있어요 (슬롯 시스템) */
+const MAX_PLANT_SLOTS = 3;
 const SLOTS_KEY = `miniGarden_slots_${nickname}`;
 const CURRENT_SLOT_KEY = `miniGarden_currentSlot_${nickname}`;
 
@@ -939,6 +958,38 @@ const PLANTNAME_KEY = `miniGarden_plantName_${PLANT_TYPE}_${nickname}_${currentS
 const PERSONALITY_KEY_STORAGE = `miniGarden_personality_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
 const SAVE_KEY = `miniGarden_save_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
 
+/* 🪙🌦️⏩🧺 코인 / 날씨 / 배속 / 바구니는 식물마다 따로가 아니라 정원사 한 명 기준으로 공유돼요.
+   (식물을 갈아타도 이 값들은 그대로 유지됩니다) */
+const SHARED_STATE_KEY = `miniGarden_shared_${nickname}`;
+const SHARED_FIELDS = [
+  'coins','lastFreeCoinClaimAt','nextFloatingCoinAt','notifiedFreeCoinDay',
+  'weather','lastWeatherDay',
+  'speedMultiplier','speedBudgetMs','speedCheckpoint','speedExhaustedAt',
+  'harvestedBasket','basketSeenCount'
+];
+function loadSharedState(){
+  try{
+    const raw = safeGet(SHARED_STATE_KEY);
+    if(raw){ const parsed = JSON.parse(raw); if(parsed && typeof parsed === 'object') return parsed; }
+  }catch(e){}
+  return null;
+}
+function applySharedState(){
+  const shared = loadSharedState();
+  if(shared){
+    SHARED_FIELDS.forEach(k=>{ if(typeof shared[k] !== 'undefined') plantState[k] = shared[k]; });
+  } else {
+    // 최초 1회: 기존에 이 슬롯에 저장돼 있던 값을 공용 저장소의 기준값으로 옮겨줘요 (마이그레이션)
+    saveSharedState();
+  }
+  if(!Array.isArray(plantState.harvestedBasket)) plantState.harvestedBasket = [];
+}
+function saveSharedState(){
+  const obj = {};
+  SHARED_FIELDS.forEach(k=>{ obj[k] = plantState[k]; });
+  safeSet(SHARED_STATE_KEY, JSON.stringify(obj));
+}
+
 const plantName = currentSlotData.plantName;
 const personalityKey = currentSlotData.personalityKey;
 
@@ -956,27 +1007,49 @@ function applyPlantTheme(){
   document.documentElement.style.setProperty('--tomato-deep', PLANT_INFO.themeColorDeep);
 }
 
-/* ================= 🌱🌱 식물 탭 UI (슬롯 전환/추가) ================= */
+/* ================= 🌱🌱🌱 식물 캐러셀 UI (슬롯 전환/추가) =================
+   가운데엔 지금 키우는 식물 이름칸 하나만 작게 보여주고, 양옆 화살표를 누르거나
+   좌우로 슬라이드하면 다른 슬롯(다른 식물 또는 새로 심기)으로 이동해요. */
 function renderPlantTabs(){
   const bar = document.getElementById('plant-tab-bar');
   if(!bar) return;
-  let html = '';
-  for(let i=0;i<MAX_PLANT_SLOTS;i++){
-    const slotId = i+1;
-    const slot = plantSlots.find(s=>s.id===slotId);
-    if(slot){
-      const isActive = slotId === currentSlotId;
-      const icon = (PLANT_TYPES[slot.plantType] && PLANT_TYPES[slot.plantType].icon) || '🌱';
-      html += `<div class="plant-tab ${isActive?'active':''}" onclick="switchSlot(${slotId})">
-        <span class="plant-tab-icon">${icon}</span>${escapeHtml(slot.plantName)}
-      </div>`;
-    } else {
-      html += `<div class="plant-tab empty" onclick="openAddPlantModal(${slotId})">
-        <span class="plant-tab-icon">➕</span>새 식물 키우기
-      </div>`;
-    }
+  const slot = plantSlots.find(s=>s.id===currentSlotId);
+  let pillHtml;
+  if(slot){
+    const icon = (PLANT_TYPES[slot.plantType] && PLANT_TYPES[slot.plantType].icon) || '🌱';
+    pillHtml = `<div class="plant-carousel-pill" aria-label="현재 식물">
+      <span class="plant-tab-icon">${icon}</span>${escapeHtml(slot.plantName)}
+    </div>`;
+  } else {
+    pillHtml = `<div class="plant-carousel-pill empty" onclick="openAddPlantModal(${currentSlotId})">
+      <span class="plant-tab-icon">➕</span>새 식물 키우기
+    </div>`;
   }
-  bar.innerHTML = html;
+  let dotsHtml = '';
+  for(let i=0;i<MAX_PLANT_SLOTS;i++){
+    dotsHtml += `<span class="plant-carousel-dot ${(i+1)===currentSlotId?'active':''}"></span>`;
+  }
+  bar.innerHTML = `
+    <div class="plant-carousel-arrow" onclick="gotoAdjacentSlot(-1)" aria-label="이전 식물">‹</div>
+    ${pillHtml}
+    <div class="plant-carousel-arrow" onclick="gotoAdjacentSlot(1)" aria-label="다음 식물">›</div>
+  `;
+  let dotsBar = document.getElementById('plant-carousel-dots');
+  if(!dotsBar){
+    dotsBar = document.createElement('div');
+    dotsBar.id = 'plant-carousel-dots';
+    dotsBar.className = 'plant-carousel-dots';
+    bar.insertAdjacentElement('afterend', dotsBar);
+  }
+  dotsBar.innerHTML = dotsHtml;
+}
+
+/* direction: -1(이전) 또는 1(다음). 비어있는 슬롯이면 새 식물 심기 모달을 열어요. */
+function gotoAdjacentSlot(direction){
+  const targetId = ((currentSlotId - 1 + direction + MAX_PLANT_SLOTS) % MAX_PLANT_SLOTS) + 1;
+  const target = plantSlots.find(s=>s.id===targetId);
+  if(target){ switchSlot(targetId); }
+  else { openAddPlantModal(targetId); }
 }
 
 function switchSlot(slotId){
@@ -986,16 +1059,44 @@ function switchSlot(slotId){
   window.location.reload();
 }
 
-function openAddPlantModal(slotId){
+/* 👆 좌우 스와이프로도 식물을 전환할 수 있어요 */
+function setupPlantCarouselSwipe(){
+  const bar = document.getElementById('plant-tab-bar');
+  if(!bar) return;
+  let startX = 0, startY = 0, tracking = false;
+  bar.addEventListener('touchstart', function(e){
+    if(!e.touches || !e.touches.length) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive:true });
+  bar.addEventListener('touchend', function(e){
+    if(!tracking) return;
+    tracking = false;
+    const t = (e.changedTouches && e.changedTouches[0]) || null;
+    if(!t) return;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3){
+      gotoAdjacentSlot(dx < 0 ? 1 : -1);
+    }
+  }, { passive:true });
+}
+
+/* isReplant: 수확 직후 "다음엔 뭘 키울까요?" 흐름일 때 true — 문구가 달라지고,
+   그대로 이어서 키우고 싶을 때를 위한 버튼이 하나 더 붙어요. */
+function openAddPlantModal(slotId, isReplant){
   closeTalkInput();
   const overlay = document.getElementById('global-modal');
   const content = document.getElementById('modal-content-area');
   overlay.style.display = 'flex';
   const personalities = Object.keys(PERSONALITY_TABLE);
   const plantTypeKeys = Object.keys(PLANT_TYPES);
+  const title = isReplant ? '🎉 수확 완료! 다음 식물을 골라주세요' : '🌱 새 식물 심기';
+  const sub = isReplant ? '이번엔 어떤 작물을, 어떤 이름과 성격으로 키워볼까요?' : '어떤 작물을 키워볼까요?';
   content.innerHTML = `
-    <div class="modal-title">🌱 새 식물 심기</div>
-    <p class="modal-sub">어떤 작물을 키워볼까요?</p>
+    <div class="modal-title">${title}</div>
+    <p class="modal-sub">${sub}</p>
     <div class="modal-options-grid" id="new-plant-type-grid">
       ${plantTypeKeys.map(k=>{
         const t = PLANT_TYPES[k];
@@ -1011,7 +1112,7 @@ function openAddPlantModal(slotId){
       }).join('')}
     </div>
     <button class="action-btn" style="background:var(--leaf);" onclick="createNewPlant(${slotId})">키우기 시작!</button>
-    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+    ${isReplant ? '' : `<button class="close-modal-btn" onclick="closeModal()">닫기</button>`}
   `;
   window._newPlantPersonality = 'active';
   window._newPlantType = 'tomato';
@@ -1179,9 +1280,11 @@ let plantState = {
   chatLog: [],
   isHarvestable:false,
   harvestedBasket: [],
+  basketSeenCount: 0,          // 🧺 바구니 뱃지: 마지막으로 바구니를 열어본 시점의 수확 개수
   diary: [],
   lastDiaryDay: null,
   achievements: {},
+  achvSeenCount: 0,            // 🏆 업적 뱃지: 마지막으로 업적을 열어본 시점의 달성 개수
   dailyMission: null,          // 🎯 일일미션 진행 상황(당일치)
   lastNotifiedStageIdx: null,  // 🔔 마지막으로 알림을 보낸 성장 단계
   notifiedFreeCoinDay: null,   // 🔔 무료 코인 알림을 이미 보낸 날짜
@@ -1253,6 +1356,7 @@ window.onload = function(){
 
   createAmbientLeaves();
   renderPlantTabs();
+  setupPlantCarouselSwipe();
   loadPlantState();
   applyLocationVisual(true);
   rollWeatherIfNewDay();
@@ -1313,20 +1417,25 @@ function loadPlantState(){
       if(!plantState.dailyMission || typeof plantState.dailyMission !== 'object') plantState.dailyMission = null;
       if(typeof plantState.lastNotifiedStageIdx !== 'number') plantState.lastNotifiedStageIdx = null;
       if(typeof plantState.notifiedFreeCoinDay === 'undefined') plantState.notifiedFreeCoinDay = null;
+      if(typeof plantState.basketSeenCount !== 'number') plantState.basketSeenCount = 0;
+      if(typeof plantState.achvSeenCount !== 'number') plantState.achvSeenCount = 0;
       delete plantState.lastSpeedActivatedAt;
     }catch(e){}
   } else {
     plantState.lastRealTick = Date.now();
     plantState.startDate = Date.now();
   }
+  applySharedState(); // 🪙🌦️⏩🧺 공유 상태(코인/날씨/배속/바구니)를 덮어써요
   ensureDailyMission();
 }
 function savePlantState(){
   plantState.lastRealTick = Date.now();
   safeSet(SAVE_KEY, JSON.stringify(plantState));
+  saveSharedState();
 }
 function savePlantStateSoft(){
   safeSet(SAVE_KEY, JSON.stringify(plantState));
+  saveSharedState();
 }
 
 /* ================= 날씨 ================= */
@@ -1496,10 +1605,11 @@ function showAchievementToast(def){
 
 function updateAchvBadge(){
   const badge = document.getElementById('achv-badge');
-  const count = Object.keys(plantState.achievements).filter(k=>plantState.achievements[k]).length;
-  if(count > 0){
+  const total = Object.keys(plantState.achievements).filter(k=>plantState.achievements[k]).length;
+  const unseen = Math.max(0, total - (plantState.achvSeenCount || 0));
+  if(unseen > 0){
     badge.style.display = 'flex';
-    badge.innerText = count;
+    badge.innerText = unseen > 99 ? '99+' : unseen;
   } else {
     badge.style.display = 'none';
   }
@@ -2084,10 +2194,11 @@ function buyShopItem(key){
 
 function updateBasketBadge(){
   const badge = document.getElementById('basket-badge');
-  const count = plantState.harvestedBasket.length;
-  if(count > 0){
+  const total = plantState.harvestedBasket.length;
+  const unseen = Math.max(0, total - (plantState.basketSeenCount || 0));
+  if(unseen > 0){
     badge.style.display = 'flex';
-    badge.innerText = count > 99 ? '99+' : count;
+    badge.innerText = unseen > 99 ? '99+' : unseen;
   } else {
     badge.style.display = 'none';
   }
@@ -2423,6 +2534,7 @@ function confirmHarvest(){
     day: dayNum,
     dateStr: dateStr,
     plantName: plantName,
+    plantType: PLANT_TYPE,
     isGolden: pendingGoldenTomato,
     personalityKey: personalityKey,
     waterCount: plantState.stats.runWaterCount || 0,
@@ -2452,10 +2564,12 @@ function confirmHarvest(){
   pendingGoldenTomato = false;
 
   document.getElementById('harvest-celebrate-screen').style.display = 'none';
+  updateBasketBadge();
   renderPlant();
   updateUI();
   savePlantState();
-  showBubble("🌱 새 씨앗을 심었어요! 다시 키워볼까요?");
+  // 🌱 수확했으니, 이름/성격/종류를 새로 골라서 다음 식물을 심어요
+  openAddPlantModal(currentSlotId, true);
 }
 
 /* ================= 모달 ================= */
@@ -2490,6 +2604,9 @@ function openModal(type){
     content.innerHTML = renderShopModal();
   } else if(type === 'basket'){
     content.innerHTML = renderBasketModal();
+    plantState.basketSeenCount = plantState.harvestedBasket.length;
+    updateBasketBadge();
+    savePlantState();
   } else if(type === 'diary'){
     content.innerHTML = renderDiaryModal();
     plantState.diaryRead = true;
@@ -2497,6 +2614,9 @@ function openModal(type){
     savePlantState();
   } else if(type === 'achievements'){
     content.innerHTML = renderAchievementsModal();
+    plantState.achvSeenCount = Object.keys(plantState.achievements).filter(k=>plantState.achievements[k]).length;
+    updateAchvBadge();
+    savePlantState();
   } else if(type === 'guide'){
     content.innerHTML = renderGuideModal();
   } else if(type === 'settings'){
@@ -2537,6 +2657,10 @@ function setLocation(loc){
 }
 
 /* ================= 수확 바구니 모달 ================= */
+/* 🧺 바구니는 정원사 공용이라, 어떤 화분에서 수확했든 종류에 상관없이 한 곳에서 모두 볼 수 있어요 */
+function basketItemPlantInfo(b){
+  return (b && PLANT_TYPES[b.plantType]) ? PLANT_TYPES[b.plantType] : PLANT_TYPES.tomato;
+}
 function renderBasketModal(){
   const basket = plantState.harvestedBasket;
   if(!basket.length){
@@ -2544,7 +2668,7 @@ function renderBasketModal(){
       <div class="modal-title">수확 바구니</div>
       <div class="basket-empty">
         <span class="basket-empty-icon">🧺</span>
-        <div class="basket-empty-text">아직 수확한 ${PLANT_INFO.name}가 없어요.<br>정성껏 키워서 첫 수확을 해보세요!</div>
+        <div class="basket-empty-text">아직 수확한 작물이 없어요.<br>정성껏 키워서 첫 수확을 해보세요!</div>
       </div>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
@@ -2553,7 +2677,7 @@ function renderBasketModal(){
   const goldenCount = basket.filter(b=>b.isGolden).length;
   return `
     <div class="modal-title">수확 바구니</div>
-    <p class="modal-sub" style="margin-bottom:10px;">${PLANT_INFO.name}를 눌러서 상세정보를 확인해보세요!</p>
+    <p class="modal-sub" style="margin-bottom:10px;">키우고 있는 모든 식물의 수확물이 모여요. 눌러서 상세정보를 확인해보세요!</p>
     <div class="basket-summary">
       <div class="basket-summary-item">
         <span class="basket-summary-num">${basket.length}</span>
@@ -2572,9 +2696,10 @@ function renderBasketModal(){
     <div class="basket-grid">
       ${basket.slice().reverse().map((b)=>{
         const realIdx = basket.indexOf(b);
+        const t = basketItemPlantInfo(b);
         return `
         <div class="basket-tomato" onclick="openTomatoDetail(${realIdx})">
-          <span class="basket-tomato-icon">${b.isGolden ? '🌟' : PLANT_INFO.icon}</span>
+          <span class="basket-tomato-icon">${b.isGolden ? '🌟' : t.icon}</span>
           <span class="basket-tomato-day">${b.day}일째</span>
         </div>`;
       }).join('')}
@@ -2594,10 +2719,11 @@ function openTomatoDetail(idx){
   const pInfo = PERSONALITY_TABLE[b.personalityKey] || PERSONALITY_TABLE.active;
   const aff = computeAffection(b.day, b.waterCount||0, b.talkGoodCount||0, b.badWordCount||0);
   const face = b.isGolden ? '🌟' : aff.face;
+  const t = basketItemPlantInfo(b);
 
   content.innerHTML = `
     <span class="detail-face">${face}</span>
-    <div class="detail-name">${escapeHtml(b.plantName)}${b.isGolden ? ` (${PLANT_INFO.goldenName})` : ''}</div>
+    <div class="detail-name">${escapeHtml(b.plantName)}${b.isGolden ? ` (${t.goldenName})` : ''} <span style="font-size:12px; color:var(--ink-soft); font-weight:700;">${t.icon} ${t.name}</span></div>
     <div class="detail-sub">${pInfo.emoji} ${pInfo.label} · ${b.day}일 동안 자람</div>
 
     <div class="detail-stat-row"><span>신선도</span><span>${aff.freshness}</span></div>
