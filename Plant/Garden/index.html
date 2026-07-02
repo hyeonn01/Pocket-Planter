@@ -2051,6 +2051,9 @@ function buyShopItem(key){
     showInfoToast('💧 지금은 수분제거가 필요 없어요.');
     return;
   }
+  // 🛑 구매 전 확인: 코인은 즉시 차감되고 아이템은 바로 식물에게 사용되니, 실수 구매를 막기 위해 한 번 더 확인받아요.
+  const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n구매하면 바로 ${plantName}에게 사용돼요.`);
+  if(!ok) return;
   plantState.coins = coins - item.cost;
   if(key === 'nutrient'){
     plantState.growth = clamp(plantState.growth + 3, 0, 100);
@@ -2743,12 +2746,94 @@ document.getElementById('talk-inline-input').addEventListener('keydown', functio
 const GOOD_WORDS = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭','예뻐'];
 const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져','뭘봐',];
 
+/* 🛠️ 개발자 치트 코드 (테스트용) — 말걸기 입력창에 아래 문구를 정확히 입력하면 즉시 발동해요.
+   AI에게 전송되지 않고 로컬에서만 처리되며, 대화 기록/일기에도 남지 않습니다.
+   🔒 아무나 못 쓰게, 먼저 "잠금 해제 문구"를 한 번 입력해야 치트가 켜집니다.
+      켜진 상태는 이 기기(브라우저)에 nickname별로 저장돼서 계속 유지돼요.
+      다른 사람은 이 문구를 모르면 그냥 평범한 말풍선 텍스트로 처리됩니다.
+      운영 서비스에서 완전히 끄고 싶으면 DEV_CHEATS 객체와 아래 두 phrase 관련 코드를 지우면 됩니다. */
+const DEV_MODE_KEY = `miniGarden_devMode_${nickname}`;
+const DEV_UNLOCK_PHRASE = '#정원사비밀번호열려라';   // 원하는 문구로 바꿔서 쓰세요
+const DEV_LOCK_PHRASE   = '#정원사비밀번호닫혀라';
+function isDevMode(){ return safeGet(DEV_MODE_KEY) === '1'; }
+
+const DEV_CHEATS = {
+  '#coin1000': function(){
+    plantState.coins = Math.floor(plantState.coins || 0) + 1000;
+    updateCoinUI();
+    showInfoToast('🛠️ [치트] 코인 +1000원!');
+  },
+  '#nextstage': function(){
+    plantState.growth = clamp(plantState.growth + (100/12) + 0.1, 0, 100);
+    if(plantState.growth >= 100 && !plantState.isHarvestable){
+      plantState.growth = 100;
+      plantState.isHarvestable = true;
+    }
+    updateUI();
+    renderPlant();
+    showInfoToast('🛠️ [치트] 다음 단계로 성장!');
+  },
+  '#harvest': function(){
+    plantState.growth = 100;
+    plantState.isHarvestable = true;
+    updateUI();
+    renderPlant();
+    showInfoToast('🛠️ [치트] 바로 수확 가능한 상태로 변경!');
+  },
+  '#dead': function(){
+    triggerDeath('🛠️ [치트] 테스트를 위해 강제로 죽음 상태가 되었어요.');
+    showInfoToast('🛠️ [치트] 죽음 상태로 변경!');
+  },
+  // 🌦️ 날씨 강제 전환 — 오늘 하루는 자동으로 다시 안 바뀌게 lastWeatherDay도 같이 고정해요.
+  '#weather맑음': function(){ forceWeather('sunny'); },
+  '#weather화창': function(){ forceWeather('bright'); },
+  '#weather흐림': function(){ forceWeather('cloudy'); },
+  '#weather비': function(){ forceWeather('rainy'); }
+};
+function forceWeather(type){
+  const w = WEATHER_TABLE.find(v=>v.type===type);
+  if(!w) return;
+  plantState.weather = type;
+  plantState.lastWeatherDay = getDayIndex(Date.now());
+  applyWeatherVisual();
+  updateUI();
+  savePlantState();
+  showInfoToast(`🛠️ [치트] 날씨를 "${w.label}"(으)로 변경!`);
+}
+
 async function processSpeech(){
   if(isAiReplying) return;
   const inputField = document.getElementById('talk-inline-input');
   if(!inputField) return;
   const text = inputField.value.trim();
   if(!text) return;
+
+  // 🔒 개발자 모드 잠금 해제/잠금 문구부터 확인
+  if(text === DEV_UNLOCK_PHRASE){
+    safeSet(DEV_MODE_KEY, '1');
+    inputField.value = '';
+    closeTalkInput();
+    showInfoToast('🛠️ 개발자 모드 ON (이 기기에서만 보여요)');
+    return;
+  }
+  if(text === DEV_LOCK_PHRASE){
+    safeSet(DEV_MODE_KEY, '0');
+    inputField.value = '';
+    closeTalkInput();
+    showInfoToast('🛠️ 개발자 모드 OFF');
+    return;
+  }
+
+  // 🛠️ 치트 코드 확인 — 개발자 모드가 켜져 있을 때만 동작하고, 일치하면 일반 대화 로직은 건너뜁니다.
+  if(isDevMode() && DEV_CHEATS[text]){
+    DEV_CHEATS[text]();
+    inputField.value = '';
+    closeTalkInput();
+    checkDeathConditions();
+    checkAchievements();
+    savePlantState();
+    return;
+  }
 
   const isGood = GOOD_WORDS.some(w=>text.includes(w));
   const isBad = BAD_WORDS.some(w=>text.includes(w));
