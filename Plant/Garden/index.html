@@ -1010,7 +1010,7 @@ function openAddPlantModal(slotId){
         return `<div class="modal-opt-btn" id="new-personality-${k}" onclick="selectNewPersonality('${k}')">${p.emoji} ${p.label}</div>`;
       }).join('')}
     </div>
-    <button class="action-btn" style="background:var(--leaf);" onclick="createNewPlant(${slotId})">이 키우기 시작!</button>
+    <button class="action-btn" style="background:var(--leaf);" onclick="createNewPlant(${slotId})">키우기 시작!</button>
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
   `;
   window._newPlantPersonality = 'active';
@@ -1665,7 +1665,7 @@ function toggleSpeedMode(enabled){
     plantState.speedBudgetMs = getLiveSpeedBudgetMs(now);
     plantState.speedMultiplier = 1;
     plantState.speedCheckpoint = null;
-    showInfoToast('⏸️ x8 배속을 껐어요.');
+    showInfoToast('⏸️ 배속을 껐어요.');
   }
   updateSpeedBadge();
   savePlantState();
@@ -1704,12 +1704,12 @@ function renderSpeedModalContent(){
   const cooldownMs = getSpeedCooldownRemainingMs(now);
   const canTurnOn = isSpeedOn || (liveBudget > 0 && cooldownMs <= 0);
   const speedGuide = isSpeedOn
-    ? '지금 x8 배속으로 자라는 중이에요.'
+    ? '더 빨리 자라는 중이에요.'
     : (canTurnOn
-        ? '지금 바로 x8 배속을 켤 수 있어요.'
+        ? '지금 바로 배속을 켤 수 있어요.'
         : `다음 충전까지 ${formatCooldown(cooldownMs)} 남았어요.`);
   const extraNote = (!isSpeedOn && cooldownMs > 0)
-    ? `1시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`
+    ? `시간을 모두 사용해서 쉬는 중이에요. (${formatCooldown(cooldownMs)} 후 다시 충전)`
     : '';
 
   content.innerHTML = `
@@ -2052,7 +2052,7 @@ function buyShopItem(key){
     return;
   }
   // 🛑 구매 전 확인: 코인은 즉시 차감되고 아이템은 바로 식물에게 사용되니, 실수 구매를 막기 위해 한 번 더 확인받아요.
-  const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n구매하면 바로 ${plantName}에게 사용돼요.`);
+  const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n(바로 ${plantName}에게 사용돼요).`);
   if(!ok) return;
   plantState.coins = coins - item.cost;
   if(key === 'nutrient'){
@@ -2516,10 +2516,10 @@ function openModal(type){
           <span class="switch-track"></span>
         </label>
       </div>
-      <button class="action-btn pastel-lavender" onclick="openModal('guide')">게임방법</button>
-      <button class="action-btn pastel-mint" onclick="installApp()">앱 설치하기</button>
-      <button class="action-btn pastel-sky" onclick="shareGarden()">친구에게 자랑하기</button>
-      <button class="action-btn pastel-rose" onclick="requestRestartCurrentPlant()">🌱 새로 키우기 (현재 식물 데이터 삭제)</button>
+      <button class="action-btn pastel-rose" onclick="openModal('guide')">게임방법</button>
+      <button class="action-btn pastel-orange" onclick="installApp()">앱 설치하기</button>
+      <button class="action-btn pastel-yellow" onclick="shareGarden()">친구에게 자랑하기</button>
+      <button class="action-btn pastel-mint" onclick="requestRestartCurrentPlant()">새로 키우기</button>
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
   }
@@ -2541,7 +2541,7 @@ function renderBasketModal(){
   const basket = plantState.harvestedBasket;
   if(!basket.length){
     return `
-      <div class="modal-title">🧺 수확 바구니 🧺</div>
+      <div class="modal-title">수확 바구니</div>
       <div class="basket-empty">
         <span class="basket-empty-icon">🧺</span>
         <div class="basket-empty-text">아직 수확한 ${PLANT_INFO.name}가 없어요.<br>정성껏 키워서 첫 수확을 해보세요!</div>
@@ -2552,7 +2552,7 @@ function renderBasketModal(){
   const fastest = basket.reduce((min,b)=> b.day < min ? b.day : min, basket[0].day);
   const goldenCount = basket.filter(b=>b.isGolden).length;
   return `
-    <div class="modal-title">🧺 수확 바구니 🧺</div>
+    <div class="modal-title">수확 바구니</div>
     <p class="modal-sub" style="margin-bottom:10px;">${PLANT_INFO.name}를 눌러서 상세정보를 확인해보세요!</p>
     <div class="basket-summary">
       <div class="basket-summary-item">
@@ -2753,7 +2753,7 @@ const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰
       다른 사람은 이 문구를 모르면 그냥 평범한 말풍선 텍스트로 처리됩니다.
       운영 서비스에서 완전히 끄고 싶으면 DEV_CHEATS 객체와 아래 두 phrase 관련 코드를 지우면 됩니다. */
 const DEV_MODE_KEY = `miniGarden_devMode_${nickname}`;
-const DEV_UNLOCK_PHRASE = '#정원사비밀번호열려라';   // 원하는 문구로 바꿔서 쓰세요
+const DEV_UNLOCK_PHRASE = '#정원사비밀번호열려라';  
 const DEV_LOCK_PHRASE   = '#정원사비밀번호닫혀라';
 function isDevMode(){ return safeGet(DEV_MODE_KEY) === '1'; }
 
