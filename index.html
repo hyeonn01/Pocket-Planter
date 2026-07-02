@@ -362,7 +362,7 @@
                 <p style="font-size: 12.5px; color: #e53935; font-weight: bold; margin-top: -10px; margin-bottom: 18px;">⚠️ 한 번 고르면 수확하기 전까지는 바꿀 수 없어요. 신중하게 골라주세요!</p>
                 <hr>
                 <button class="select-btn" onclick="selectPlant('Tomato', '토마토')">🍅 토마토</button>
-                <button class="select-btn locked" onclick="lockedPlantAlert()">🥕 <span class="lock-badge">준비중</span></button>
+                <button class="select-btn" onclick="selectPlant('Grape', '포도')">🍇 포도</button>
                 <button class="select-btn locked" onclick="lockedPlantAlert()">🥑 <span class="lock-badge">준비중</span></button>
                 <button class="select-btn locked" onclick="lockedPlantAlert()">🍓 <span class="lock-badge">준비중</span></button>
                 <button class="select-btn locked" onclick="lockedPlantAlert()">🍄 <span class="lock-badge">준비중</span></button>
@@ -550,9 +550,10 @@
             const currentPlantDir = safeGet(`miniGarden_currentPlantDir_${nickname}`);
 
             if (currentPlantDir) {
-                const plantName = safeGet(`miniGarden_plantName_${currentPlantDir.toLowerCase()}_${nickname}`) || '';
-                const personality = safeGet(`miniGarden_personality_${currentPlantDir.toLowerCase()}_${nickname}`) || 'active';
-                const url = `Plant/${currentPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(personality)}`;
+                const plantType = currentPlantDir.toLowerCase();
+                const plantName = safeGet(`miniGarden_plantName_${plantType}_${nickname}`) || '';
+                const personality = safeGet(`miniGarden_personality_${plantType}_${nickname}`) || 'active';
+                const url = `Plant/Garden/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(personality)}&plantType=${encodeURIComponent(plantType)}`;
                 window.location.href = url;
                 return;
             }
@@ -709,12 +710,15 @@
         }
 
         // 🔗 새 식물 시작 시, "현재 키우는 식물" 기록을 남겨서 다음 재접속 때 바로 이어가게 합니다.
+        // 🍅🍇 이제 작물별로 폴더를 나누지 않고 Plant/Garden/ 하나만 써요.
+        //    어떤 작물인지는 plantType 파라미터로 넘겨서 게임 화면이 정확히 초기화되게 합니다.
         function goToPlantGame() {
+            const plantType = selectedPlantDir.toLowerCase();
             safeSet(`miniGarden_currentPlantDir_${nickname}`, selectedPlantDir);
-            safeSet(`miniGarden_plantName_${selectedPlantDir.toLowerCase()}_${nickname}`, plantName);
-            safeSet(`miniGarden_personality_${selectedPlantDir.toLowerCase()}_${nickname}`, selectedPersonality);
+            safeSet(`miniGarden_plantName_${plantType}_${nickname}`, plantName);
+            safeSet(`miniGarden_personality_${plantType}_${nickname}`, selectedPersonality);
 
-            const url = `Plant/${selectedPlantDir}/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(selectedPersonality)}`;
+            const url = `Plant/Garden/index.html?nickname=${encodeURIComponent(nickname)}&profile=${encodeURIComponent(selectedProfile)}&plantName=${encodeURIComponent(plantName)}&personality=${encodeURIComponent(selectedPersonality)}&plantType=${encodeURIComponent(plantType)}`;
             window.location.href = url;
         }
     </script>
