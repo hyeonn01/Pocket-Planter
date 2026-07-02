@@ -204,6 +204,29 @@
             padding:7px 12px; border-radius:999px; cursor:pointer; box-shadow:none; margin:0;
         }
 
+        .install-overlay{
+            position:absolute; inset:0; z-index:60;
+            background:rgba(30,45,30,0.45); backdrop-filter:blur(2px);
+            display:none; justify-content:center; align-items:center;
+            padding:20px; box-sizing:border-box;
+        }
+        .install-overlay.show{ display:flex; }
+        .install-card{
+            background:#fff; border-radius:24px; padding:28px 22px;
+            max-width:290px; width:100%; text-align:center; box-sizing:border-box;
+            box-shadow:0 18px 36px rgba(0,0,0,0.22);
+            animation: install-pop 0.2s ease-out;
+        }
+        @keyframes install-pop{
+            0%{ transform:scale(0.92); opacity:0; } 100%{ transform:scale(1); opacity:1; }
+        }
+        .install-card h1{ font-size:18px; margin-bottom:10px; }
+        .install-card p{ font-size:12.5px; line-height:1.6; margin-bottom:18px; color:#6b7a68; }
+        .install-later-btn{
+            width:100%; background:#e3e9e0; box-shadow:0 4px 0 #c7d0c3;
+            color:#5a6a56; margin-top:2px;
+        }
+
         .profile-selector { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
         .profile-option {
             font-size: 28px; width: 50px; height: 50px;
@@ -293,6 +316,19 @@
     <div class="update-toast" id="update-toast">
         <span>🔄 새 업데이트가 있어요!</span>
         <button onclick="applyUpdate()">새로고침</button>
+    </div>
+
+    <div class="install-overlay" id="install-overlay">
+        <div class="install-card">
+            <div style="font-size:44px; margin-bottom:6px;">📲</div>
+            <h1>앱설치하기</h1>
+            <p>
+                홈 화면에 설치하면 브라우저 주소창 없이 빠르게 열 수 있고,
+                정원 소식도 알림으로 받아볼 수 있어요.
+            </p>
+            <button style="width:100%;" onclick="installApp()">지금 설치하기</button>
+            <button class="install-later-btn" onclick="dismissInstallPrompt()">나중에 할게요</button>
+        </div>
     </div>
 
     <div class="game-container" id="main-container">
@@ -427,11 +463,62 @@
         }, true);
 
         function lockedPlantAlert(){
-            alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요. 지금은 🍅 토마토를 키워보세요!');
+            alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요.');
+        }
+
+        /* ================= 📲 PWA 설치 안내 ================= */
+        let deferredInstallPrompt = null;
+        function setupPwaInstall(){
+            window.addEventListener('beforeinstallprompt', (e)=>{
+                e.preventDefault();
+                deferredInstallPrompt = e;
+            });
+        }
+        function isIos(){
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        function isInStandaloneMode(){
+            return (window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        }
+        function dismissInstallPrompt(){
+            const el = document.getElementById('install-overlay');
+            if(el) el.classList.remove('show');
+            safeSet('miniGarden_installPromptSeen', '1');
+        }
+        function maybeShowInstallPrompt(){
+            if(isInStandaloneMode()) return;
+            if(safeGet('miniGarden_installPromptSeen') === '1') return;
+            const el = document.getElementById('install-overlay');
+            if(el) el.classList.add('show');
+        }
+        async function installApp(){
+            if(isInStandaloneMode()){
+                alert('이미 앱으로 설치되어 실행 중이에요! 🌿');
+                dismissInstallPrompt();
+                return;
+            }
+            if(deferredInstallPrompt){
+                // 📱 Android/PC 크롬, 엣지 등
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                dismissInstallPrompt();
+                return;
+            }
+            if(isIos()){
+                alert('아이폰/아이패드에서 설치하는 방법\n\n1. 하단의 [공유] 버튼(⬆️)을 눌러주세요\n2. "홈 화면에 추가"를 선택해주세요\n3. "추가"를 누르면 설치 완료!');
+                dismissInstallPrompt();
+                return;
+            }
+            alert('이 브라우저에서는 설치 버튼을 직접 지원하지 않을 수 있어요.\n브라우저 메뉴(ex.크롬)에서 "앱 설치" 또는 "홈 화면에 추가"를 찾아보세요!');
+            dismissInstallPrompt();
         }
 
         window.onload = function() {
-            createLeaves(); 
+            createLeaves();
+            setupPwaInstall();
+            setTimeout(maybeShowInstallPrompt, 400);
+
             const savedNickname = safeGet('miniGarden_nickname');
             const savedProfile = safeGet('miniGarden_profile');
             
