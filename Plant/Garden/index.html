@@ -54,6 +54,7 @@
     display:flex;flex-direction:column;
     position:relative;overflow:hidden;
     z-index:2;
+    touch-action: pan-y;
     background: linear-gradient(180deg, var(--sky-light) 0%, var(--mint) 100%);
   }
 
@@ -532,6 +533,23 @@
   }
   .close-modal-btn:hover{ background:#d7e4d3; }
 
+  /* 🛠️ 개발자 모드 전용 UI (설정 화면 하단 / 로컬 데이터 뷰어) */
+  .dev-section-label{
+    font-size:11.5px; font-weight:800; color:#8a978a;
+    margin:12px 0 6px; padding-top:8px; border-top:1px dashed #dfe6da;
+  }
+  .dev-table{
+    max-height:280px; overflow-y:auto; margin-bottom:12px;
+    border:1px solid #e6ede2; border-radius:10px;
+  }
+  .dev-row{
+    padding:8px 10px; border-bottom:1px solid #eef3ea; font-size:10.5px;
+  }
+  .dev-row:last-child{ border-bottom:none; }
+  .dev-row-key{ font-weight:800; color:#3a5a48; word-break:break-all; margin-bottom:2px; }
+  .dev-row-val{ color:var(--ink-soft); word-break:break-all; line-height:1.4; }
+  .dev-row-empty{ padding:16px 10px; text-align:center; color:#8a978a; font-size:11.5px; }
+
   .setting-row{
     display:flex; justify-content:space-between; align-items:center;
     background:var(--card-soft); border-radius:13px; padding:11px 14px; margin-bottom:9px;
@@ -661,41 +679,38 @@
   }
   .info-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* 🌱🌱🌱 식물 캐러셀 (최대 3개까지 함께 키우기) — 가운데 이름칸 + 양옆 화살표, 스와이프로도 전환 가능 */
+  /* 🌱🌱🌱 식물 캐러셀 (최대 3개까지 함께 키우기) — 자리를 적게 차지하도록 작은 점 표시만 남기고,
+     이름/아이콘/단계는 바로 아래 대시보드에 이미 나오므로 여기선 생략해요. 전환은 양옆 화살표/스와이프로. */
   .plant-tab-bar{
     position:relative; z-index:6;
-    display:flex; align-items:center; justify-content:center; gap:12px;
-    padding: 8px 14px 0;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    padding: 7px 14px 0;
+    min-height:6px;
     touch-action: pan-y;
   }
-  .plant-carousel-arrow{
-    flex-shrink:0; width:28px; height:28px; border-radius:50%;
-    background:#fffaf0; color:#b7c9ae;
-    display:inline-flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:900; line-height:1; cursor:pointer;
+  .plant-carousel-dot{
+    width:6px; height:6px; border-radius:50%; background:#cfdcc9;
+    transition: width 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .plant-carousel-dot.active{ width:16px; border-radius:999px; background:var(--leaf-deep); }
+  .plant-carousel-dot.empty{ background:transparent; border:1.5px dashed #c3d3bc; }
+  .plant-carousel-dot.empty.active{ width:6px; background:transparent; border-color:var(--leaf); }
+
+  /* 🡄🡆 화면 가운데 양옆에 뜨는 식물 전환 화살표 (첫/마지막 식물이면 이동 가능한 쪽만 보여요) */
+  .plant-side-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    z-index:15; width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,0.88); color:var(--leaf-deep);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:900; line-height:1; cursor:pointer;
     border:1.5px solid rgba(255,255,255,0.9);
-    box-shadow:0 4px 10px rgba(70,110,70,0.12);
-    transition: transform 0.1s;
+    box-shadow:0 6px 16px rgba(70,110,70,0.18);
+    transition: transform 0.1s, opacity 0.15s;
   }
-  .plant-carousel-arrow:active{ transform:scale(0.88); }
-  .plant-carousel-pill{
-    flex:0 1 auto; max-width:150px;
-    display:flex; align-items:center; justify-content:center; gap:5px;
-    background:rgba(255,255,255,0.78); border:1.5px solid var(--leaf);
-    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:800;
-    color:var(--leaf-deep); box-shadow: var(--shadow-soft); cursor:pointer;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    transition: transform 0.1s;
-  }
-  .plant-carousel-pill:active{ transform: scale(0.96); }
-  .plant-carousel-pill.empty{
-    background:rgba(255,255,255,0.4); color:#8a978a;
-    border-style:dashed; border-color:#c3d3bc;
-  }
-  .plant-tab-icon{ font-size:14px; flex-shrink:0; }
-  .plant-carousel-dots{ display:flex; justify-content:center; align-items:center; gap:5px; padding-top:5px; }
-  .plant-carousel-dot{ width:5px; height:5px; border-radius:50%; background:#cfdcc9; transition: width 0.15s, background 0.15s; }
-  .plant-carousel-dot.active{ width:14px; border-radius:999px; background:var(--leaf-deep); }
+  .plant-side-arrow:active{ transform:translateY(-50%) scale(0.88); }
+  .plant-side-arrow.left{ left:8px; }
+  .plant-side-arrow.right{ right:8px; }
+  .plant-side-arrow.hidden{ display:none; }
 
   /* 📖 일기 항목을 눌러서 상세 내용을 볼 수 있어요 */
   .diary-entry{ cursor:pointer; transition: background 0.12s; }
@@ -865,6 +880,10 @@
     </div>
   </div>
 
+  <!-- 🡄🡆 화면 가운데 양옆 식물 전환 화살표 (스와이프와 함께 동작) -->
+  <div class="plant-side-arrow left" id="plant-side-arrow-left" onclick="gotoAdjacentSlot(-1)" aria-label="이전 식물">‹</div>
+  <div class="plant-side-arrow right" id="plant-side-arrow-right" onclick="gotoAdjacentSlot(1)" aria-label="다음 식물">›</div>
+
   <!-- 모달 -->
   <div class="modal-overlay" id="global-modal">
     <div class="modal-content" id="modal-content-area"></div>
@@ -896,8 +915,8 @@ const MAX_PLANT_SLOTS = 3;
 const SLOTS_KEY = `miniGarden_slots_${nickname}`;
 const CURRENT_SLOT_KEY = `miniGarden_currentSlot_${nickname}`;
 
-/* 🍅🍇 식물 종류(품종)별 설정 — 슬롯마다 'tomato' 또는 'grape' 중 하나를 가질 수 있어요.
-   같은 코드로 두 작물을 함께 키울 수 있도록 텍스트/색상/12단계 라벨/열매 모양을 이 표에서 갈라줍니다. */
+/* 🍅🍇🍊 식물 종류(품종)별 설정 — 슬롯마다 'tomato'/'grape'/'tangerine' 중 하나를 가질 수 있어요.
+   같은 코드로 여러 작물을 함께 키울 수 있도록 텍스트/색상/12단계 라벨/열매 모양을 이 표에서 갈라줍니다. */
 const PLANT_TYPES = {
   tomato: {
     key:'tomato', name:'토마토', icon:'🍅', goldenName:'황금 토마토',
@@ -912,6 +931,23 @@ const PLANT_TYPES = {
     potColor:'#8a6a4d', potColorLight:'#9c7c5c',
     stageLabels: ['씨앗','발아 중','첫 새싹','줄기 뻗음','덩굴 자람','튼튼한 줄기','꽃송이 맺힘','꽃 만개','포도알 맺힘','포도송이 커짐','색 변하는 중','수확 가능'],
     fruitColorUnripe:'#8bc76a', fruitColorMid:'#9b7fc4', fruitColorRipe:'#6a4c93', fruitColorRipeDeep:'#4a3268'
+  },
+  tangerine: {
+    key:'tangerine', name:'귤', icon:'🍊', goldenName:'황금 귤',
+    themeColor:'#ff9f43', themeColorDeep:'#e6821c',
+    potColor:'#c2874f', potColorLight:'#d6a06c',
+    stageLabels: ['씨앗','발아 중','첫 새싹','줄기 뻗음','잎 늘어남','튼튼한 줄기','꽃봉오리 맺힘','하얀 꽃 만개','열매 맺힘','열매 커짐','색 변하는 중','수확 가능'],
+    fruitColorUnripe:'#8bc76a', fruitColorMid:'#e0c34a', fruitColorRipe:'#f5a623', fruitColorRipeDeep:'#d97706'
+  },
+  banana: {
+    /* 🍌 바나나는 씨앗이 아니라 구근(뿌리줄기)에서 자라고, 나무처럼 굵은 헛줄기 위에
+       커다란 잎이 나며, 자주색 꽃이 진 자리에 바나나송이가 매달려요. 그래서 화분도
+       다른 작물보다 한 단계 크게 그려줍니다. (buildPlantSVG의 potScale 참고) */
+    key:'banana', name:'바나나', icon:'🍌', goldenName:'황금 바나나',
+    themeColor:'#f4c430', themeColorDeep:'#c9a227',
+    potColor:'#8a8452', potColorLight:'#a39c66',
+    stageLabels: ['구근 심기','새순 돋음','첫 잎 나옴','헛줄기 자람','잎 넓어짐','튼튼한 헛줄기','꽃대 올라옴','바나나 꽃 개화','바나나송이 맺힘','바나나 커짐','노랗게 익는 중','수확 가능'],
+    fruitColorUnripe:'#7fae5a', fruitColorMid:'#c9d94a', fruitColorRipe:'#f4d35e', fruitColorRipeDeep:'#d9a441'
   }
 };
 
@@ -998,7 +1034,7 @@ safeSet('miniGarden_nickname', nickname);
 safeSet('miniGarden_profile', profile);
 safeSet(PLANTNAME_KEY, plantName);
 safeSet(PERSONALITY_KEY_STORAGE, personalityKey);
-safeSet(`miniGarden_currentPlantDir_${nickname}`, PLANT_TYPE === 'grape' ? 'Grape' : 'Tomato');
+safeSet(`miniGarden_currentPlantDir_${nickname}`, PLANT_TYPE.charAt(0).toUpperCase() + PLANT_TYPE.slice(1));
 
 /* 🎨 식물 종류에 맞춰 테마 색상(CSS 변수)을 실시간으로 바꿔줍니다.
    버튼/뱃지/바구니 등 기존 --tomato 변수를 쓰는 모든 UI가 자동으로 포도색(보라)으로 바뀌어요. */
@@ -1008,45 +1044,35 @@ function applyPlantTheme(){
 }
 
 /* ================= 🌱🌱🌱 식물 캐러셀 UI (슬롯 전환/추가) =================
-   가운데엔 지금 키우는 식물 이름칸 하나만 작게 보여주고, 양옆 화살표를 누르거나
+   상단엔 자리를 적게 차지하는 작은 점(dot)만 보여줘요 — 이름/아이콘/단계는
+   바로 아래 대시보드에 이미 나오니 여기선 생략해요. 양옆 화살표를 누르거나
    좌우로 슬라이드하면 다른 슬롯(다른 식물 또는 새로 심기)으로 이동해요. */
 function renderPlantTabs(){
   const bar = document.getElementById('plant-tab-bar');
   if(!bar) return;
-  const slot = plantSlots.find(s=>s.id===currentSlotId);
-  let pillHtml;
-  if(slot){
-    const icon = (PLANT_TYPES[slot.plantType] && PLANT_TYPES[slot.plantType].icon) || '🌱';
-    pillHtml = `<div class="plant-carousel-pill" aria-label="현재 식물">
-      <span class="plant-tab-icon">${icon}</span>${escapeHtml(slot.plantName)}
-    </div>`;
-  } else {
-    pillHtml = `<div class="plant-carousel-pill empty" onclick="openAddPlantModal(${currentSlotId})">
-      <span class="plant-tab-icon">➕</span>새 식물 키우기
-    </div>`;
-  }
+
   let dotsHtml = '';
-  for(let i=0;i<MAX_PLANT_SLOTS;i++){
-    dotsHtml += `<span class="plant-carousel-dot ${(i+1)===currentSlotId?'active':''}"></span>`;
+  for(let i=1;i<=MAX_PLANT_SLOTS;i++){
+    const filled = plantSlots.some(s=>s.id===i);
+    const cls = ['plant-carousel-dot'];
+    if(i===currentSlotId) cls.push('active');
+    if(!filled) cls.push('empty');
+    dotsHtml += `<span class="${cls.join(' ')}"></span>`;
   }
-  bar.innerHTML = `
-    <div class="plant-carousel-arrow" onclick="gotoAdjacentSlot(-1)" aria-label="이전 식물">‹</div>
-    ${pillHtml}
-    <div class="plant-carousel-arrow" onclick="gotoAdjacentSlot(1)" aria-label="다음 식물">›</div>
-  `;
-  let dotsBar = document.getElementById('plant-carousel-dots');
-  if(!dotsBar){
-    dotsBar = document.createElement('div');
-    dotsBar.id = 'plant-carousel-dots';
-    dotsBar.className = 'plant-carousel-dots';
-    bar.insertAdjacentElement('afterend', dotsBar);
-  }
-  dotsBar.innerHTML = dotsHtml;
+  bar.innerHTML = dotsHtml;
+
+  // 🡄🡆 화면 양옆 화살표: 첫 번째 식물이면 왼쪽, 마지막 식물이면 오른쪽 화살표만 숨겨요.
+  const leftArrow = document.getElementById('plant-side-arrow-left');
+  const rightArrow = document.getElementById('plant-side-arrow-right');
+  if(leftArrow) leftArrow.classList.toggle('hidden', currentSlotId <= 1);
+  if(rightArrow) rightArrow.classList.toggle('hidden', currentSlotId >= MAX_PLANT_SLOTS);
 }
 
-/* direction: -1(이전) 또는 1(다음). 비어있는 슬롯이면 새 식물 심기 모달을 열어요. */
+/* direction: -1(이전) 또는 1(다음). 첫/마지막 슬롯을 넘어가면 아무 동작도 하지 않아요(순환 없음).
+   비어있는 슬롯이면 새 식물 심기 모달을 열어요. */
 function gotoAdjacentSlot(direction){
-  const targetId = ((currentSlotId - 1 + direction + MAX_PLANT_SLOTS) % MAX_PLANT_SLOTS) + 1;
+  const targetId = currentSlotId + direction;
+  if(targetId < 1 || targetId > MAX_PLANT_SLOTS) return;
   const target = plantSlots.find(s=>s.id===targetId);
   if(target){ switchSlot(targetId); }
   else { openAddPlantModal(targetId); }
@@ -1059,18 +1085,22 @@ function switchSlot(slotId){
   window.location.reload();
 }
 
-/* 👆 좌우 스와이프로도 식물을 전환할 수 있어요 */
+/* 👆 좌우 스와이프로도 식물을 전환할 수 있어요. 화면 어디서나 동작하도록 game-container 전체에 걸어요. */
 function setupPlantCarouselSwipe(){
-  const bar = document.getElementById('plant-tab-bar');
-  if(!bar) return;
+  const area = document.getElementById('game-container');
+  if(!area) return;
   let startX = 0, startY = 0, tracking = false;
-  bar.addEventListener('touchstart', function(e){
+  area.addEventListener('touchstart', function(e){
+    tracking = false;
+    // 모달이 열려있을 때는 스와이프로 식물이 바뀌지 않도록 막아요.
+    const overlay = document.getElementById('global-modal');
+    if(overlay && getComputedStyle(overlay).display !== 'none') return;
     if(!e.touches || !e.touches.length) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     tracking = true;
   }, { passive:true });
-  bar.addEventListener('touchend', function(e){
+  area.addEventListener('touchend', function(e){
     if(!tracking) return;
     tracking = false;
     const t = (e.changedTouches && e.changedTouches[0]) || null;
@@ -1616,11 +1646,12 @@ function updateAchvBadge(){
 }
 
 function checkAchievements(){
+  // 🏆 '첫 수확'/'수확왕'은 바구니가 정원사 공용(여러 식물이 공유)이라 여기서 개수로 판정하면
+  //    "다른 화분에서 이미 수확한 기록"만으로 이 화분을 심자마자 잘못 달성돼버려요.
+  //    그래서 실제로 수확이 일어나는 순간(confirmHarvest)에서만 부여하도록 여기서는 판정하지 않아요.
   const dayNum = getCurrentDayNum();
   if(dayNum >= 100) unlockAchievement('survive_100');
   if(plantState.stats.waterCount >= 100) unlockAchievement('water_100');
-  if(plantState.harvestedBasket.length >= 1) unlockAchievement('first_harvest');
-  if(plantState.harvestedBasket.length >= 5) unlockAchievement('harvest_5');
   if(plantState.diary.length >= 7) unlockAchievement('diary_7');
 }
 function applyWeatherVisual(skipFlash){
@@ -2304,6 +2335,7 @@ function buildPotFace(){
 
 function buildPlantSVG(stage){
 const isGrape = PLANT_TYPE === 'grape';
+const isBanana = PLANT_TYPE === 'banana';
 const stemH = 14 + stage*15;
 const baseY = 220;
 const topY = baseY - stemH;
@@ -2323,23 +2355,43 @@ const t = i/(leafCount-1 || 1);
 const y = baseY - 14 - t*(stemH-20 > 0 ? stemH-20 : 0);
 const dir = i % 2 === 0 ? 1 : -1;
 const size = 13 + (i%3)*3;
-leaves += `       <g transform="translate(100,${y})">         <path d="M0,0 Q ${dir*size*1.8},${-size*0.4} ${dir*size*2.2},${size*0.3} Q ${dir*size*1.2},${size*0.9} 0,0 Z"
+if(isBanana){
+  /* 🍌 바나나 잎은 작은 물방울 잎이 아니라, 굵은 중심맥을 가진 길쭉하고 넓은 잎으로 그려요 */
+  const len = size*3.1;
+  const wid = size*1.15;
+  leaves += `       <g transform="translate(100,${y}) rotate(${dir*22})">         <path d="M0,0 Q ${dir*wid},${-len*0.32} ${dir*wid*0.55},${-len} Q ${dir*-wid*0.35},${-len*0.55} 0,0 Z"
+              fill="#5fae6c" stroke="#3f8a52" stroke-width="1.3"/>
+        <path d="M0,-2 Q ${dir*wid*0.15},${-len*0.5} ${dir*wid*0.3},${-len*0.92}" stroke="#3f8a52" stroke-width="1" fill="none" opacity="0.55"/>       </g>`;
+} else {
+  leaves += `       <g transform="translate(100,${y})">         <path d="M0,0 Q ${dir*size*1.8},${-size*0.4} ${dir*size*2.2},${size*0.3} Q ${dir*size*1.2},${size*0.9} 0,0 Z"
               fill="#5fae6c" stroke="#3f8a52" stroke-width="1.2"/>       </g>`;
 }
+}
 
+/* 🍌 바나나는 나무처럼 자라니, 다른 화분들보다 화분 자체를 더 크게(약 1.2배) 그려서
+   존재감을 다르게 줍니다. (밑변 중심인 100,220 기준으로 확대) */
+const potScale = isBanana ? 1.22 : 1;
 let pot = `     <g>       <path d="M62,220 L138,220 L130,238 Q100,244 70,238 Z" fill="${PLANT_INFO.potColor}"/>       <rect x="58" y="212" width="84" height="12" rx="4" fill="${PLANT_INFO.potColorLight}"/>       <ellipse cx="100" cy="213" rx="42" ry="7" fill="#7a5235" opacity="0.55"/>     </g>`;
 
-let seedStage = stage === 0 ? `       <ellipse cx="100" cy="214" rx="7" ry="9" fill="#8a5a2e"/>
-  ` : '';
+let seedStage = stage === 0 ? (isBanana
+  ? `       <ellipse cx="100" cy="215" rx="10" ry="7" fill="#8a5a2e"/><ellipse cx="100" cy="212" rx="6" ry="4" fill="#a97a45"/>
+  `
+  : `       <ellipse cx="100" cy="214" rx="7" ry="9" fill="#8a5a2e"/>
+  `) : '';
 
 let stem = stage > 0 ? `     <path d="M100,${baseY} C ${96},${topY+40} ${104},${topY+20} 100,${topY}"
-          stroke="#3f8a52" stroke-width="${6+stage*0.6}" fill="none" stroke-linecap="round"/>
+          stroke="${isBanana ? '#4c7a3f' : '#3f8a52'}" stroke-width="${isBanana ? 9+stage*0.9 : 6+stage*0.6}" fill="none" stroke-linecap="round"/>
   ` : '';
 
-/* 🍅 토마토는 노란 5장짜리 꽃, 🍇 포도는 작은 연둣빛 꽃송이(포도꽃)로 표현해요 */
+/* 🍅 토마토는 노란 5장짜리 꽃, 🍇 포도는 작은 연둣빛 꽃송이, 🍌 바나나는 아래로 늘어지는
+   자주색 꽃봉오리(바나나 꽃)로 표현해요 */
 let flower = '';
 if(hasFlower){
-  if(isGrape){
+  if(isBanana){
+    flower = `     <g transform="translate(100,${topY-2})">       <path d="M0,0 C 11,10 12,30 0,44 C -12,30 -11,10 0,0 Z" fill="#7b4b6b" stroke="#5c3550" stroke-width="1.3"/>
+      <path d="M0,6 C 6,12 7,24 0,34 C -7,24 -6,12 0,6 Z" fill="#976388" opacity="0.7"/>     </g>
+  `;
+  } else if(isGrape){
     const dots = [[-6,-2],[6,-2],[-3,5],[3,5],[0,-8],[0,3]];
     flower = `     <g transform="translate(100,${topY-6})">       ${dots.map(([dx,dy])=>`<circle cx="${dx}" cy="${dy}" r="2.6" fill="#eef7df" stroke="#c8dba0" stroke-width="0.8"/>`).join('')}     </g>
   `;
@@ -2350,12 +2402,29 @@ if(hasFlower){
   }
 }
 
-/* 🍅 토마토는 동그란 열매 하나씩, 🍇 포도는 작은 알갱이가 뭉친 송이로 그려요 */
+/* 🍅 토마토는 동그란 열매, 🍇 포도는 알갱이가 뭉친 송이, 🍌 바나나는 살짝 휜 초승달 모양
+   바나나가 여러 개 모여 "손(hand)"을 이루는 송이로 그려요 */
 let fruits = '';
 for(let i=0;i<fruitCount;i++){
 const fx = 100 + (i%2===0 ? -1 : 1) * (14 + i*4);
-const fy = topY + 24 + i*10;
-if(isGrape){
+const fy = topY + (isBanana ? 18 : 24) + i*10;
+if(isBanana){
+  const scaleUp = 1 + Math.min(stage-8,3)*0.22;
+  const bColor = fruitRipe ? fruitColorRipe : fruitColor;
+  const bEdge = fruitRipe ? fruitColorRipeDeep : '#5d7a3a';
+  /* 손가락 3~4개가 모인 바나나 한 "손" */
+  const fingerCount = Math.min(4, 2 + i);
+  let fingers = '';
+  for(let f=0; f<fingerCount; f++){
+    const fdx = (f - (fingerCount-1)/2) * 9 * scaleUp;
+    const rot = (f - (fingerCount-1)/2) * 10;
+    fingers += `<g transform="translate(${fdx},0) rotate(${rot})">           <path d="M0,0 C ${5*scaleUp},${-4*scaleUp} ${6*scaleUp},${-16*scaleUp} 0,${-22*scaleUp} C ${-4*scaleUp},${-16*scaleUp} ${-3*scaleUp},${-4*scaleUp} 0,0 Z"
+            fill="${bColor}" stroke="${bEdge}" stroke-width="1"/>
+          ${fruitRipe ? `<path d="M0,${-2*scaleUp} L 0,${-19*scaleUp}" stroke="${fruitColorRipeDeep}" stroke-width="0.6" opacity="0.5"/>` : ''}         </g>`;
+  }
+  fruits += `      <g transform="translate(${fx},${fy})">         <path d="M0,${-2} q -2,-5 -5,-6" stroke="#4c7a3f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+${fingers}       </g>`;
+} else if(isGrape){
   const rBerry = 3.4 + Math.min(stage-8,3)*0.7;
   const berryOffsets = [[0,-rBerry*1.5],[-rBerry*1.3,-rBerry*0.2],[rBerry*1.3,-rBerry*0.2],[-rBerry*0.9,rBerry*1.2],[rBerry*0.9,rBerry*1.2],[0,rBerry*2.3]];
   const berries = berryOffsets.map(([bx,by])=>`       <circle cx="${bx}" cy="${by}" r="${rBerry}" fill="${fruitRipe ? fruitColorRipe : fruitColor}" stroke="${fruitRipe ? fruitColorRipeDeep : '#5d7a3a'}" stroke-width="1"/>
@@ -2369,12 +2438,12 @@ ${berries}       </g>`;
 }
 }
 
-let groundShadow = `     <ellipse cx="100" cy="243" rx="48" ry="8" fill="#000000" opacity="0.16"/>`;
+let groundShadow = `     <ellipse cx="100" cy="243" rx="${isBanana ? 54 : 48}" ry="8" fill="#000000" opacity="0.16"/>`;
+
+const potAndShadow = `<g transform="translate(100,222) scale(${potScale}) translate(-100,-222)">${groundShadow}${pot}${seedStage}</g>`;
 
 return `     <g transform="translate(0,-70)">
-      ${groundShadow}
-      ${pot}
-      ${seedStage}
+      ${potAndShadow}
       ${stem}
       ${leaves}
       ${flower}
@@ -2640,8 +2709,18 @@ function openModal(type){
       <button class="action-btn pastel-orange" onclick="installApp()">앱 설치하기</button>
       <button class="action-btn pastel-yellow" onclick="shareGarden()">친구에게 자랑하기</button>
       <button class="action-btn pastel-mint" onclick="requestRestartCurrentPlant()">새로 키우기</button>
+      ${isDevMode() ? `
+      <div class="dev-section-label">🛠️ 개발자 모드</div>
+      <button class="action-btn pastel-mint" onclick="openModal('devtools')">🗂️ 로컬 저장 데이터 보기</button>
+      <button class="action-btn pastel-yellow" onclick="resetAchievementsData(false)">🏆 업적 초기화</button>
+      <button class="action-btn pastel-yellow" onclick="resetBasketData(false)">🧺 바구니 초기화</button>
+      <button class="action-btn pastel-yellow" onclick="resetDiaryData(false)">📔 일기 초기화</button>
+      <button class="action-btn pastel-rose" onclick="resetEverythingData(false)">⚠️ 전체 데이터 초기화</button>
+      ` : ''}
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
+  } else if(type === 'devtools'){
+    content.innerHTML = renderDevToolsModal();
   }
 }
 function closeModal(){
@@ -2914,8 +2993,127 @@ const DEV_CHEATS = {
   '#weather맑음': function(){ forceWeather('sunny'); },
   '#weather화창': function(){ forceWeather('bright'); },
   '#weather흐림': function(){ forceWeather('cloudy'); },
-  '#weather비': function(){ forceWeather('rainy'); }
+  '#weather비': function(){ forceWeather('rainy'); },
+
+  // 🧹 초기화 치트 — 업적/바구니/일기는 각각 따로, '전체'는 이 정원사의 모든 데이터를 완전히 지워요.
+  '#초기화업적': function(){ resetAchievementsData(true); },
+  '#초기화바구니': function(){ resetBasketData(true); },
+  '#초기화일기': function(){ resetDiaryData(true); },
+  '#초기화전체': function(){ resetEverythingData(true); }
 };
+
+/* 🏆 이 화분의 업적만 초기화해요. fromCheat이면 확인창 없이 바로 실행(치트 코드 입력 자체가 확인 절차). */
+function resetAchievementsData(fromCheat){
+  if(!fromCheat && !confirm('정말 이 식물의 업적을 모두 초기화할까요?\n되돌릴 수 없어요.')) return;
+  plantState.achievements = {};
+  plantState.achvSeenCount = 0;
+  updateAchvBadge();
+  savePlantState();
+  showInfoToast('🏆 ' + (fromCheat ? '[치트] ' : '') + '업적을 초기화했어요!');
+  if(!fromCheat) closeModal();
+}
+
+/* 🧺 수확 바구니를 비워요. 바구니는 이 정원사의 모든 식물이 공유해요. */
+function resetBasketData(fromCheat){
+  if(!fromCheat && !confirm('정말 수확 바구니를 모두 비울까요?\n(이 정원사가 키운 모든 식물의 수확 기록이 사라져요) 되돌릴 수 없어요.')) return;
+  plantState.harvestedBasket = [];
+  plantState.basketSeenCount = 0;
+  updateBasketBadge();
+  savePlantState();
+  showInfoToast('🧺 ' + (fromCheat ? '[치트] ' : '') + '수확 바구니를 비웠어요!');
+  if(!fromCheat) closeModal();
+}
+
+/* 📔 이 화분의 일기를 초기화해요. */
+function resetDiaryData(fromCheat){
+  if(!fromCheat && !confirm('정말 일기를 모두 지울까요?\n되돌릴 수 없어요.')) return;
+  plantState.diary = [];
+  plantState.lastDiaryDay = null;
+  plantState.diaryRead = true;
+  updateDiaryBadge();
+  savePlantState();
+  showInfoToast('📔 ' + (fromCheat ? '[치트] ' : '') + '일기를 초기화했어요!');
+  if(!fromCheat) closeModal();
+}
+
+/* ⚠️ 완전 초기화 — 이 정원사(닉네임)와 관련된 모든 로컬 데이터(모든 화분, 코인, 바구니, 업적, 일기,
+   슬롯, 개발자 모드 여부 등)를 지우고 처음 화면(정원사 만들기)으로 돌아가요.
+   nickname이 포함된 miniGarden_ 접두사 키를 전부 찾아서 지우는 방식이라, 슬롯 개수가 몇 개든 안전해요. */
+function nukeAllDataForNickname(){
+  try{
+    const keysToRemove = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('miniGarden_') === 0 && k.indexOf(`_${nickname}`) !== -1){
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k=>safeRemove(k));
+  }catch(e){}
+}
+function resetEverythingData(fromCheat){
+  const msg = `⚠️ 정말 "${nickname}" 정원사의 모든 데이터를 완전히 삭제할까요?\n\n` +
+    `모든 화분(최대 ${MAX_PLANT_SLOTS}개), 코인, 수확 바구니, 업적, 일기가 전부 사라지고\n` +
+    `절대 되돌릴 수 없어요.`;
+  if(!confirm(msg)) return;
+  if(!confirm('정말 정말 확실한가요? 마지막 확인이에요.')) return;
+  nukeAllDataForNickname();
+  window.location.href = '../../index.html';
+}
+
+/* ================= 🗂️ 개발자용: 로컬 저장 데이터 보기 =================
+   이 앱은 별도 서버/DB 없이 브라우저 localStorage에만 데이터를 저장하는 구조라서,
+   "전체 사용자 가입 목록"처럼 여러 기기를 한 곳에서 모아 보는 건 원래 불가능해요.
+   대신 지금 이 브라우저(기기)에 저장돼 있는 miniGarden_ 관련 데이터를 표로 보여줘요. */
+function renderDevToolsModal(){
+  let rows = [];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('miniGarden_') === 0){
+        rows.push({ key:k, value: localStorage.getItem(k) });
+      }
+    }
+  }catch(e){}
+  rows.sort((a,b)=> a.key.localeCompare(b.key));
+  const rowsHtml = rows.map(r=>{
+    let preview = r.value || '';
+    if(preview.length > 140) preview = preview.slice(0,140) + '…';
+    return `<div class="dev-row">
+      <div class="dev-row-key">${escapeHtml(r.key)}</div>
+      <div class="dev-row-val">${escapeHtml(preview)}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="modal-title">🗂️ 로컬 저장 데이터</div>
+    <p class="modal-sub" style="margin-bottom:10px;">
+      이 앱은 서버가 없어서 전체 사용자를 한 곳에서 모아보는 "가입자 DB"는 없어요.<br>
+      대신 <b>지금 이 브라우저(기기)</b>에 저장된 데이터를 그대로 보여드려요. 총 ${rows.length}개 항목.
+    </p>
+    <div class="dev-table">
+      ${rows.length ? rowsHtml : '<div class="dev-row-empty">저장된 데이터가 없어요.</div>'}
+    </div>
+    <button class="action-btn pastel-orange" onclick="exportDevData()">JSON으로 내보내기(클립보드 복사)</button>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+function exportDevData(){
+  let obj = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('miniGarden_') === 0) obj[k] = localStorage.getItem(k);
+    }
+  }catch(e){}
+  const text = JSON.stringify(obj, null, 2);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showInfoToast('📋 클립보드에 복사했어요!');
+    }).catch(()=>{ alert(text); });
+  } else {
+    alert(text);
+  }
+}
 function forceWeather(type){
   const w = WEATHER_TABLE.find(v=>v.type===type);
   if(!w) return;
