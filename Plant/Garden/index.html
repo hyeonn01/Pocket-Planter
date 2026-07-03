@@ -113,27 +113,31 @@
     padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 0;
     font-size:11.5px; color:#3a5a48; font-weight:700;
   }
-  .weather-chip{
-    display:flex; align-items:center; gap:4px;
-    background:rgba(255,255,255,0.8); border-radius:999px; padding:5px 11px;
-    backdrop-filter: blur(6px); box-shadow:0 2px 8px rgba(70,110,70,0.08);
-  }
   .status-bar-right{ display:flex; align-items:center; gap:8px; }
+  /* 레벨/코인/날씨 칩 - 크기, 폰트, 아이콘을 하나의 규격으로 통일 */
+  .weather-chip, .coin-chip, .level-chip{
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    height:26px; padding:0 11px; box-sizing:border-box;
+    border-radius:999px; border:none; margin:0;
+    font-family:inherit; font-size:11.5px; font-weight:800; line-height:1;
+    white-space:nowrap;
+  }
+  .weather-chip{
+    background:rgba(255,255,255,0.8);
+    backdrop-filter: blur(6px); box-shadow:0 2px 8px rgba(70,110,70,0.08);
+    color:#3a5a48;
+  }
   .coin-chip{
-    display:flex; align-items:center; gap:5px;
-    background:rgba(255,248,220,0.92); border-radius:999px; padding:5px 11px;
+    background:rgba(255,248,220,0.92);
     color:#8a5a00; box-shadow:0 2px 8px rgba(160,120,20,0.14);
-    font-weight:800;
   }
   .coin-icon{
-    width:1em; height:1em; display:inline-block;
-    vertical-align:-0.15em; flex-shrink:0;
+    width:13px; height:13px; display:inline-block; flex-shrink:0;
   }
   .level-chip{
-    display:flex; align-items:center; gap:5px;
-    background:rgba(230,244,255,0.92); border-radius:999px; padding:5px 11px;
+    background:rgba(230,244,255,0.92);
     color:#2e6da4; box-shadow:0 2px 8px rgba(46,109,164,0.14);
-    font-weight:800; cursor:pointer; border:none; font-size:11.5px; font-family:inherit;
+    cursor:pointer;
   }
   .level-chip:active{ transform:scale(0.96); }
   .level-xp-row{ margin-bottom:7px; }
@@ -554,6 +558,49 @@
   }
   .close-modal-btn:hover{ background:#d7e4d3; }
 
+  /* 🎮 미니게임 허브 */
+  .minigame-list{ display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+  .minigame-card{
+    display:flex; align-items:center; gap:11px;
+    background:var(--card-soft); border:1.5px solid #e1f0d8; border-radius:14px;
+    padding:11px 12px; cursor:pointer; transition: background 0.15s;
+  }
+  .minigame-card:hover{ background:#e7f5dd; }
+  .minigame-card:active{ transform:scale(0.98); }
+  .minigame-card.disabled{ opacity:0.5; cursor:not-allowed; }
+  .minigame-card-icon{ font-size:26px; flex-shrink:0; line-height:1; }
+  .minigame-card-info{ flex:1; min-width:0; }
+  .minigame-card-title{ font-size:13px; font-weight:800; color:#39523b; }
+  .minigame-card-desc{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+  .minigame-card-arrow{ font-size:12px; color:var(--ink-soft); flex-shrink:0; }
+
+  /* 🃏 하이로우 게임 */
+  .hl-msg{
+    background:#eef8e6; border-radius:10px; padding:7px 10px; margin:0 0 12px;
+    font-weight:700; color:#3a5a3a; font-size:12px; text-align:center;
+  }
+  .hl-card-row{
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    margin-bottom:14px;
+  }
+  .hl-card{
+    width:64px; height:88px; border-radius:10px; background:#fff;
+    border:2px solid #e1f0d8; box-shadow:0 6px 14px rgba(70,110,70,0.14);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:900; color:#33402f;
+    animation: modal-pop 0.2s ease-out;
+  }
+  .hl-card-back{ background:linear-gradient(135deg, var(--leaf), var(--leaf-deep)); color:#fff; font-size:22px; }
+  .hl-vs{ font-size:11px; font-weight:800; color:var(--ink-soft); }
+  .hl-multiplier{
+    text-align:center; font-size:12.5px; font-weight:700; color:#39523b;
+    background:#fff8e8; border:1.5px solid #ffe3a0; border-radius:12px;
+    padding:8px 10px; margin-bottom:12px;
+  }
+  .hl-guess-row{ margin-bottom:12px; }
+  .hl-btn-low{ font-size:14px; }
+  .hl-btn-high{ font-size:14px; }
+
   /* 🛠️ 개발자 모드 전용 UI (설정 화면 하단 / 로컬 데이터 뷰어) */
   .dev-section-label{
     font-size:11.5px; font-weight:800; color:#8a978a;
@@ -843,6 +890,7 @@
     <span class="speed-badge" id="speed-badge">⏩ x1</span>
     <div class="utility-actions">
       <button class="utility-icon-btn" id="shop-btn" onclick="openModal('shop')" aria-label="상점">🛒</button>
+      <button class="utility-icon-btn" id="minigame-btn" onclick="openModal('minigame')" aria-label="미니게임">🕹️</button>
       <button class="utility-icon-btn" id="daily-free-coin-btn" onclick="claimDailyFreeCoin()" aria-label="오늘의 무료 코인">🍀</button>
     </div>
     <div class="harvest-hint" id="harvest-hint">🍅 토마토를 눌러서 수확하기!</div>
@@ -2261,6 +2309,158 @@ function claimDailyFreeCoin(){
     savePlantStateSoft();
   }, 420);
 }
+
+/* ================= 🎮 미니게임 허브 ================= */
+function renderMinigameHub(){
+  return `
+    <div class="modal-title">🎮 미니게임</div>
+    <p class="modal-sub">게임을 통해 코인을 모아보세요!</p>
+    <div class="minigame-list">
+      <div class="minigame-card" onclick="openHighLowGame()">
+        <span class="minigame-card-icon">🃏</span>
+        <div class="minigame-card-info">
+          <div class="minigame-card-title">하이로우</div>
+          <div class="minigame-card-desc">다음 카드가 높을까, 낮을까?</div>
+        </div>
+        <span class="minigame-card-arrow">▶</span>
+      </div>
+      <div class="minigame-card disabled">
+        <span class="minigame-card-icon">⏳</span>
+        <div class="minigame-card-info">
+          <div class="minigame-card-title">준비중</div>
+          <div class="minigame-card-desc">다음 게임을 기대해주세요!</div>
+        </div>
+      </div>
+    </div>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+
+/* ================= 🃏 하이로우 (High-Low) 미니게임 =================
+   카드 하나가 공개되고, 다음 카드가 더 높을지/낮을지 맞히는 게임.
+   맞힐 때마다 배당이 2배씩 늘어나며, 언제든 챙기고 멈출 수 있어요. */
+const HL_BET_OPTIONS = [10, 50, 100];
+let hlState = null; // { bet, multiplier, current, busy }
+
+function hlDrawCard(){
+  return Math.floor(Math.random() * 13) + 1; // 1(A) ~ 13(K)
+}
+function hlCardLabel(v){
+  const map = { 1:'A', 11:'J', 12:'Q', 13:'K' };
+  return map[v] || String(v);
+}
+
+function openHighLowGame(){
+  hlState = null;
+  document.getElementById('modal-content-area').innerHTML = renderHighLowBetScreen();
+}
+
+function renderHighLowBetScreen(){
+  const coins = Math.floor(plantState.coins || 0);
+  return `
+    <div class="modal-title">하이로우</div>
+    <p class="modal-sub">🃏 카드가 다음 카드보다 높을지 낮을지 맞혀보세요!<br>맞힐 때마다 코인이 2배씩 늘어나요.</p>
+    <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
+    <div class="modal-options-grid">
+      ${HL_BET_OPTIONS.map(b => `
+        <div class="modal-opt-btn ${coins < b ? 'disabled' : ''}" ${coins < b ? '' : `onclick="beginHighLow(${b})"`}>
+          ${b}원 배팅
+        </div>`).join('')}
+    </div>
+    <button class="close-modal-btn" onclick="openModal('minigame')">← 목록으로</button>
+  `;
+}
+
+function beginHighLow(bet){
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < bet){
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
+    return;
+  }
+  plantState.coins = coins - bet;
+  updateCoinUI();
+  savePlantStateSoft();
+  hlState = { bet, multiplier: 1, current: hlDrawCard(), busy: false };
+  renderHighLowGameScreen();
+}
+
+function renderHighLowGameScreen(msg){
+  if(!hlState) return;
+  const potential = hlState.bet * hlState.multiplier;
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">하이로우</div>
+    ${msg ? `<p class="hl-msg">${msg}</p>` : ''}
+    <div class="hl-card-row">
+      <div class="hl-card">${hlCardLabel(hlState.current)}</div>
+      <div class="hl-vs">VS</div>
+      <div class="hl-card hl-card-back">?</div>
+    </div>
+    <div class="hl-multiplier">현재 배당 x${hlState.multiplier} · 예상 획득 ${COIN_ICON_HTML} ${potential}원</div>
+    <div class="modal-options-grid hl-guess-row">
+      <div class="modal-opt-btn hl-btn-low" onclick="guessHighLow('low')">낮다</div>
+      <div class="modal-opt-btn hl-btn-high" onclick="guessHighLow('high')">높다</div>
+    </div>
+    ${hlState.multiplier > 1 ? `<button class="action-btn pastel-yellow" onclick="collectHighLow()">${COIN_ICON_HTML} ${potential}원 챙기고 그만하기</button>` : ''}
+    <button class="close-modal-btn" onclick="forfeitHighLow()">그만두기 (배팅금 포기)</button>
+  `;
+}
+
+function guessHighLow(direction){
+  if(!hlState || hlState.busy) return;
+  hlState.busy = true;
+  const next = hlDrawCard();
+  const cur = hlState.current;
+
+  if(next === cur){
+    // 동점은 승패에 영향 없이 카드만 다시 뽑아요
+    hlState.current = hlDrawCard();
+    hlState.busy = false;
+    renderHighLowGameScreen(`동점이었어요! (${hlCardLabel(next)}) 카드를 다시 뽑을게요.`);
+    return;
+  }
+
+  const isCorrect = (next > cur && direction === 'high') || (next < cur && direction === 'low');
+  if(isCorrect){
+    hlState.multiplier *= 2;
+    hlState.current = next;
+    hlState.busy = false;
+    renderHighLowGameScreen(`정답! ${hlCardLabel(next)} 카드였어요!`);
+  } else {
+    const lost = hlState.bet;
+    hlState = null;
+    renderHighLowResultScreen(false, lost, hlCardLabel(next));
+  }
+}
+
+function collectHighLow(){
+  if(!hlState) return;
+  const won = hlState.bet * hlState.multiplier;
+  plantState.coins = Math.floor(plantState.coins || 0) + won;
+  updateCoinUI();
+  savePlantStateSoft();
+  hlState = null;
+  renderHighLowResultScreen(true, won);
+}
+
+function forfeitHighLow(){
+  hlState = null;
+  closeModal();
+}
+
+function renderHighLowResultScreen(isWin, amount, revealedCardLabel){
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">${isWin ? '🎉 획득 완료!' : '😢 아쉬워요'}</div>
+    <p class="modal-sub">
+      ${isWin
+        ? `${COIN_ICON_HTML} ${amount}원을 획득했어요!`
+        : `${revealedCardLabel ? `카드는 ${revealedCardLabel}였어요.<br>` : ''}배팅한 ${amount}원을 잃었어요.`}
+    </p>
+    <button class="action-btn pastel-mint" onclick="openHighLowGame()">다시 도전하기</button>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+  showInfoToast(isWin ? `${COIN_ICON_HTML} +${amount}원 획득!` : `${COIN_ICON_HTML} -${amount}원...`);
+}
+
 /* ================= 🌟 정원사 레벨 모달 ================= */
 function renderLevelModal(){
   const level = plantState.gardenerLevel || 1;
@@ -2920,6 +3120,8 @@ function openModal(type){
     `;
   } else if(type === 'devtools'){
     content.innerHTML = renderDevToolsModal();
+  } else if(type === 'minigame'){
+    content.innerHTML = renderMinigameHub();
   }
 }
 function closeModal(){
