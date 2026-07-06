@@ -608,6 +608,66 @@
   .hl-card-reveal{ animation: hl-flip 0.35s ease; }
   .hl-card-win{ border-color:var(--leaf-deep); box-shadow:0 6px 14px rgba(95,174,108,0.35); }
   .hl-card-lose{ border-color:var(--tomato-deep); box-shadow:0 6px 14px rgba(228,88,60,0.3); }
+
+  /* 🃏 하이로우 게임 방법 안내 */
+  .hl-rules-text{
+    font-size:12.5px; color:#3a5a48; line-height:1.55; margin:0 0 14px; text-align:center;
+  }
+  .hl-rules-order{
+    background:var(--card-soft); border:1.5px solid #e1f0d8; border-radius:14px;
+    padding:12px 10px; margin-bottom:14px;
+  }
+  .hl-rules-order-title{
+    font-size:11px; font-weight:800; color:var(--ink-soft); text-align:center; margin-bottom:9px;
+  }
+  .hl-rules-order-row{
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:5px;
+  }
+  .hl-order-chip{
+    display:inline-flex; align-items:baseline; gap:2px;
+    background:#fff; border:1.5px solid #d8ecd0; border-radius:8px;
+    padding:4px 7px; font-size:12.5px; font-weight:900; color:#33402f;
+  }
+  .hl-order-chip small{ font-size:9px; font-weight:700; color:var(--ink-soft); }
+  .hl-order-arrow{ font-size:11px; color:#b8c9b0; font-weight:700; }
+  .hl-rules-list{
+    margin:0 0 16px; padding:0 0 0 18px; font-size:12px; color:#3a5a48; line-height:1.75;
+  }
+  .hl-rules-list li{ margin-bottom:2px; }
+  .hl-rules-list b{ color:var(--leaf-deep); }
+  .hl-help-link{
+    display:block; text-align:center; font-size:11.5px; font-weight:700;
+    color:var(--ink-soft); text-decoration:underline; margin:-4px 0 12px; cursor:pointer;
+  }
+
+  /* 🂡 미니 블랙잭 */
+  .bj-card-row{
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap:8px; margin-bottom:12px;
+  }
+  .bj-card{
+    width:46px; height:64px; border-radius:8px; background:#fff;
+    border:2px solid #e1f0d8; box-shadow:0 4px 10px rgba(70,110,70,0.14);
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; font-weight:900; color:#33402f;
+    animation: modal-pop 0.2s ease-out;
+  }
+  .bj-card-new{ animation: hl-flip 0.35s ease; }
+  .bj-card-win{ border-color:var(--leaf-deep); box-shadow:0 6px 14px rgba(95,174,108,0.35); }
+  .bj-card-lose{ border-color:var(--tomato-deep); box-shadow:0 6px 14px rgba(228,88,60,0.3); }
+  .bj-sum-box{
+    text-align:center; font-size:13px; font-weight:800; color:#39523b;
+    background:#eef8e6; border-radius:10px; padding:7px 10px; margin-bottom:10px;
+  }
+  .bj-sum-box b{ font-size:16px; color:var(--leaf-deep); }
+  .bj-multiplier{
+    text-align:center; font-size:12.5px; font-weight:700; color:#39523b;
+    background:#fff8e8; border:1.5px solid #ffe3a0; border-radius:12px;
+    padding:8px 10px; margin-bottom:12px;
+  }
+  .bj-guess-row{ margin-bottom:12px; }
+  .bj-btn-hit{ font-size:14px; }
+  .bj-btn-stand{ font-size:14px; }
   @keyframes hl-flip{
     0%{ transform: rotateY(90deg); opacity:0.3; }
     100%{ transform: rotateY(0deg); opacity:1; }
@@ -2496,12 +2556,13 @@ function renderMinigameHub(){
         </div>
         <span class="minigame-card-arrow">▶</span>
       </div>
-      <div class="minigame-card disabled">
-        <span class="minigame-card-icon">⏳</span>
+      <div class="minigame-card" onclick="openBlackjackGame()">
+        <span class="minigame-card-icon">🂡</span>
         <div class="minigame-card-info">
-          <div class="minigame-card-title">준비중</div>
-          <div class="minigame-card-desc">다음 게임을 기대해주세요!</div>
+          <div class="minigame-card-title">미니 블랙잭</div>
+          <div class="minigame-card-desc">21을 넘지 않게, 어디까지 도전할까?</div>
         </div>
+        <span class="minigame-card-arrow">▶</span>
       </div>
     </div>
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
@@ -2524,6 +2585,41 @@ function hlCardLabel(v){
 
 function openHighLowGame(){
   hlState = null;
+  document.getElementById('modal-content-area').innerHTML = renderHighLowRulesScreen();
+}
+
+/* 🔎 게임 시작 전, 카드 알파벳(J/Q/K) 의미와 규칙을 먼저 보여주는 설명 화면 */
+function renderHighLowRulesScreen(){
+  return `
+    <div class="modal-title">🃏 하이로우 게임 방법</div>
+    <p class="hl-rules-text">카드 한 장이 먼저 공개돼요.<br>다음 카드가 그보다 <b>높을지 낮을지</b> 맞히면 코인을 얻는 게임이에요!</p>
+    <div class="hl-rules-order">
+      <div class="hl-rules-order-title">카드 숫자 순서 (낮음 → 높음)</div>
+      <div class="hl-rules-order-row">
+        <span class="hl-order-chip">A<small>(1)</small></span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">2~10</span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">J<small>(11)</small></span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">Q<small>(12)</small></span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">K<small>(13)</small></span>
+      </div>
+    </div>
+    <ul class="hl-rules-list">
+      <li><b>A</b>는 가장 낮은 숫자, <b>J·Q·K</b>는 숫자 11·12·13을 뜻하는 가장 높은 카드예요.</li>
+      <li>맞히면 배당이 <b>2배씩</b> 계속 쌓여요.</li>
+      <li>같은 숫자가 나오면(동점) 승패 없이 카드만 다시 뽑아요.</li>
+      <li>틀리면 배팅한 코인을 모두 잃어요.</li>
+      <li>언제든 <b>"챙기고 그만하기"</b>로 지금까지 딴 코인을 받을 수 있어요.</li>
+    </ul>
+    <button class="action-btn pastel-mint" onclick="showHighLowBetScreen()">시작하기</button>
+    <button class="close-modal-btn" onclick="openModal('minigame')">← 목록으로</button>
+  `;
+}
+
+function showHighLowBetScreen(){
   document.getElementById('modal-content-area').innerHTML = renderHighLowBetScreen();
 }
 
@@ -2532,6 +2628,7 @@ function renderHighLowBetScreen(){
   return `
     <div class="modal-title">하이로우</div>
     <p class="modal-sub">🃏 카드가 다음 카드보다 높을지 낮을지 맞혀보세요!<br>맞힐 때마다 코인이 2배씩 늘어나요.</p>
+    <span class="hl-help-link" onclick="document.getElementById('modal-content-area').innerHTML = renderHighLowRulesScreen()">❔ 게임 방법 다시 보기</span>
     <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
     <div class="modal-options-grid">
       ${HL_BET_OPTIONS.map(b => `
@@ -2674,13 +2771,221 @@ function renderHighLowResultScreen(isWin, amount, revealedCardLabel){
         ? `${COIN_ICON_HTML} ${amount}원을 획득했어요!`
         : `${revealedCardLabel ? `카드는 ${revealedCardLabel}였어요.<br>` : ''}배팅한 ${amount}원을 잃었어요.`}
     </p>
-    <button class="action-btn pastel-mint" onclick="openHighLowGame()">다시 도전하기</button>
+    <button class="action-btn pastel-mint" onclick="showHighLowBetScreen()">다시 도전하기</button>
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
   `;
   showInfoToast(isWin ? `${COIN_ICON_HTML} +${amount}원 획득!` : `${COIN_ICON_HTML} -${amount}원...`);
 }
 
-/* ================= 🌟 정원사 레벨 모달 ================= */
+/* ================= 🂡 미니 블랙잭 (21 넘지 않기) 미니게임 =================
+   카드를 계속 받을지(Hit) 그만 받을지(Stand) 선택하는 게임.
+   카드 합계가 낮을 때(안전)는 배당이 조금, 합계가 높을 때(위험)는 배당이 크게 올라요.
+   21을 넘기면(버스트) 배팅금을 모두 잃고, 언제든 "그만하기"로 지금까지의 배당을 챙길 수 있어요. */
+const BJ_BET_OPTIONS = [10, 50, 100, 500];
+let bjState = null; // { bet, multiplier, sum, cards, busy, pendingType, pendingCard, pendingSum, pendingFactor }
+
+// A=1, 2~10은 숫자 그대로, J·Q·K는 10으로 계산 (실제 블랙잭 규칙과 동일)
+function bjCardValue(v){
+  if(v === 1) return 1;
+  if(v >= 11) return 10;
+  return v;
+}
+// 현재 합계(카드를 받기 전 기준)가 높을수록(위험할수록) 다음 배당 상승폭이 커져요
+function bjNextMultiplierFactor(sumBeforeHit){
+  if(sumBeforeHit <= 11) return 1.3;  // 어떤 카드를 받아도 버스트 불가능한 안전 구간
+  if(sumBeforeHit <= 16) return 1.6;  // 약간의 버스트 위험이 있는 구간
+  return 2.2;                          // 버스트 위험이 큰 고위험 구간
+}
+
+function openBlackjackGame(){
+  bjState = null;
+  document.getElementById('modal-content-area').innerHTML = renderBlackjackRulesScreen();
+}
+
+/* 🔎 게임 시작 전, 카드 알파벳(J/Q/K)과 A의 숫자값, 위험-보상 구조를 먼저 보여주는 설명 화면 */
+function renderBlackjackRulesScreen(){
+  return `
+    <div class="modal-title">🂡 미니 블랙잭 게임 방법</div>
+    <p class="hl-rules-text">카드를 계속 받을지, 그만 받을지 직접 선택하는 게임이에요.<br>카드 합계가 <b>21을 넘으면(버스트)</b> 배팅금을 모두 잃어요!</p>
+    <div class="hl-rules-order">
+      <div class="hl-rules-order-title">카드 숫자 값</div>
+      <div class="hl-rules-order-row">
+        <span class="hl-order-chip">A<small>(1)</small></span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">2~10<small>(숫자 그대로)</small></span>
+        <span class="hl-order-arrow">→</span>
+        <span class="hl-order-chip">J·Q·K<small>(10)</small></span>
+      </div>
+    </div>
+    <ul class="hl-rules-list">
+      <li><b>카드 받기(Hit)</b>를 누르면 카드를 한 장 더 받아 합계에 더해요.</li>
+      <li>합계가 낮아 안전할 때는 배당이 조금, <b>21에 가까워 위험할수록</b> 배당이 크게 올라요.</li>
+      <li>합계가 21을 넘으면(버스트) 배팅금을 모두 잃어요.</li>
+      <li>언제든 <b>"그만하기(Stand)"</b>를 눌러 지금까지의 배당을 그대로 챙길 수 있어요.</li>
+      <li>합계가 정확히 21이 되면 자동으로 멈추고 배당을 챙겨줘요!</li>
+    </ul>
+    <button class="action-btn pastel-mint" onclick="showBlackjackBetScreen()">시작하기</button>
+    <button class="close-modal-btn" onclick="openModal('minigame')">← 목록으로</button>
+  `;
+}
+
+function showBlackjackBetScreen(){
+  document.getElementById('modal-content-area').innerHTML = renderBlackjackBetScreen();
+}
+
+function renderBlackjackBetScreen(){
+  const coins = Math.floor(plantState.coins || 0);
+  return `
+    <div class="modal-title">미니 블랙잭</div>
+    <p class="modal-sub">🂡 카드를 받을지 그만할지 직접 선택하세요!<br>위험할수록 배당이 더 크게 올라가요.</p>
+    <span class="hl-help-link" onclick="document.getElementById('modal-content-area').innerHTML = renderBlackjackRulesScreen()">❔ 게임 방법 다시 보기</span>
+    <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
+    <div class="modal-options-grid">
+      ${BJ_BET_OPTIONS.map(b => `
+        <div class="modal-opt-btn ${coins < b ? 'disabled' : ''}" ${coins < b ? '' : `onclick="beginBlackjack(${b})"`}>
+          ${b}원 배팅
+        </div>`).join('')}
+    </div>
+    <button class="close-modal-btn" onclick="openModal('minigame')">← 목록으로</button>
+  `;
+}
+
+function beginBlackjack(bet){
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < bet){
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
+    return;
+  }
+  plantState.coins = coins - bet;
+  updateCoinUI();
+  savePlantStateSoft();
+  const firstCard = hlDrawCard();
+  bjState = { bet, multiplier: 1, sum: bjCardValue(firstCard), cards: [firstCard], busy: false };
+  renderBlackjackGameScreen();
+}
+
+function renderBlackjackGameScreen(msg){
+  if(!bjState) return;
+  const potential = Math.floor(bjState.bet * bjState.multiplier);
+  const cardsHtml = bjState.cards.map(c => `<div class="bj-card">${hlCardLabel(c)}</div>`).join('');
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">미니 블랙잭</div>
+    ${msg ? `<p class="hl-msg">${msg}</p>` : ''}
+    <div class="bj-card-row">${cardsHtml}</div>
+    <div class="bj-sum-box">현재 합계 · <b>${bjState.sum}</b> / 21</div>
+    <div class="bj-multiplier">지금 그만하면 = ${COIN_ICON_HTML} ${potential}원</div>
+    <div class="modal-options-grid bj-guess-row">
+      <div class="modal-opt-btn bj-btn-hit" onclick="hitBlackjack()">카드 받기</div>
+      <div class="modal-opt-btn bj-btn-stand" onclick="standBlackjack()">그만하기</div>
+    </div>
+  `;
+}
+
+function hitBlackjack(){
+  if(!bjState || bjState.busy) return;
+  bjState.busy = true;
+  const card = hlDrawCard();
+  const val = bjCardValue(card);
+  const newSum = bjState.sum + val;
+
+  if(newSum > 21){
+    bjState.pendingType = 'bust';
+  } else if(newSum === 21){
+    bjState.pendingType = 'blackjack';
+    bjState.pendingFactor = bjNextMultiplierFactor(bjState.sum);
+  } else {
+    bjState.pendingType = 'safe';
+    bjState.pendingFactor = bjNextMultiplierFactor(bjState.sum);
+  }
+  bjState.pendingCard = card;
+  bjState.pendingSum = newSum;
+  renderBlackjackRevealScreen();
+}
+
+/* 🔎 새로 받은 카드를 보여주고, 사용자가 결과를 확인한 뒤 직접 "다음으로"를 눌러야 진행돼요 */
+function renderBlackjackRevealScreen(){
+  if(!bjState) return;
+  const type = bjState.pendingType;
+  const card = bjState.pendingCard;
+  const newSum = bjState.pendingSum;
+  let msg, cardClass;
+  if(type === 'bust'){
+    msg = `버스트! ${hlCardLabel(card)} 카드로 합계가 ${newSum}이 되어 21을 넘었어요.`;
+    cardClass = 'bj-card-lose';
+  } else if(type === 'blackjack'){
+    msg = `${hlCardLabel(card)} 카드로 정확히 21! 자동으로 배당을 챙겨드릴게요.`;
+    cardClass = 'bj-card-win';
+  } else {
+    msg = `${hlCardLabel(card)} 카드를 받았어요! 합계 ${newSum}`;
+    cardClass = '';
+  }
+  const cardsHtml = bjState.cards.map(c => `<div class="bj-card">${hlCardLabel(c)}</div>`).join('')
+    + `<div class="bj-card bj-card-new ${cardClass}">${hlCardLabel(card)}</div>`;
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">미니 블랙잭</div>
+    <p class="hl-msg">${msg}</p>
+    <div class="bj-card-row">${cardsHtml}</div>
+    <button class="action-btn pastel-mint" onclick="proceedAfterBlackjackReveal()">다음으로</button>
+  `;
+}
+
+/* 카드 확인 후 사용자가 "다음으로"를 누르면 그제서야 결과를 반영해요 */
+function proceedAfterBlackjackReveal(){
+  if(!bjState) return;
+  const type = bjState.pendingType;
+  const card = bjState.pendingCard;
+  const newSum = bjState.pendingSum;
+
+  if(type === 'bust'){
+    const lost = bjState.bet;
+    bjState = null;
+    renderBlackjackResultScreen(false, lost, `합계 ${newSum}(버스트)`);
+    return;
+  }
+
+  bjState.multiplier *= bjState.pendingFactor;
+  bjState.sum = newSum;
+  bjState.cards.push(card);
+  bjState.pendingType = null;
+  bjState.pendingCard = null;
+
+  if(type === 'blackjack'){
+    const won = Math.floor(bjState.bet * bjState.multiplier);
+    plantState.coins = Math.floor(plantState.coins || 0) + won;
+    updateCoinUI();
+    savePlantStateSoft();
+    bjState = null;
+    renderBlackjackResultScreen(true, won, '21 달성!');
+    return;
+  }
+
+  bjState.busy = false;
+  renderBlackjackGameScreen();
+}
+
+function standBlackjack(){
+  if(!bjState) return;
+  const won = Math.floor(bjState.bet * bjState.multiplier);
+  plantState.coins = Math.floor(plantState.coins || 0) + won;
+  updateCoinUI();
+  savePlantStateSoft();
+  bjState = null;
+  renderBlackjackResultScreen(true, won);
+}
+
+function renderBlackjackResultScreen(isWin, amount, note){
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">${isWin ? '🎉 획득 완료!' : '😢 아쉬워요'}</div>
+    <p class="modal-sub">
+      ${isWin
+        ? `${note ? `${note}<br>` : ''}${COIN_ICON_HTML} ${amount}원을 획득했어요!`
+        : `${note ? `${note}<br>` : ''}배팅한 ${amount}원을 잃었어요.`}
+    </p>
+    <button class="action-btn pastel-mint" onclick="showBlackjackBetScreen()">다시 도전하기</button>
+    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+  showInfoToast(isWin ? `${COIN_ICON_HTML} +${amount}원 획득!` : `${COIN_ICON_HTML} -${amount}원...`);
+}
 function renderLevelModal(){
   const level = plantState.gardenerLevel || 1;
   const xp = Math.floor(plantState.gardenerXp || 0);
