@@ -184,9 +184,11 @@
   }
 
   .quick-actions-row{
-    position:relative; z-index:6; display:flex; flex-direction:row; gap:10px;
+    position:relative; z-index:6; display:flex; flex-direction:row; align-items:center;
+    justify-content:space-between; gap:10px;
     margin:8px 14px 0; flex-shrink:0;
   }
+  .quick-actions-left{ display:flex; flex-direction:row; gap:10px; }
   .utility-icon-btn{
     width:36px; height:36px; border:none; border-radius:50%;
     background:rgba(255,255,255,0.92); color:var(--leaf-deep);
@@ -369,10 +371,10 @@
   }
 
   .personality-badge{
-    position:absolute; top:6px; right:6px;
-    background:rgba(255,255,255,0.85); padding:4px 9px;
-    border-radius:999px; font-size:10.5px; font-weight:700; z-index:7;
-    color:#43543e; white-space:nowrap;
+    background:rgba(255,255,255,0.92); padding:6px 11px;
+    border-radius:999px; font-size:11px; font-weight:700; z-index:7;
+    color:#43543e; white-space:nowrap; box-shadow:0 8px 18px rgba(70,110,70,0.16);
+    flex-shrink:0;
   }
 
   .speed-badge{
@@ -603,6 +605,13 @@
   .hl-guess-row{ margin-bottom:12px; }
   .hl-btn-low{ font-size:14px; }
   .hl-btn-high{ font-size:14px; }
+  .hl-card-reveal{ animation: hl-flip 0.35s ease; }
+  .hl-card-win{ border-color:var(--leaf-deep); box-shadow:0 6px 14px rgba(95,174,108,0.35); }
+  .hl-card-lose{ border-color:var(--tomato-deep); box-shadow:0 6px 14px rgba(228,88,60,0.3); }
+  @keyframes hl-flip{
+    0%{ transform: rotateY(90deg); opacity:0.3; }
+    100%{ transform: rotateY(0deg); opacity:1; }
+  }
 
   /* 🛠️ 개발자 모드 전용 UI (설정 화면 하단 / 로컬 데이터 뷰어) */
   .dev-section-label{
@@ -895,16 +904,18 @@
     </div>
   </div>
 
-  <!-- 🛒🕹️🍀 상점/미니게임/무료코인 버튼 (대시보드 박스 밖, 왼쪽 정렬 가로 배치) -->
+  <!-- 🛒🕹️🍀 상점/미니게임/무료코인 버튼 (대시보드 박스 밖, 왼쪽) + 성격 뱃지 (오른쪽, 같은 줄) -->
   <div class="quick-actions-row">
-    <button class="utility-icon-btn" id="shop-btn" onclick="openModal('shop')" aria-label="상점">🛒</button>
-    <button class="utility-icon-btn" id="minigame-btn" onclick="openModal('minigame')" aria-label="미니게임">🕹️</button>
-    <button class="utility-icon-btn" id="daily-free-coin-btn" onclick="claimDailyFreeCoin()" aria-label="오늘의 무료 코인">🍀</button>
+    <div class="quick-actions-left">
+      <button class="utility-icon-btn" id="shop-btn" onclick="openModal('shop')" aria-label="상점">🛒</button>
+      <button class="utility-icon-btn" id="minigame-btn" onclick="openModal('minigame')" aria-label="미니게임">🕹️</button>
+      <button class="utility-icon-btn" id="daily-free-coin-btn" onclick="claimDailyFreeCoin()" aria-label="오늘의 무료 코인">🍀</button>
+    </div>
+    <span class="personality-badge" id="personality-badge">😊 활발함</span>
   </div>
 
   <!-- 식물 스테이지 -->
   <div class="garden-stage" id="touch-stage">
-    <span class="personality-badge" id="personality-badge">😊 활발함</span>
     <span class="speed-badge" id="speed-badge">⏩ x1</span>
     <div class="harvest-hint" id="harvest-hint">🍅 토마토를 눌러서 수확하기!</div>
     <div class="speech-bubble-wrap" id="chat-bubble-wrap">
@@ -2548,6 +2559,7 @@ function beginHighLow(bet){
 function renderHighLowGameScreen(msg){
   if(!hlState) return;
   const potential = hlState.bet * hlState.multiplier;
+  const nextPotential = hlState.bet * hlState.multiplier * 2;
   document.getElementById('modal-content-area').innerHTML = `
     <div class="modal-title">하이로우</div>
     ${msg ? `<p class="hl-msg">${msg}</p>` : ''}
@@ -2556,7 +2568,7 @@ function renderHighLowGameScreen(msg){
       <div class="hl-vs">VS</div>
       <div class="hl-card hl-card-back">?</div>
     </div>
-    <div class="hl-multiplier">현재 배당 x${hlState.multiplier} · 예상 획득 ${COIN_ICON_HTML} ${potential}원</div>
+    <div class="hl-multiplier">예상 획득 (현재 배당 x2) = ${COIN_ICON_HTML} ${nextPotential}원</div>
     <div class="modal-options-grid hl-guess-row">
       <div class="modal-opt-btn hl-btn-low" onclick="guessHighLow('low')">낮다</div>
       <div class="modal-opt-btn hl-btn-high" onclick="guessHighLow('high')">높다</div>
@@ -2573,15 +2585,61 @@ function guessHighLow(direction){
   const cur = hlState.current;
 
   if(next === cur){
-    // 동점은 승패에 영향 없이 카드만 다시 뽑아요
-    hlState.current = hlDrawCard();
-    hlState.busy = false;
-    renderHighLowGameScreen(`동점이었어요! (${hlCardLabel(next)}) 카드를 다시 뽑을게요.`);
+    // 동점은 승패에 영향 없이 카드만 다시 뽑아요 (다만 무슨 카드였는지는 보여주고 넘어가요)
+    hlState.pendingType = 'tie';
+    hlState.revealValue = next;
+    renderHighLowRevealScreen();
     return;
   }
 
   const isCorrect = (next > cur && direction === 'high') || (next < cur && direction === 'low');
-  if(isCorrect){
+  hlState.pendingType = isCorrect ? 'win' : 'lose';
+  hlState.revealValue = next;
+  renderHighLowRevealScreen();
+}
+
+/* 🔎 다음 카드를 뒤집어 보여주고, 사용자가 결과를 확인한 뒤 직접 "다음으로"를 눌러야 진행돼요 */
+function renderHighLowRevealScreen(){
+  if(!hlState) return;
+  const cur = hlState.current;
+  const next = hlState.revealValue;
+  const type = hlState.pendingType;
+  let msg, cardClass;
+  if(type === 'tie'){
+    msg = `동점이었어요! (${hlCardLabel(next)}) 카드를 다시 뽑을게요.`;
+    cardClass = '';
+  } else if(type === 'win'){
+    msg = `정답! ${hlCardLabel(next)} 카드였어요!`;
+    cardClass = 'hl-card-win';
+  } else {
+    msg = `아쉬워요! ${hlCardLabel(next)} 카드였어요.`;
+    cardClass = 'hl-card-lose';
+  }
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">하이로우</div>
+    <p class="hl-msg">${msg}</p>
+    <div class="hl-card-row">
+      <div class="hl-card">${hlCardLabel(cur)}</div>
+      <div class="hl-vs">VS</div>
+      <div class="hl-card hl-card-reveal ${cardClass}">${hlCardLabel(next)}</div>
+    </div>
+    <button class="action-btn pastel-mint" onclick="proceedAfterHighLowReveal()">다음으로</button>
+  `;
+}
+
+/* 카드 확인 후 사용자가 "다음으로"를 누르면 그제서야 다음 라운드/결과 화면으로 넘어가요 */
+function proceedAfterHighLowReveal(){
+  if(!hlState) return;
+  const type = hlState.pendingType;
+  const next = hlState.revealValue;
+  hlState.pendingType = null;
+  hlState.revealValue = null;
+
+  if(type === 'tie'){
+    hlState.current = hlDrawCard();
+    hlState.busy = false;
+    renderHighLowGameScreen();
+  } else if(type === 'win'){
     hlState.multiplier *= 2;
     hlState.current = next;
     hlState.busy = false;
