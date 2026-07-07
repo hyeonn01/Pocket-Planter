@@ -259,16 +259,47 @@
   .sun-fill{ background: linear-gradient(90deg, #ffe49a, #ffc14d); }
   .speed-fill{ background: linear-gradient(90deg, #ffcf7a, #ff9a3c); transition: width 0.4s linear; }
 
-  .daily-mission-row{ display:flex; gap:7px; margin-top:6px; }
-  .mission-chip{
-    flex:1; text-align:center; background:var(--card-soft); border:1.5px solid #e1f0d8;
-    border-radius:999px; padding:5px 6px; font-size:10.5px; font-weight:700; color:#4a5d44;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: background 0.2s, border-color 0.2s;
+  .daily-mission-block{
+    margin-top:9px; padding-top:8px; border-top:1px dashed #dfeada;
   }
-  .mission-chip b{ font-weight:900; color:var(--leaf-deep); }
-  .mission-chip.completed{ background:#fff8e0; border-color:#ffdd88; color:#8a5a00; }
-  .mission-chip.completed b{ color:#d97706; }
-  .mission-chip.completed::before{ content:'✅ '; }
+  .daily-mission-title{
+    font-size:10.5px; font-weight:800; color:var(--leaf-deep); margin-bottom:7px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .daily-mission-item{
+    display:flex; align-items:center; gap:9px;
+    background:var(--card-soft); border:1.5px solid #e1f0d8; border-radius:13px;
+    padding:7px 10px; margin-bottom:6px;
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+  .daily-mission-item:last-child{ margin-bottom:0; }
+  .daily-mission-icon{
+    font-size:16px; width:26px; height:26px; flex-shrink:0; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(70,110,70,0.1);
+  }
+  .daily-mission-info{ flex:1; min-width:0; }
+  .daily-mission-label-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11px; font-weight:800; color:#3f5439; margin-bottom:4px;
+  }
+  .daily-mission-label-row .daily-mission-count{ font-size:10px; font-weight:800; color:var(--ink-soft); }
+  .daily-mission-label-row .daily-mission-count b{ font-weight:900; color:var(--leaf-deep); }
+  .daily-mission-bar-bg{ background:#e7f0e3; border-radius:999px; height:6px; overflow:hidden; }
+  .daily-mission-bar-fill{
+    height:100%; border-radius:999px; width:0%;
+    background: linear-gradient(90deg, var(--leaf), var(--leaf-deep));
+    transition: width 0.4s ease;
+  }
+  .daily-mission-reward{
+    flex-shrink:0; font-size:10px; font-weight:800; color:#b46a2e;
+    background:#fff3e0; border-radius:999px; padding:4px 9px; white-space:nowrap;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .daily-mission-item.completed{ background:#fff8e0; border-color:#ffdd88; }
+  .daily-mission-item.completed .daily-mission-count b{ color:#d97706; }
+  .daily-mission-item.completed .daily-mission-bar-fill{ background:linear-gradient(90deg,#ffd54f,#ffb300); }
+  .daily-mission-item.completed .daily-mission-reward{ background:#ffdd88; color:#8a5a00; }
 
   .garden-stage{
     flex:1; min-height:0; position:relative; z-index:5;
@@ -969,9 +1000,30 @@
       <span>일조량 <span id="txt-sun">50</span>%</span>
       <div class="progress-bar-bg"><div class="progress-bar-fill sun-fill" id="bar-sun"></div></div>
     </div>
-    <div class="daily-mission-row" id="daily-mission-row">
-      <span class="mission-chip" id="mission-chip-talk">💬 말걸기 <b id="mission-talk-count">0</b>/5</span>
-      <span class="mission-chip" id="mission-chip-pet">❤️ 쓰다듬기 <b id="mission-pet-count">0</b>/5</span>
+    <div class="daily-mission-block" id="daily-mission-row">
+      <div class="daily-mission-title">오늘의 미션</div>
+      <div class="daily-mission-item" id="mission-item-talk">
+        <span class="daily-mission-icon">💬</span>
+        <div class="daily-mission-info">
+          <div class="daily-mission-label-row">
+            <span>말걸기</span>
+            <span class="daily-mission-count"><b id="mission-talk-count">0</b>/5</span>
+          </div>
+          <div class="daily-mission-bar-bg"><div class="daily-mission-bar-fill" id="mission-talk-bar" style="width:0%"></div></div>
+        </div>
+        <span class="daily-mission-reward" id="mission-chip-talk">+30원</span>
+      </div>
+      <div class="daily-mission-item" id="mission-item-pet">
+        <span class="daily-mission-icon">💚</span>
+        <div class="daily-mission-info">
+          <div class="daily-mission-label-row">
+            <span>쓰다듬기</span>
+            <span class="daily-mission-count"><b id="mission-pet-count">0</b>/5</span>
+          </div>
+          <div class="daily-mission-bar-bg"><div class="daily-mission-bar-fill" id="mission-pet-bar" style="width:0%"></div></div>
+        </div>
+        <span class="daily-mission-reward" id="mission-chip-pet">+20원</span>
+      </div>
     </div>
   </div>
 
@@ -1202,7 +1254,7 @@ const SHARED_FIELDS = [
   'speedMultiplier','speedBudgetMs','speedCheckpoint','speedExhaustedAt',
   'harvestedBasket','basketSeenCount',
   'gardenerLevel','gardenerXp','missionSeenLevel',
-  'lifeWater','lifeTalk','lifeDays'
+  'lifeWater','lifeTalk','lifeDays','lifePet','lifeCoinsEarned','lifeDiaryCount'
 ];
 function loadSharedState(){
   try{
@@ -1584,13 +1636,16 @@ const STATUS_DIARY_LINES = {
    업적 시스템 대신, 레벨마다 정해진 미션을 달성해야 다음 레벨로 올라갈 수 있어요.
    미션 진행도는 정원사 계정 전체(모든 화분 공유) 기준의 누적치라서, 화분을 바꿔도 이어져요. */
 const LEVEL_MISSION_TYPES = [
-  { type:'water',   icon:'💧', label:'물주기',       unit:'회', getCount:()=> plantState.lifeWater || 0 },
-  { type:'talk',    icon:'💬', label:'다정한 대화',   unit:'회', getCount:()=> plantState.lifeTalk || 0 },
-  { type:'harvest', icon:'🧺', label:'수확',         unit:'회', getCount:()=> (plantState.harvestedBasket||[]).length },
-  { type:'day',     icon:'📅', label:'정원 가꾸기',   unit:'일', getCount:()=> plantState.lifeDays || 0 }
+  { type:'water',    icon:'💧', label:'물주기',           unit:'회', getCount:()=> plantState.lifeWater || 0 },
+  { type:'talk',     icon:'💬', label:'다정한 대화',       unit:'회', getCount:()=> plantState.lifeTalk || 0 },
+  { type:'pet',      icon:'💚', label:'쓰다듬기',         unit:'회', getCount:()=> plantState.lifePet || 0 },
+  { type:'harvest',  icon:'🧺', label:'수확',            unit:'회', getCount:()=> (plantState.harvestedBasket||[]).length },
+  { type:'day',      icon:'📅', label:'정원 가꾸기',       unit:'일', getCount:()=> plantState.lifeDays || 0 },
+  { type:'coin',     icon:'🪙', label:'코인 모으기',       unit:'원', getCount:()=> plantState.lifeCoinsEarned || 0 },
+  { type:'diary',    icon:'📔', label:'일기 쓰기',        unit:'개', getCount:()=> plantState.lifeDiaryCount || 0 }
 ];
 /* level(현재 레벨)을 넘어 다음 레벨로 가기 위한 미션 정의를 계산해요.
-   4가지 미션 타입을 순환하면서, 4레벨을 한 바퀴 돌 때마다 목표치가 조금씩 올라가요. */
+   7가지 미션 타입을 순환하면서, 한 바퀴(7레벨)를 돌 때마다 목표치가 조금씩 올라가요. */
 function getLevelMissionDef(level){
   const idx = (level - 1) % LEVEL_MISSION_TYPES.length;
   const cycle = Math.floor((level - 1) / LEVEL_MISSION_TYPES.length);
@@ -1598,8 +1653,11 @@ function getLevelMissionDef(level){
   let target;
   if(m.type === 'water') target = 8 + cycle * 10;
   else if(m.type === 'talk') target = 6 + cycle * 8;
+  else if(m.type === 'pet') target = 6 + cycle * 8;
   else if(m.type === 'harvest') target = 1 + cycle * 2;
-  else target = 3 + cycle * 4;
+  else if(m.type === 'day') target = 3 + cycle * 4;
+  else if(m.type === 'coin') target = 100 + cycle * 150;
+  else target = 2 + cycle * 3; // diary
   return { level, type:m.type, icon:m.icon, label:m.label, unit:m.unit, target, current:m.getCount() };
 }
 
@@ -1630,6 +1688,9 @@ let plantState = {
   lifeWater: 0,                // 🎯 레벨 미션용 누적 물주기 횟수 (계정 전체 공유)
   lifeTalk: 0,                 // 🎯 레벨 미션용 누적 다정한 대화 횟수 (계정 전체 공유)
   lifeDays: 0,                 // 🎯 레벨 미션용 누적 정원 가꾼 일수 (계정 전체 공유)
+  lifePet: 0,                  // 🎯 레벨 미션용 누적 쓰다듬기 횟수 (계정 전체 공유)
+  lifeCoinsEarned: 0,          // 🎯 레벨 미션용 누적 획득 코인 (계정 전체 공유, 사용해도 줄지 않음)
+  lifeDiaryCount: 0,           // 🎯 레벨 미션용 누적 일기 작성 수 (계정 전체 공유)
   dailyMission: null,          // 🎯 일일미션 진행 상황(당일치)
   lastNotifiedStageIdx: null,  // 🔔 마지막으로 알림을 보낸 성장 단계
   notifiedFreeCoinDay: null,   // 🔔 무료 코인 알림을 이미 보낸 날짜
@@ -1757,6 +1818,9 @@ function loadPlantState(){
       if(typeof plantState.lifeWater !== 'number') plantState.lifeWater = 0;
       if(typeof plantState.lifeTalk !== 'number') plantState.lifeTalk = 0;
       if(typeof plantState.lifeDays !== 'number') plantState.lifeDays = 0;
+      if(typeof plantState.lifePet !== 'number') plantState.lifePet = 0;
+      if(typeof plantState.lifeCoinsEarned !== 'number') plantState.lifeCoinsEarned = 0;
+      if(typeof plantState.lifeDiaryCount !== 'number') plantState.lifeDiaryCount = 0;
       if(typeof plantState.lastFreeCoinClaimDay !== 'number' && plantState.lastFreeCoinClaimDay !== null) plantState.lastFreeCoinClaimDay = null;
       if(!plantState.stats || typeof plantState.stats !== 'object'){
         plantState.stats = { waterCount:0, talkGoodCount:0, totalBadWordEver:0, wateredOnlyOnRain:true, hasWateredAnyDay:false, currentRunHadBadWord:false, runHasBadWord:false, runWaterCount:0, runTalkGoodCount:0, runBadWordCount:0 };
@@ -1900,6 +1964,7 @@ function writeDiaryIfNewDay(){
 
   plantState.diaryRead = false; // 🆕 새 일기가 생겼으니 "안읽음" 배지를 다시 켜줘요
   plantState.lifeDays = (plantState.lifeDays || 0) + 1; // 🎯 레벨 미션용: 정원 가꾼 일수 누적
+  plantState.lifeDiaryCount = (plantState.lifeDiaryCount || 0) + 1; // 🎯 레벨 미션용: 일기 작성 수 누적
 
   updateDiaryBadge();
   checkLevelUp();
@@ -1925,14 +1990,26 @@ function ensureDailyMission(){
 function updateMissionUI(){
   if(!plantState.dailyMission) return;
   const m = plantState.dailyMission;
+
   const talkEl = document.getElementById('mission-talk-count');
   const petEl = document.getElementById('mission-pet-count');
   if(talkEl) talkEl.innerText = Math.min(m.talkCount, DAILY_MISSION_TARGET);
   if(petEl) petEl.innerText = Math.min(m.petCount, DAILY_MISSION_TARGET);
-  const talkChip = document.getElementById('mission-chip-talk');
-  const petChip = document.getElementById('mission-chip-pet');
-  if(talkChip) talkChip.classList.toggle('completed', !!m.talkClaimed);
-  if(petChip) petChip.classList.toggle('completed', !!m.petClaimed);
+
+  const talkBar = document.getElementById('mission-talk-bar');
+  const petBar = document.getElementById('mission-pet-bar');
+  if(talkBar) talkBar.style.width = clamp((m.talkCount / DAILY_MISSION_TARGET) * 100, 0, 100) + '%';
+  if(petBar) petBar.style.width = clamp((m.petCount / DAILY_MISSION_TARGET) * 100, 0, 100) + '%';
+
+  const talkItem = document.getElementById('mission-item-talk');
+  const petItem = document.getElementById('mission-item-pet');
+  if(talkItem) talkItem.classList.toggle('completed', !!m.talkClaimed);
+  if(petItem) petItem.classList.toggle('completed', !!m.petClaimed);
+
+  const talkReward = document.getElementById('mission-chip-talk');
+  const petReward = document.getElementById('mission-chip-pet');
+  if(talkReward) talkReward.innerText = m.talkClaimed ? '✅ 완료' : `+${DAILY_MISSION_TALK_REWARD}원`;
+  if(petReward) petReward.innerText = m.petClaimed ? '✅ 완료' : `+${DAILY_MISSION_PET_REWARD}원`;
 }
 
 // type: 'talk' | 'pet' — 말걸기/쓰다듬기 할 때마다 호출해서 진행도를 쌓고,
@@ -1945,6 +2022,7 @@ function registerMissionProgress(type){
     if(m.talkCount >= DAILY_MISSION_TARGET && !m.talkClaimed){
       m.talkClaimed = true;
       plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + DAILY_MISSION_TALK_REWARD);
+      plantState.lifeCoinsEarned = (plantState.lifeCoinsEarned || 0) + DAILY_MISSION_TALK_REWARD;
       updateCoinUI();
       showInfoToast(`❤️ 일일미션 완료! 오늘 5번 대화했어요. ${COIN_ICON_HTML} +${DAILY_MISSION_TALK_REWARD}원`);
     }
@@ -1953,10 +2031,12 @@ function registerMissionProgress(type){
     if(m.petCount >= DAILY_MISSION_TARGET && !m.petClaimed){
       m.petClaimed = true;
       plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + DAILY_MISSION_PET_REWARD);
+      plantState.lifeCoinsEarned = (plantState.lifeCoinsEarned || 0) + DAILY_MISSION_PET_REWARD;
       updateCoinUI();
       showInfoToast(`❤️ 일일미션 완료! 오늘 5번 쓰다듬었어요. ${COIN_ICON_HTML} +${DAILY_MISSION_PET_REWARD}원`);
     }
   }
+  checkLevelUp();
   updateMissionUI();
   savePlantStateSoft();
 }
@@ -2574,8 +2654,10 @@ function spawnFloatingCoin(){
     ev.stopPropagation();
     coin.remove();
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + FLOATING_COIN_VALUE);
+    plantState.lifeCoinsEarned = (plantState.lifeCoinsEarned || 0) + FLOATING_COIN_VALUE;
     updateCoinUI();
     showInfoToast(`${COIN_ICON_HTML} 랜덤 코인 +${FLOATING_COIN_VALUE}원 획득!`);
+    checkLevelUp();
     savePlantStateSoft();
   });
   layer.appendChild(coin);
@@ -2589,11 +2671,13 @@ function claimDailyFreeCoin(){
   setTimeout(()=>{
     if(btn) btn.classList.remove('shake');
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + reward);
+    plantState.lifeCoinsEarned = (plantState.lifeCoinsEarned || 0) + reward;
     plantState.lastFreeCoinClaimAt = Date.now();
     plantState.lastFreeCoinClaimDay = getDayIndex(Date.now());
     updateCoinUI();
     refreshDailyFreeCoinButton();
     showInfoToast(`🍀 오늘의 무료 코인! +${reward}원 획득했어요!`);
+    checkLevelUp();
     savePlantStateSoft();
   }, 420);
 }
@@ -3463,6 +3547,8 @@ function petPlant(){
   if(plantState.isDead) return;
   petCount++;
   registerMissionProgress('pet');
+  plantState.lifePet = (plantState.lifePet || 0) + 1; // 🎯 레벨 미션용 누적 쓰다듬기
+  checkLevelUp();
   const svg = document.getElementById('plant-svg');
   svg.classList.remove('sway');
   svg.classList.remove('pet-shake');
@@ -3595,6 +3681,7 @@ function confirmHarvest(){
   // 🌟 황금 작물을 수확하면 코인 보너스를 바로 지급해요
   if(pendingGoldenTomato){
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + 100);
+    plantState.lifeCoinsEarned = (plantState.lifeCoinsEarned || 0) + 100;
   }
 
   checkLevelUp(); // 🎯 수확 횟수가 늘었으니 레벨 미션 달성 여부를 확인해요
@@ -3864,7 +3951,7 @@ function openDiaryDetail(idx){
 function renderLevelMissionModal(){
   const level = plantState.gardenerLevel || 1;
   const rows = [];
-  for(let L = level; L < level + 6; L++){
+  for(let L = level; L < level + LEVEL_MISSION_TYPES.length; L++){
     const def = getLevelMissionDef(L);
     const done = def.current >= def.target;
     const isCurrent = (L === level);
