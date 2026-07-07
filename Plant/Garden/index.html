@@ -75,6 +75,26 @@
   }
   .scene-dim.is-rainy{ background: rgba(15,25,35,0.28); }
 
+  .season-tint{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    opacity:0; transition: opacity 0.6s ease, background 0.6s ease;
+  }
+  .season-tint.season-active{ opacity:1; }
+  .season-tint.season-spring{ background: linear-gradient(180deg, rgba(255,201,214,0.28) 0%, rgba(255,236,242,0.06) 55%, rgba(255,236,242,0) 100%); }
+  .season-tint.season-summer{ background: linear-gradient(180deg, rgba(150,230,180,0.16) 0%, rgba(255,255,255,0) 60%); }
+  .season-tint.season-autumn{ background: linear-gradient(180deg, rgba(255,178,90,0.26) 0%, rgba(255,222,160,0.08) 55%, rgba(255,222,160,0) 100%); }
+  .season-tint.season-winter{ background: linear-gradient(180deg, rgba(200,226,255,0.32) 0%, rgba(235,244,255,0.10) 55%, rgba(235,244,255,0) 100%); }
+
+  .time-tint{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    opacity:0; mix-blend-mode:multiply; transition: opacity 0.8s ease, background 0.8s ease;
+  }
+  .time-tint.time-active{ opacity:1; }
+  .time-tint.time-dawn{ background: linear-gradient(180deg, rgba(255,178,150,0.30) 0%, rgba(255,214,190,0.12) 60%, rgba(255,255,255,1) 100%); }
+  .time-tint.time-morning{ background: rgba(255,255,255,1); }
+  .time-tint.time-day{ background: rgba(255,255,255,1); }
+  .time-tint.time-night{ background: linear-gradient(180deg, rgba(20,28,58,0.55) 0%, rgba(30,38,70,0.45) 100%); }
+
   .rain-layer{
     position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; display:none;
   }
@@ -668,22 +688,23 @@
     100%{ transform: rotateY(0deg); opacity:1; }
   }
 
-  /* 🛠️ 개발자 모드 전용 UI (설정 화면 하단 / 로컬 데이터 뷰어) */
+  /* 🛠️ 개발자 모드 전용 UI (설정 화면 하단 / 치트 버튼) */
   .dev-section-label{
     font-size:11.5px; font-weight:800; color:#8a978a;
     margin:12px 0 6px; padding-top:8px; border-top:1px dashed #dfe6da;
   }
-  .dev-table{
-    max-height:280px; overflow-y:auto; margin-bottom:12px;
-    border:1px solid #e6ede2; border-radius:10px;
+  .dev-cheat-label{
+    font-size:10.5px; font-weight:800; color:#8a978a; margin:10px 0 6px;
   }
-  .dev-row{
-    padding:8px 10px; border-bottom:1px solid #eef3ea; font-size:10.5px;
+  .dev-cheat-grid{
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
   }
-  .dev-row:last-child{ border-bottom:none; }
-  .dev-row-key{ font-weight:800; color:#3a5a48; word-break:break-all; margin-bottom:2px; }
-  .dev-row-val{ color:var(--ink-soft); word-break:break-all; line-height:1.4; }
-  .dev-row-empty{ padding:16px 10px; text-align:center; color:#8a978a; font-size:11.5px; }
+  .dev-cheat-btn{
+    font-size:10.5px; font-weight:700; color:#3c5a34;
+    background:#eef5ea; border:1px solid #cfe0c7; border-radius:999px;
+    padding:5px 10px; cursor:pointer; white-space:nowrap;
+  }
+  .dev-cheat-btn:active{ background:#dfeada; }
 
   .setting-row{
     display:flex; justify-content:space-between; align-items:center;
@@ -905,6 +926,8 @@
 <div class="game-container" id="game-container">
   <div class="scene-bg" id="scene-bg"></div>
   <div class="scene-dim" id="scene-dim"></div>
+  <div class="season-tint" id="season-tint"></div>
+  <div class="time-tint" id="time-tint"></div>
   <div class="rain-layer" id="rain-layer"></div>
   <div class="lightning-flash" id="lightning-flash"></div>
   <div id="leaf-container" style="position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:3; border-radius:inherit;"></div>
@@ -1461,8 +1484,6 @@ function showLevelUpPopup(newLevel, reward, unlockedList){
       unlockEl.innerText = '';
     }
   }
-  const nextEl = document.getElementById('level-up-next-mission');
-  if(nextEl) nextEl.innerText = `다음 목표: 새로운 7가지 미션이 이전보다 조금 더 늘어난 양으로 기다리고 있어요!`;
   screen.style.display = 'flex';
   playClickSound();
   sendLocalNotification(`🌟 정원사 레벨 ${newLevel} 달성!`, `₩ +${reward}원을 받았어요. 정원에 들러 확인해보세요.`, 'level-up');
@@ -1483,12 +1504,39 @@ const GROWTH_PER_DAY = 100 / TOTAL_GROWTH_DAYS;
 const WATER_DRY_PER_DAY = { '테라스':95, '창가':57, '책상':30, '마당':108 };
 const SUN_GAIN_PER_DAY  = { '테라스':30, '창가':21, '책상':9,  '마당':33 };
 const WEATHER_TABLE = [
-  { type:'sunny',   label:'☀️ 맑음',   weight:4, growthMul:1.0,  sunMul:1.0 },
-  { type:'bright',  label:'🌞 화창함', weight:4, growthMul:1.05, sunMul:1.25 },
-  { type:'cloudy',  label:'⛅ 흐림',   weight:1, growthMul:0.95, sunMul:0.5 },
-  { type:'rainy',   label:'🌧️ 비',     weight:1, growthMul:0.95, sunMul:0.25 }
+  { type:'sunny',   label:'☀️ 맑음',   weight:3, growthMul:1.0,  sunMul:1.0 },
+  { type:'bright',  label:'🌞 화창함', weight:3, growthMul:1.05, sunMul:1.25 },
+  { type:'cloudy',  label:'⛅ 흐림',   weight:2, growthMul:0.95, sunMul:0.5 },
+  { type:'rainy',   label:'🌧️ 비',     weight:2, growthMul:0.95, sunMul:0.25 }
 ];
-const OUTDOOR_RAIN_LOCATIONS = ['마당','테라스'];
+const OUTDOOR_LOCATIONS = ['마당','테라스'];
+const SEASON_FALL_EMOJI = { spring:'🌸', summer:'🍃', autumn:'🍂', winter:'❄️' };
+const SEASON_LABELS = { spring:'봄', summer:'여름', autumn:'가을', winter:'겨울' };
+/* 🗓️ 4분기 기준으로 계절을 나눠요: 1~3월=봄, 4~6월=여름, 7~9월=가을, 10~12월=겨울 */
+function getCurrentSeason(){
+  const m = new Date().getMonth() + 1;
+  if(m>=1 && m<=3) return 'spring';
+  if(m>=4 && m<=6) return 'summer';
+  if(m>=7 && m<=9) return 'autumn';
+  return 'winter';
+}
+/* 🕓 하루를 새벽(4~7시)/오전(7~12시)/낮(12~18시)/밤(18~4시) 4구간으로 나눠서
+   배경 위에 시간대별 색감을 살짝 입혀요 (장소와 무관하게 적용돼요). */
+const TIME_LABELS = { dawn:'새벽', morning:'오전', day:'낮', night:'밤' };
+function getCurrentTimeOfDay(){
+  const h = new Date().getHours();
+  if(h>=4 && h<7) return 'dawn';
+  if(h>=7 && h<12) return 'morning';
+  if(h>=12 && h<18) return 'day';
+  return 'night';
+}
+function applyTimeVisual(){
+  const tint = document.getElementById('time-tint');
+  if(!tint) return;
+  const t = getCurrentTimeOfDay();
+  tint.classList.remove('time-active','time-dawn','time-morning','time-day','time-night');
+  tint.classList.add('time-active', `time-${t}`);
+}
 const RAIN_WATER_GAIN_PER_DAY = 18;
 const FLOATING_COIN_VALUE = 10;
 const FLOATING_COIN_MIN_DELAY_MS = 4.5 * 60 * 1000;
@@ -1598,10 +1646,7 @@ const LEVEL_MISSION_TYPES = [
   { type:'water',    icon:'💧', label:'물주기',           unit:'회', getCount:()=> plantState.lifeWater || 0 },
   { type:'talk',     icon:'💬', label:'다정한 대화',       unit:'회', getCount:()=> plantState.lifeTalk || 0 },
   { type:'pet',      icon:'💚', label:'쓰다듬기',         unit:'회', getCount:()=> plantState.lifePet || 0 },
-  { type:'harvest',  icon:'🧺', label:'수확',            unit:'회', getCount:()=> (plantState.harvestedBasket||[]).length },
-  { type:'day',      icon:'📅', label:'정원 가꾸기',       unit:'일', getCount:()=> plantState.lifeDays || 0 },
-  { type:'coin',     icon:'🪙', label:'코인 모으기',       unit:'원', getCount:()=> plantState.lifeCoinsEarned || 0 },
-  { type:'diary',    icon:'📔', label:'일기 쓰기',        unit:'개', getCount:()=> plantState.lifeDiaryCount || 0 }
+  { type:'harvest',  icon:'🧺', label:'수확',            unit:'회', getCount:()=> (plantState.harvestedBasket||[]).length }
 ];
 /* level에서 level+1로 가기 위해 필요한 목표치를 미션 타입별로 계산해요.
    레벨이 오를수록(level-1에 비례해서) 목표치가 계속 늘어나요. */
@@ -1729,7 +1774,6 @@ window.onload = function(){
   const p = getPersonality();
   document.getElementById('personality-badge').innerText = `${p.emoji} ${p.label}`;
 
-  createAmbientLeaves();
   renderPlantTabs();
   setupPlantCarouselSwipe();
   loadPlantState();
@@ -2012,6 +2056,7 @@ function updateMissionBadge(){
 function applyWeatherVisual(skipFlash){
   const w = getWeatherInfo();
   document.getElementById('weather-chip').innerText = w.label;
+  applyTimeVisual();
 
   const bg = document.getElementById('scene-bg');
   const dim = document.getElementById('scene-dim');
@@ -2072,6 +2117,7 @@ function applyLocationVisual(){
   const url = ENV_BACKGROUNDS[plantState.location];
   document.getElementById('scene-bg').style.backgroundImage = `url('${url}')`;
   document.getElementById('current-location-tag').innerText = `📍 ${plantState.location}`;
+  createSeasonalFalling();
 }
 
 /* ================= ⏩ 배속 시스템 (24시간 중 1시간만 사용 가능) ================= */
@@ -2274,7 +2320,7 @@ function gameTick(){
   const rainRelief = w.type === 'rainy' ? 0.5 : 1;
   const dry = (WATER_DRY_PER_DAY[plantState.location] || 10) * elapsedDays * rainRelief * p.dryMul;
   const sunTarget = (SUN_GAIN_PER_DAY[plantState.location] || 8) * w.sunMul;
-  const rainGain = (w.type === 'rainy' && OUTDOOR_RAIN_LOCATIONS.includes(plantState.location)) ? (RAIN_WATER_GAIN_PER_DAY * elapsedDays) : 0;
+  const rainGain = (w.type === 'rainy' && OUTDOOR_LOCATIONS.includes(plantState.location)) ? (RAIN_WATER_GAIN_PER_DAY * elapsedDays) : 0;
 
   plantState.water = clamp(plantState.water - dry + rainGain, 0, 100);
   plantState.sun = clamp(plantState.sun*Math.pow(0.6, elapsedDays) + sunTarget*elapsedDays, 0, 100);
@@ -3565,7 +3611,7 @@ function showBubble(msg){
   bubble.innerText = msg;
   wrap.classList.add('show');
   clearTimeout(showBubble._t);
-  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 10000);
+  showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 7000);
 }
 
 /* 🤔 식물이 답변을 "생각 중"일 때 — 점 3개가 움직이는 말풍선을 계속 띄워둡니다 (자동으로 사라지지 않음) */
@@ -3758,15 +3804,30 @@ function openModal(type){
       <button class="action-btn pastel-mint" onclick="requestRestartCurrentPlant()">새로 키우기</button>
       ${isDevMode() ? `
       <div class="dev-section-label">🛠️ 개발자 모드</div>
-      <button class="action-btn pastel-mint" onclick="openModal('devtools')">🗂️ 로컬 저장 데이터 보기</button>
-      <button class="action-btn pastel-yellow" onclick="resetBasketData(false)">🧺 바구니 초기화</button>
-      <button class="action-btn pastel-yellow" onclick="resetDiaryData(false)">📔 일기 초기화</button>
+      <div class="dev-cheat-label">⚡ 치트 (테스트용)</div>
+      <div class="dev-cheat-grid">
+        <button class="dev-cheat-btn" onclick="runDevCheat('#coin1000')">🪙 +1000원</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#nextstage')">🌱 다음 단계</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#harvest')">🧺 수확 가능</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#dead')">💀 죽음 상태</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#weather맑음')">☀️ 맑음</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#weather화창')">🌞 화창</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#weather흐림')">⛅ 흐림</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#weather비')">🌧️ 비</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#레벨업')">🌟 레벨업</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#레벨업10')">🌟 +10레벨</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#레벨100')">🌟 Lv.100</button>
+        <button class="dev-cheat-btn" onclick="runDevCheat('#레벨초기화')">🌟 레벨 초기화</button>
+      </div>
+      <div class="dev-cheat-label">🧹 초기화</div>
+      <div class="dev-cheat-grid">
+        <button class="dev-cheat-btn" onclick="resetBasketData(false)">🧺 바구니 초기화</button>
+        <button class="dev-cheat-btn" onclick="resetDiaryData(false)">📔 일기 초기화</button>
+      </div>
       <button class="action-btn pastel-rose" onclick="resetEverythingData(false)">⚠️ 전체 데이터 초기화</button>
       ` : ''}
       <button class="close-modal-btn" onclick="closeModal()">닫기</button>
     `;
-  } else if(type === 'devtools'){
-    content.innerHTML = renderDevToolsModal();
   } else if(type === 'minigame'){
     content.innerHTML = renderMinigameHub();
   }
@@ -3923,13 +3984,10 @@ function renderLevelMissionModal(){
   const level = plantState.gardenerLevel || 1;
   const defs = getLevelMissionDefs(level);
   const doneCount = defs.filter(d => d.current >= d.target).length;
-  const nextDefs = getLevelMissionDefs(level + 1);
-  const nextPreview = LEVEL_MISSION_TYPES.map((m, i)=>`${m.icon} ${nextDefs[i].target}${m.unit}`).join(' · ');
   return `
-    <div class="modal-title">🎯 레벨 미션 · Lv.${level}</div>
-    <div class="achv-summary-bar">이번 레벨 미션 ${doneCount} / ${defs.length} 완료 · 전부 달성하면 자동으로 레벨업해요</div>
+    <div class="modal-title"> Lv.${level} 미션 </div>
+    <div class="achv-summary-bar">이번 레벨 미션 ${doneCount} / ${defs.length} 완료</div>
     <div class="level-mission-list" style="margin-bottom:14px;">${renderLevelMissionRows(level)}</div>
-    <p class="level-reward-note">다음 레벨(Lv.${level+1}) 목표는 조금 더 늘어나요:<br>${nextPreview}</p>
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
   `;
 }
@@ -4123,58 +4181,14 @@ function resetEverythingData(fromCheat){
   window.location.href = '../../index.html';
 }
 
-/* ================= 🗂️ 개발자용: 로컬 저장 데이터 보기 =================
-   이 앱은 별도 서버/DB 없이 브라우저 localStorage에만 데이터를 저장하는 구조라서,
-   "전체 사용자 가입 목록"처럼 여러 기기를 한 곳에서 모아 보는 건 원래 불가능해요.
-   대신 지금 이 브라우저(기기)에 저장돼 있는 miniGarden_ 관련 데이터를 표로 보여줘요. */
-function renderDevToolsModal(){
-  let rows = [];
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.indexOf('miniGarden_') === 0){
-        rows.push({ key:k, value: localStorage.getItem(k) });
-      }
-    }
-  }catch(e){}
-  rows.sort((a,b)=> a.key.localeCompare(b.key));
-  const rowsHtml = rows.map(r=>{
-    let preview = r.value || '';
-    if(preview.length > 140) preview = preview.slice(0,140) + '…';
-    return `<div class="dev-row">
-      <div class="dev-row-key">${escapeHtml(r.key)}</div>
-      <div class="dev-row-val">${escapeHtml(preview)}</div>
-    </div>`;
-  }).join('');
-  return `
-    <div class="modal-title">🗂️ 로컬 저장 데이터</div>
-    <p class="modal-sub" style="margin-bottom:10px;">
-      이 앱은 서버가 없어서 전체 사용자를 한 곳에서 모아보는 "가입자 DB"는 없어요.<br>
-      대신 <b>지금 이 브라우저(기기)</b>에 저장된 데이터를 그대로 보여드려요. 총 ${rows.length}개 항목.
-    </p>
-    <div class="dev-table">
-      ${rows.length ? rowsHtml : '<div class="dev-row-empty">저장된 데이터가 없어요.</div>'}
-    </div>
-    <button class="action-btn pastel-orange" onclick="exportDevData()">JSON으로 내보내기(클립보드 복사)</button>
-    <button class="close-modal-btn" onclick="closeModal()">닫기</button>
-  `;
-}
-function exportDevData(){
-  let obj = {};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.indexOf('miniGarden_') === 0) obj[k] = localStorage.getItem(k);
-    }
-  }catch(e){}
-  const text = JSON.stringify(obj, null, 2);
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>{
-      showInfoToast('📋 클립보드에 복사했어요!');
-    }).catch(()=>{ alert(text); });
-  } else {
-    alert(text);
-  }
+/* ================= 🛠️ 개발자용: 치트 버튼 실행 =================
+   설정 화면의 치트 버튼을 누르면 대화창에 문구를 입력했을 때와 동일하게 동작해요. */
+function runDevCheat(key){
+  if(!isDevMode() || !DEV_CHEATS[key]) return;
+  DEV_CHEATS[key]();
+  checkDeathConditions();
+  checkLevelUp();
+  savePlantState();
 }
 function forceWeather(type){
   const w = WEATHER_TABLE.find(v=>v.type===type);
@@ -4559,14 +4573,22 @@ ${shareUrl}`;
   }
 }
 
-/* ================= 배경 잎 효과 ================= */
-function createAmbientLeaves(){
+/* ================= 계절별 낙하 효과 + 배경 색감 (마당/테라스일 때만 표시) ================= */
+function createSeasonalFalling(){
   const container = document.getElementById('leaf-container');
+  const tint = document.getElementById('season-tint');
+  if(!container) return;
+  container.innerHTML = '';
+  if(tint) tint.classList.remove('season-active','season-spring','season-summer','season-autumn','season-winter');
+  if(!OUTDOOR_LOCATIONS.includes(plantState.location)) return; // 실내(거실/방)에서는 표시하지 않아요
+  const season = getCurrentSeason();
+  if(tint) tint.classList.add('season-active', `season-${season}`);
+  const emoji = SEASON_FALL_EMOJI[season];
   const count = isMobile ? 8 : 12;
   for(let i=0;i<count;i++){
     const leaf = document.createElement('div');
     leaf.className = 'leaf';
-    leaf.innerText = '🍃';
+    leaf.innerText = emoji;
     leaf.style.left = Math.random()*100+'%';
     leaf.style.animationDelay = Math.random()*6+'s';
     leaf.style.animationDuration = (Math.random()*4+7)+'s';
