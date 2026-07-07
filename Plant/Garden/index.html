@@ -74,6 +74,7 @@
     pointer-events:none;
   }
   .scene-dim.is-rainy{ background: rgba(15,25,35,0.28); }
+  .scene-dim.is-rainy-soft{ background: rgba(15,25,35,0.16); }
 
   .season-tint{
     position:absolute; inset:0; z-index:2; pointer-events:none;
@@ -99,6 +100,11 @@
     position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; display:none;
   }
   .rain-layer.active{ display:block; }
+  .window-rain-clip{
+    position:absolute; z-index:3; pointer-events:none; overflow:hidden; display:none;
+  }
+  .window-rain-clip.active{ display:block; }
+  .window-rain-clip .raindrop{ opacity:0.5; }
   .raindrop{
     position:absolute; top:-10%;
     width:2px; height:60px;
@@ -173,6 +179,26 @@
   .level-mission-row-info{ flex:1; min-width:0; }
   .level-mission-row-top{ display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#4a5d44; margin-bottom:3px; }
   .level-mission-row.done .level-mission-row-top{ color:var(--leaf-deep); }
+  .level-mission-help{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:13px; height:13px; margin-left:4px; border-radius:50%;
+    background:#dfeadb; color:#5c7d54; font-size:9.5px; font-weight:800;
+    cursor:pointer; flex-shrink:0; line-height:1;
+  }
+  .level-mission-help:active{ transform:scale(0.9); }
+  .level-mission-help-wrap{ position:relative; display:inline-flex; vertical-align:middle; }
+  .level-mission-help-tip{
+    position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%) translateY(3px) scale(0.9);
+    background:#33402f; color:#fff; font-size:10px; font-weight:700; white-space:nowrap;
+    padding:6px 10px; border-radius:9px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    opacity:0; pointer-events:none; transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index:20;
+  }
+  .level-mission-help-tip::after{
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:#33402f;
+  }
+  .level-mission-help-tip.show{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); pointer-events:auto; }
   .level-mission-bar-bg{ background:#e7f0e3; border-radius:999px; height:6px; overflow:hidden; }
   .level-mission-bar-fill{ background:linear-gradient(90deg, var(--leaf), var(--leaf-deep)); height:100%; border-radius:999px; transition:width 0.4s ease; }
   .level-mission-row.done .level-mission-bar-fill{ background:linear-gradient(90deg,#ffd54f,#ffb300); }
@@ -255,6 +281,15 @@
   }
   .shop-buy-btn.expensive{ background:#e58a3c; }
   .shop-buy-btn:disabled{ background:#c8d6c5; color:#6f7a6d; cursor:not-allowed; }
+  .shop-buy-btn.pot-equipped{ background:#9fb89a; color:#fff; }
+  .shop-tab-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .shop-tab-btn{
+    flex:1; border:1.5px solid #e1f0d8; background:var(--card-soft); color:#5c7d54;
+    border-radius:999px; padding:8px 0; font-size:12px; font-weight:800; cursor:pointer;
+  }
+  .shop-tab-btn.active{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+  .pot-preview-wrap{ display:flex; justify-content:center; align-items:center; margin-bottom:4px; }
+  .pot-preview-svg{ width:98px; height:53px; overflow:visible; }
 
   .dashboard{
     position:relative; z-index:6; flex-shrink:0;
@@ -853,7 +888,7 @@
   .info-toast{
     position:absolute; top:96px; left:50%; transform:translateX(-50%) translateY(-12px);
     background:#4c7fae; color:#fff; padding:9px 15px; border-radius:14px;
-    font-size:11.5px; font-weight:700; z-index:55; white-space:nowrap;
+    font-size:11.5px; font-weight:700; z-index:150; white-space:nowrap;
     box-shadow:0 8px 20px rgba(0,0,0,0.18);
     opacity:0; pointer-events:none; transition: opacity 0.25s ease, transform 0.25s ease;
     display:flex; align-items:center; gap:6px; max-width:82%;
@@ -929,6 +964,7 @@
   <div class="season-tint" id="season-tint"></div>
   <div class="time-tint" id="time-tint"></div>
   <div class="rain-layer" id="rain-layer"></div>
+  <div class="window-rain-clip" id="window-rain-clip"><div class="rain-layer active" id="window-rain-layer"></div></div>
   <div class="lightning-flash" id="lightning-flash"></div>
   <div id="leaf-container" style="position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:3; border-radius:inherit;"></div>
   <div id="floating-coin-layer" class="floating-coin-layer"></div>
@@ -1233,7 +1269,8 @@ const SHARED_FIELDS = [
   'speedMultiplier','speedBudgetMs','speedCheckpoint','speedExhaustedAt',
   'harvestedBasket','basketSeenCount',
   'gardenerLevel','gardenerXp','missionSeenLevel',
-  'lifeWater','lifeTalk','lifeDays','lifePet','lifeCoinsEarned','lifeDiaryCount'
+  'lifeWater','lifeTalk','lifeDays','lifePet','lifeCoinsEarned','lifeDiaryCount',
+  'lastGrowthBoosterBuyDay'
 ];
 function loadSharedState(){
   try{
@@ -1545,10 +1582,17 @@ const DAILY_FREE_COIN_MIN = 10;
 const DAILY_FREE_COIN_MAX = 50;
 const DAILY_FREE_COIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const SHOP_ITEMS = [
-  { key:'nutrient', icon:'🧪', title:'영양제', cost:500, desc:'성장 +3% · 수분 +8% · 일조 +8%' },
-  { key:'dehumidifier', icon:'🫧', title:'수분제거', cost:500, desc:'수분량 -25% (과습 완화)' },
-  { key:'sunlight', icon:'☀️', title:'일조량 추가', cost:500, desc:'일조량 +25%' },
-  { key:'growth_booster', icon:'🚀', title:'성장촉진제', cost:1000, desc:'성장도 +12%' }
+  { key:'nutrient', icon:'🧪', title:'영양제', cost:1000, desc:'성장 +3% · 수분 +8% · 일조 +8%' },
+  { key:'dehumidifier', icon:'🫧', title:'수분제거', cost:1000, desc:'수분량 -25% (과습 완화)' },
+  { key:'sunlight', icon:'☀️', title:'일조량 추가', cost:1000, desc:'일조량 +25%' },
+  { key:'growth_booster', icon:'🚀', title:'성장촉진제', cost:10000, desc:'성장도 +12% · 하루 1개 한정' }
+];
+/* 🏺 화분 디자인 — 코인으로 구매해서 화분의 색상뿐 아니라 모양(shape)까지 바꿀 수 있어요. 이 식물(슬롯) 전용이에요. */
+const POT_DESIGNS = [
+  { key:'terracotta', shape:'ridged',    title:'빈티지 리지 테라코타', cost:20000, potColor:'#d97a4d', potColorLight:'#f3b98a', desc:'은은한 엠보싱 줄무늬의 클래식 토분' },
+  { key:'sage',       shape:'round',     title:'큐트 라운드 세이지',   cost:20000, potColor:'#7fa876', potColorLight:'#c7e6bd', desc:'콩콩 물방울 무늬가 있는 동글동글 항아리' },
+  { key:'navy',       shape:'hex',       title:'모던 페이스드 네이비', cost:20000, potColor:'#33465c', potColorLight:'#5b7fa3', desc:'골드 라인 포인트의 각진 모던 화분' },
+  { key:'blush',      shape:'scalloped', title:'리본 블러쉬 스캘럽',   cost:20000, potColor:'#e39aa3', potColorLight:'#fbd0d8', desc:'리본 장식이 달린 물결 테두리 화분' }
 ];
 
 /* 🎯 일일미션: 매일 자정(달력 기준) 초기화되는 소소한 목표예요 */
@@ -1705,6 +1749,9 @@ let plantState = {
   dailyMission: null,          // 🎯 일일미션 진행 상황(당일치)
   lastNotifiedStageIdx: null,  // 🔔 마지막으로 알림을 보낸 성장 단계
   notifiedFreeCoinDay: null,   // 🔔 무료 코인 알림을 이미 보낸 날짜
+  lastGrowthBoosterBuyDay: null, // 🚀 성장촉진제는 하루에 1개만 살 수 있어서, 마지막 구매 날짜를 기억해요 (계정 전체 공유)
+  ownedPotDesigns: [],          // 🏺 구매해서 보유중인 화분 디자인 키 목록 (이 화분/슬롯 전용)
+  equippedPotDesign: null,      // 🏺 현재 장착중인 화분 디자인 키 (null이면 기본 화분 색)
   speedMultiplier: 1,
   speedBudgetMs: SPEED_BUDGET_TOTAL_MS,
   speedCheckpoint: null,
@@ -1824,6 +1871,8 @@ function loadPlantState(){
       plantState = Object.assign(plantState, parsed);
       if(!Array.isArray(plantState.harvestedBasket)) plantState.harvestedBasket = [];
       if(!Array.isArray(plantState.diary)) plantState.diary = [];
+      if(!Array.isArray(plantState.ownedPotDesigns)) plantState.ownedPotDesigns = [];
+      if(typeof plantState.equippedPotDesign !== 'string') plantState.equippedPotDesign = null;
       if(typeof plantState.missionSeenLevel !== 'number') plantState.missionSeenLevel = 1;
       if(typeof plantState.lifeWater !== 'number') plantState.lifeWater = 0;
       if(typeof plantState.lifeTalk !== 'number') plantState.lifeTalk = 0;
@@ -2061,23 +2110,38 @@ function applyWeatherVisual(skipFlash){
   const bg = document.getElementById('scene-bg');
   const dim = document.getElementById('scene-dim');
   const rain = document.getElementById('rain-layer');
+  const windowRainClip = document.getElementById('window-rain-clip');
+  const windowRain = document.getElementById('window-rain-layer');
 
   bg.classList.remove('is-rainy','is-cloudy');
-  dim.classList.remove('is-rainy');
+  dim.classList.remove('is-rainy','is-rainy-soft');
   rain.classList.remove('active');
   rain.innerHTML = '';
+  windowRainClip.classList.remove('active');
+  windowRain.innerHTML = '';
+  stopLightningLoop();
 
   if(w.type === 'cloudy'){
     bg.classList.add('is-cloudy');
   } else if(w.type === 'rainy'){
-    bg.classList.add('is-rainy');
-    dim.classList.add('is-rainy');
-    rain.classList.add('active');
-    spawnRaindrops();
-    if(!skipFlash) maybeFlashLightning();
-    startLightningLoop();
-  } else {
-    stopLightningLoop();
+    // 🌧️ 비 내리는 모션(빗줄기)은 지붕이 없는 야외(테라스/마당)일 때만 화면 전체에 보여요.
+    if(OUTDOOR_LOCATIONS.includes(plantState.location)){
+      bg.classList.add('is-rainy');
+      dim.classList.add('is-rainy');
+      rain.classList.add('active');
+      spawnRaindrops();
+      if(!skipFlash) maybeFlashLightning();
+      startLightningLoop();
+    } else if(plantState.location === '창가'){
+      // 🪟 창가는 실내라서 화면 전체가 아니라 배경의 창문 안쪽에서만 비가 내리게 해요.
+      dim.classList.add('is-rainy-soft');
+      positionWindowRain();
+      windowRainClip.classList.add('active');
+      spawnWindowRaindrops();
+    } else {
+      // 🖥️ 책상 등 창문이 없는 실내는 비 모션 없이 살짝 어두워지기만 해요.
+      dim.classList.add('is-rainy-soft');
+    }
   }
 }
 let lightningInterval = null;
@@ -2111,6 +2175,42 @@ function spawnRaindrops(){
     rain.appendChild(d);
   }
 }
+/* 🪟 창가 배경 이미지 속 "창문" 위치에 맞춰 비 전용 레이어의 좌표/크기를 계산해요.
+   배경(scene-bg)은 400x800 비율의 SVG를 cover/center-bottom으로 채우기 때문에,
+   화면 크기에 맞춰 실제 창문이 화면 어디에 위치하는지 매번 다시 계산해줘야 해요. */
+const WINDOW_RAIN_BOX = { x:60, y:90, w:280, h:330 }; // '창가' SVG(0~400,0~800) 기준 창문 유리 영역
+function positionWindowRain(){
+  const container = document.getElementById('game-container');
+  const clip = document.getElementById('window-rain-clip');
+  if(!container || !clip) return;
+  const cw = container.clientWidth, ch = container.clientHeight;
+  if(!cw || !ch) return;
+  const scale = Math.max(cw/400, ch/800);
+  const imgW = 400*scale, imgH = 800*scale;
+  const left = (cw - imgW)/2;
+  const top = ch - imgH; // background-position: center bottom
+  clip.style.left = (left + WINDOW_RAIN_BOX.x*scale)+'px';
+  clip.style.top = (top + WINDOW_RAIN_BOX.y*scale)+'px';
+  clip.style.width = (WINDOW_RAIN_BOX.w*scale)+'px';
+  clip.style.height = (WINDOW_RAIN_BOX.h*scale)+'px';
+}
+function spawnWindowRaindrops(){
+  const rain = document.getElementById('window-rain-layer');
+  if(!rain) return;
+  const count = isMobile ? 10 : 14;
+  for(let i=0;i<count;i++){
+    const d = document.createElement('div');
+    d.className = 'raindrop';
+    d.style.left = Math.random()*100+'%';
+    d.style.animationDuration = (0.5 + Math.random()*0.4)+'s';
+    d.style.animationDelay = (Math.random()*1.2)+'s';
+    d.style.opacity = (0.3 + Math.random()*0.4).toFixed(2);
+    rain.appendChild(d);
+  }
+}
+window.addEventListener('resize', function(){
+  if(document.getElementById('window-rain-clip').classList.contains('active')) positionWindowRain();
+});
 
 /* ================= 위치 배경 ================= */
 function applyLocationVisual(){
@@ -3126,16 +3226,35 @@ function renderBlackjackResultScreen(isWin, amount, note){
   `;
   showInfoToast(isWin ? `${COIN_ICON_HTML} +${amount}원 획득!` : `${COIN_ICON_HTML} -${amount}원...`);
 }
+/* 💬 미션 옆 ?을 누르면 작은 말풍선 힌트가 뜨고, 한번 더 누르거나 다른 곳을 누르면 닫혀요 */
+function toggleMissionHelpTip(btn){
+  const tip = btn.nextElementSibling;
+  if(!tip) return;
+  const wasOpen = tip.classList.contains('show');
+  document.querySelectorAll('.level-mission-help-tip.show').forEach(t=>t.classList.remove('show'));
+  if(!wasOpen) tip.classList.add('show');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.level-mission-help-wrap')){
+    document.querySelectorAll('.level-mission-help-tip.show').forEach(t=>t.classList.remove('show'));
+  }
+});
 /* 🎯 이번 레벨의 미션 7개 체크리스트 HTML을 만들어요 (레벨 모달/미션 모달에서 공용으로 사용) */
 function renderLevelMissionRows(level){
   const defs = getLevelMissionDefs(level);
   return defs.map(d=>{
     const done = d.current >= d.target;
     const pct = clamp((d.current / d.target) * 100, 0, 100);
+    const helpBtn = d.type === 'talk'
+      ? `<span class="level-mission-help-wrap">
+           <span class="level-mission-help" onclick="event.stopPropagation(); toggleMissionHelpTip(this)">?</span>
+           <span class="level-mission-help-tip">예쁜말, 고운말을 건네보세요!</span>
+         </span>`
+      : '';
     return `<div class="level-mission-row ${done ? 'done' : ''}">
       <span class="level-mission-row-icon">${done ? '✅' : d.icon}</span>
       <div class="level-mission-row-info">
-        <div class="level-mission-row-top"><span>${d.label}</span><span>${Math.min(d.current, d.target)} / ${d.target} ${d.unit}</span></div>
+        <div class="level-mission-row-top"><span>${d.label}${helpBtn}</span><span>${Math.min(d.current, d.target)} / ${d.target} ${d.unit}</span></div>
         <div class="level-mission-bar-bg"><div class="level-mission-bar-fill" style="width:${pct}%"></div></div>
       </div>
     </div>`;
@@ -3167,23 +3286,104 @@ function renderLevelModal(){
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
   `;
 }
+let shopTab = 'nutrient';
+function switchShopTab(tab){
+  shopTab = tab;
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+}
 function renderShopModal(){
   const coins = Math.floor(plantState.coins || 0);
+  const todayIdx = getDayIndex(Date.now());
   return `
     <div class="modal-title">🛒 코인 상점</div>
     <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
+    <div class="shop-tab-row">
+      <button class="shop-tab-btn ${shopTab==='nutrient'?'active':''}" onclick="switchShopTab('nutrient')">🧪 영양제</button>
+      <button class="shop-tab-btn ${shopTab==='pot'?'active':''}" onclick="switchShopTab('pot')">🏺 화분</button>
+    </div>
+    ${shopTab === 'pot' ? renderPotShopGrid() : `
     <div class="shop-grid">
-      ${SHOP_ITEMS.map(item=>`
+      ${SHOP_ITEMS.map(item=>{
+        const isBoosterLocked = item.key === 'growth_booster' && plantState.lastGrowthBoosterBuyDay === todayIdx;
+        const disabled = coins < item.cost || isBoosterLocked;
+        return `
         <div class="shop-card">
           <span class="shop-card-title">${item.icon} ${item.title}</span>
           <span class="shop-card-desc">${item.desc}</span>
           <span class="shop-card-price">${item.cost}원</span>
-          <button class="shop-buy-btn ${item.cost >= 1000 ? 'expensive' : ''}" onclick="buyShopItem('${item.key}')" ${coins < item.cost ? 'disabled' : ''}>구매하기</button>
+          <button class="shop-buy-btn ${item.cost >= 1000 ? 'expensive' : ''}" onclick="buyShopItem('${item.key}')" ${disabled ? 'disabled' : ''}>${isBoosterLocked ? '오늘 구매완료' : '구매하기'}</button>
         </div>
-      `).join('')}
+      `;}).join('')}
     </div>
+    `}
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
   `;
+}
+/* 🏺 화분 디자인 상점 그리드: 보유 여부에 따라 구매/장착/사용중 버튼이 달라져요 */
+function renderPotShopGrid(){
+  const coins = Math.floor(plantState.coins || 0);
+  return `
+    <div class="shop-grid">
+      ${POT_DESIGNS.map(d=>{
+        const owned = (plantState.ownedPotDesigns||[]).includes(d.key);
+        const equipped = plantState.equippedPotDesign === d.key;
+        let btnHtml;
+        if(equipped){
+          btnHtml = `<button class="shop-buy-btn pot-equipped" disabled>사용중</button>`;
+        } else if(owned){
+          btnHtml = `<button class="shop-buy-btn" onclick="equipPotDesign('${d.key}')">장착하기</button>`;
+        } else {
+          btnHtml = `<button class="shop-buy-btn expensive" onclick="buyPotDesign('${d.key}')" ${coins < d.cost ? 'disabled' : ''}>구매하기</button>`;
+        }
+        return `
+        <div class="shop-card">
+          <div class="pot-preview-wrap">${renderPotPreviewSVG(d.shape, d.potColor, d.potColorLight)}</div>
+          <span class="shop-card-title">${d.title}</span>
+          <span class="shop-card-desc">${d.desc}</span>
+          <span class="shop-card-price">${owned ? '보유중' : d.cost+'원'}</span>
+          ${btnHtml}
+        </div>
+      `;}).join('')}
+      <div class="shop-card">
+        <div class="pot-preview-wrap">${renderPotPreviewSVG('plain', PLANT_INFO.potColor, PLANT_INFO.potColorLight)}</div>
+        <span class="shop-card-title">기본 화분</span>
+        <span class="shop-card-desc">처음부터 가지고 있던 기본 화분이에요.</span>
+        <span class="shop-card-price">무료</span>
+        ${!plantState.equippedPotDesign ? `<button class="shop-buy-btn pot-equipped" disabled>사용중</button>` : `<button class="shop-buy-btn" onclick="equipPotDesign(null)">장착하기</button>`}
+      </div>
+    </div>
+  `;
+}
+function buyPotDesign(key){
+  const design = POT_DESIGNS.find(d=>d.key===key);
+  if(!design) return;
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < design.cost){
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
+    return;
+  }
+  const ok = confirm(`"${design.title}"(${design.cost}원)를 구매할까요?`);
+  if(!ok) return;
+  plantState.coins = coins - design.cost;
+  if(!Array.isArray(plantState.ownedPotDesigns)) plantState.ownedPotDesigns = [];
+  plantState.ownedPotDesigns.push(design.key);
+  plantState.equippedPotDesign = design.key;
+  showBubble('새 화분으로 갈아입었어요!');
+  renderPlant();
+  updateUI();
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+  savePlantState();
+}
+function equipPotDesign(key){
+  plantState.equippedPotDesign = key;
+  showBubble(key ? '화분을 바꿔줬어요!' : '기본 화분으로 되돌렸어요!');
+  renderPlant();
+  updateUI();
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+  savePlantState();
 }
 function buyShopItem(key){
   const item = SHOP_ITEMS.find(v=>v.key === key);
@@ -3196,6 +3396,13 @@ function buyShopItem(key){
   if(key === 'dehumidifier' && plantState.water <= 15){
     showInfoToast('💧 지금은 수분제거가 필요 없어요.');
     return;
+  }
+  if(key === 'growth_booster'){
+    const today = getDayIndex(Date.now());
+    if(plantState.lastGrowthBoosterBuyDay === today){
+      showInfoToast('🚀 성장촉진제는 하루에 1개만 구매할 수 있어요!');
+      return;
+    }
   }
   // 🛑 구매 전 확인: 코인은 즉시 차감되고 아이템은 바로 식물에게 사용되니, 실수 구매를 막기 위해 한 번 더 확인받아요.
   const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n(바로 ${plantName}에게 사용돼요).`);
@@ -3214,6 +3421,7 @@ function buyShopItem(key){
     showBubble('햇살을 듬뿍 받았어요!');
   } else if(key === 'growth_booster'){
     plantState.growth = clamp(plantState.growth + 12, 0, 100);
+    plantState.lastGrowthBoosterBuyDay = getDayIndex(Date.now());
     showBubble('쑥쑥 자랄 힘이 생겼어요!');
   }
   if(plantState.growth >= 100 && !plantState.isHarvestable){
@@ -3338,6 +3546,114 @@ function buildPotFace(){
   return `<g transform="translate(0,-55)">${eyes}${mouth}${extra}</g>`;
 }
 
+/* 🏺 화분 모양(shape)별로 실제 다른 형태의 화분 SVG를 만들어요.
+   식물 렌더링과 상점 미리보기가 이 함수 하나를 공용으로 써서 항상 똑같이 보여요.
+   단색 대신 그라데이션 + 하이라이트 + 디테일을 넣어서 도자기 같은 고급스러운 느낌을 냈어요. */
+function getPotBodyMarkup(shape, potColor, potColorLight){
+  const shadow = `<ellipse cx="100" cy="213" rx="42" ry="7" fill="#7a5235" opacity="0.5"/>`;
+  const gid = 'pg-' + shape; // 같은 모양은 항상 같은 색 그라데이션을 쓰므로 id를 고정해도 안전해요
+
+  if(shape === 'round'){
+    // 🪴 큐트 라운드 세이지 — 배가 볼록한 항아리형 + 콩점 패턴 + 반짝이는 하이라이트
+    return `
+      <defs>
+        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${potColorLight}"/>
+          <stop offset="100%" stop-color="${potColor}"/>
+        </linearGradient>
+        <linearGradient id="${gid}-rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="${potColorLight}"/>
+        </linearGradient>
+      </defs>
+      <path d="M59,218 Q50,232 61,243 Q100,253 139,243 Q150,232 141,218 Z" fill="url(#${gid}-body)" stroke="${potColor}" stroke-width="0.6"/>
+      <g fill="#fff" opacity="0.4">
+        <circle cx="78" cy="230" r="2.6"/><circle cx="100" cy="238" r="2.2"/><circle cx="122" cy="229" r="2.6"/>
+        <circle cx="89" cy="222" r="1.8"/><circle cx="112" cy="222" r="1.8"/>
+      </g>
+      <ellipse cx="76" cy="228" rx="10" ry="15" fill="#fff" opacity="0.16"/>
+      <rect x="57" y="210" width="86" height="13" rx="6.5" fill="url(#${gid}-rim)"/>
+      <rect x="57" y="210" width="86" height="4" rx="2" fill="#fff" opacity="0.35"/>
+      ${shadow}`;
+  }
+
+  if(shape === 'hex'){
+    // 🔷 모던 페이스드 네이비 — 각진 다면체 + 골드 라인 포인트로 세련된 느낌
+    return `
+      <defs>
+        <linearGradient id="${gid}-body" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${potColorLight}"/>
+          <stop offset="100%" stop-color="${potColor}"/>
+        </linearGradient>
+      </defs>
+      <path d="M63,219 L137,219 L133,231 L122,242 L78,242 L67,231 Z" fill="url(#${gid}-body)"/>
+      <path d="M63,219 L100,219 L100,242 L78,242 L67,231 Z" fill="#fff" opacity="0.10"/>
+      <path d="M100,219 L137,219 L133,231 L122,242 L100,242 Z" fill="#000" opacity="0.12"/>
+      <path d="M63,219 L137,219" stroke="#f3dfae" stroke-width="1.6" opacity="0.9"/>
+      <path d="M100,219 L100,242" stroke="#f3dfae" stroke-width="1" opacity="0.55"/>
+      <rect x="59" y="210" width="82" height="12" rx="2.5" fill="${potColorLight}"/>
+      <rect x="59" y="210" width="82" height="12" rx="2.5" fill="none" stroke="#f3dfae" stroke-width="1" opacity="0.8"/>
+      ${shadow}`;
+  }
+
+  if(shape === 'scalloped'){
+    // 🎀 리본 블러쉬 스캘럽 — 물결 테두리 + 리본 포인트로 사랑스러운 느낌
+    return `
+      <defs>
+        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${potColorLight}"/>
+          <stop offset="100%" stop-color="${potColor}"/>
+        </linearGradient>
+      </defs>
+      <path d="M63,223 L137,223 L129,240 Q100,246 71,240 Z" fill="url(#${gid}-body)"/>
+      <ellipse cx="80" cy="230" rx="9" ry="13" fill="#fff" opacity="0.18"/>
+      <path d="M57,213 Q65,206 73,213 Q81,206 89,213 Q97,206 105,213 Q113,206 121,213 Q129,206 137,213 L140,225 L60,225 Z" fill="${potColorLight}" stroke="#fff" stroke-width="0.5" opacity="0.98"/>
+      <g transform="translate(100,221)">
+        <path d="M0,0 L-9,-6 L-7,1 Z" fill="#e8879a"/>
+        <path d="M0,0 L9,-6 L7,1 Z" fill="#e8879a"/>
+        <circle cx="0" cy="-1" r="3.2" fill="#f4a7b6"/>
+      </g>
+      ${shadow}`;
+  }
+
+  if(shape === 'ridged'){
+    // 🏺 빈티지 리지 테라코타 — 엠보싱 가로줄 + 살짝 벌어진 립으로 클래식하고 고급스럽게
+    return `
+      <defs>
+        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${potColorLight}"/>
+          <stop offset="55%" stop-color="${potColor}"/>
+          <stop offset="100%" stop-color="${potColor}"/>
+        </linearGradient>
+      </defs>
+      <path d="M61,219 L139,219 L130,239 Q100,245 70,239 Z" fill="url(#${gid}-body)"/>
+      <path d="M64,225 Q100,229.5 136,225" stroke="#000" stroke-opacity="0.15" stroke-width="1.7" fill="none"/>
+      <path d="M64.5,226.5 Q100,231 135.5,226.5" stroke="#fff" stroke-opacity="0.25" stroke-width="1" fill="none"/>
+      <path d="M66,232 Q100,236.5 134,232" stroke="#000" stroke-opacity="0.13" stroke-width="1.7" fill="none"/>
+      <path d="M66.5,233.5 Q100,238 133.5,233.5" stroke="#fff" stroke-opacity="0.22" stroke-width="1" fill="none"/>
+      <ellipse cx="82" cy="224" rx="7" ry="10" fill="#fff" opacity="0.13"/>
+      <rect x="57" y="209" width="86" height="13" rx="5" fill="${potColorLight}"/>
+      <rect x="57" y="209" width="86" height="5" rx="2.5" fill="#fff" opacity="0.3"/>
+      <rect x="57" y="209" width="86" height="13" rx="5" fill="none" stroke="${potColor}" stroke-width="0.7" opacity="0.4"/>
+      ${shadow}`;
+  }
+
+  // plain: 기본 화분 (은은한 그라데이션의 심플한 사다리꼴)
+  return `
+    <defs>
+      <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${potColorLight}"/>
+        <stop offset="100%" stop-color="${potColor}"/>
+      </linearGradient>
+    </defs>
+    <path d="M62,220 L138,220 L130,238 Q100,244 70,238 Z" fill="url(#${gid}-body)"/>
+    <rect x="58" y="212" width="84" height="12" rx="4" fill="${potColorLight}"/>
+    ${shadow}`;
+}
+/* 🖼️ 상점에서 구매 전에 실제 모양을 미리 볼 수 있는 작은 화분 SVG 썸네일 */
+function renderPotPreviewSVG(shape, potColor, potColorLight){
+  return `<svg class="pot-preview-svg" viewBox="46 198 108 58" xmlns="http://www.w3.org/2000/svg">${getPotBodyMarkup(shape, potColor, potColorLight)}</svg>`;
+}
 function buildPlantSVG(stage){
 const isGrape = PLANT_TYPE === 'grape';
 const isBanana = PLANT_TYPE === 'banana';
@@ -3408,7 +3724,11 @@ if(isBanana){
 /* 🍌 바나나는 나무처럼 자라니, 다른 화분들보다 화분 자체를 더 크게(약 1.2배) 그려서
    존재감을 다르게 줍니다. (밑변 중심인 100,220 기준으로 확대) */
 const potScale = isBanana ? 1.22 : 1;
-let pot = `     <g>       <path d="M62,220 L138,220 L130,238 Q100,244 70,238 Z" fill="${PLANT_INFO.potColor}"/>       <rect x="58" y="212" width="84" height="12" rx="4" fill="${PLANT_INFO.potColorLight}"/>       <ellipse cx="100" cy="213" rx="42" ry="7" fill="#7a5235" opacity="0.55"/>     </g>`;
+const _potDesign = plantState.equippedPotDesign ? POT_DESIGNS.find(p=>p.key===plantState.equippedPotDesign) : null;
+const _potColor = _potDesign ? _potDesign.potColor : PLANT_INFO.potColor;
+const _potColorLight = _potDesign ? _potDesign.potColorLight : PLANT_INFO.potColorLight;
+const _potShape = _potDesign ? _potDesign.shape : 'plain';
+let pot = `     <g>${getPotBodyMarkup(_potShape, _potColor, _potColorLight)}</g>`;
 
 let seedStage = '';
 if(stage === 0){
@@ -3763,6 +4083,7 @@ function openModal(type){
     content.innerHTML = renderLevelModal();
     updateLevelUI();
   } else if(type === 'shop'){
+    shopTab = 'nutrient';
     content.innerHTML = renderShopModal();
   } else if(type === 'basket'){
     content.innerHTML = renderBasketModal();
@@ -3838,6 +4159,7 @@ function closeModal(){
 function setLocation(loc){
   plantState.location = loc;
   applyLocationVisual();
+  applyWeatherVisual(true); // 🌧️ 위치가 바뀌면 비 연출(야외 전체/창문 안쪽/실내 어둡게)도 새 위치 기준으로 다시 적용해요.
   showBubble(`화분을 [ ${loc} ] 으로 옮겼어요!`);
   closeModal();
   updateUI();
