@@ -271,13 +271,15 @@
   .shop-card{
     background:var(--card-soft); border:1.5px solid #e1f0d8; border-radius:16px;
     padding:12px 10px; text-align:center;
+    display:flex; flex-direction:column;
   }
   .shop-card-title{ display:block; font-size:12.5px; color:#39523b; font-weight:800; margin-bottom:4px; }
-  .shop-card-desc{ display:block; font-size:10.5px; color:var(--ink-soft); line-height:1.45; min-height:30px; margin-bottom:7px; }
+  .shop-card-desc{ display:block; font-size:10.5px; color:var(--ink-soft); line-height:1.45; min-height:46px; margin-bottom:7px; }
   .shop-card-price{ display:block; font-size:11px; color:#d97706; font-weight:900; margin-bottom:8px; }
   .shop-buy-btn{
     border:none; border-radius:999px; padding:7px 10px; width:100%;
     background:var(--leaf); color:#fff; font-size:11px; font-weight:800; cursor:pointer;
+    margin-top:auto;
   }
   .shop-buy-btn.expensive{ background:#e58a3c; }
   .shop-buy-btn:disabled{ background:#c8d6c5; color:#6f7a6d; cursor:not-allowed; }
@@ -3639,6 +3641,7 @@ function getPotBodyMarkup(shape, potColor, potColorLight){
   const body = `<path d="M64,219 Q61,219 61.6,222 L68,238 Q70,245 100,247 Q130,245 132,238 L138.4,222 Q139,219 136,219 Z" fill="url(#${gid}-body)"/>`;
   const gloss = `<ellipse cx="80" cy="223" rx="13" ry="9" fill="#fff" opacity="0.22"/>`;
   const rim = `<rect x="58" y="208" width="84" height="15" rx="7.5" fill="url(#${gid}-rim)"/>`;
+  const soil = `<ellipse cx="100" cy="216" rx="33" ry="6.2" fill="#4a3320"/><ellipse cx="100" cy="214.3" rx="33" ry="5.2" fill="#6b4a2e"/><ellipse cx="88" cy="212.8" rx="9" ry="2" fill="#7d5a38" opacity="0.7"/><ellipse cx="112" cy="216.5" rx="8" ry="1.8" fill="#7d5a38" opacity="0.6"/>`;
   const rimShine = `<rect x="58" y="208" width="84" height="5" rx="2.5" fill="#fff" opacity="0.4"/>`;
 
   let accent = '';
@@ -3681,7 +3684,7 @@ function getPotBodyMarkup(shape, potColor, potColorLight){
   }
   // plain(기본 화분)은 별도 accent 없이 가장 깔끔한 형태예요
 
-  return `${defsBase}${body}${gloss}${rim}${accent}${rimShine}`;
+  return `${defsBase}${body}${gloss}${rim}${soil}${accent}${rimShine}`;
 }
 /* 🖼️ 상점에서 구매 전에 실제 모양을 미리 볼 수 있는 작은 화분 SVG 썸네일 */
 function renderPotPreviewSVG(shape, potColor, potColorLight){
@@ -3692,7 +3695,7 @@ const isGrape = PLANT_TYPE === 'grape';
 const isBanana = PLANT_TYPE === 'banana';
 const isTangerine = PLANT_TYPE === 'tangerine';
 const isTomato = PLANT_TYPE === 'tomato' || (!isGrape && !isBanana && !isTangerine); // 기본값 안전장치
-const stemH = 14 + stage*15;
+const stemH = 14 + stage*12;
 const baseY = 220;
 const topY = baseY - stemH;
 const leafCount = Math.min(8, stage+1);
@@ -3756,7 +3759,7 @@ if(isBanana){
 
 /* 🍌 바나나는 나무처럼 자라니, 다른 화분들보다 화분 자체를 더 크게(약 1.2배) 그려서
    존재감을 다르게 줍니다. (밑변 중심인 100,220 기준으로 확대) */
-const potScale = isBanana ? 1.22 : 1;
+const potScale = isBanana ? 1.28 : 1.12;
 const _potDesign = plantState.equippedPotDesign ? POT_DESIGNS.find(p=>p.key===plantState.equippedPotDesign) : null;
 const _potColor = _potDesign ? _potDesign.potColor : PLANT_INFO.potColor;
 const _potColorLight = _potDesign ? _potDesign.potColorLight : PLANT_INFO.potColorLight;
