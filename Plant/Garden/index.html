@@ -435,6 +435,50 @@
     50%{ filter: drop-shadow(0 0 14px rgba(228,88,60,0.55)); transform: scale(1.035) rotate(1deg); }
   }
 
+  /* 🐾 펫(강아지/고양이/꿀벌/나비) — 이모티콘이 아니라 직접 그린 SVG로 표현하고,
+     걷기/눕기/날기/앉기 같은 여러 포즈 사이를 JS가 주기적으로 전환해줘요. */
+  .pet-wrap{
+    position:absolute; z-index:6; pointer-events:none;
+    width:54px; height:40px;
+    transition: left 1.6s ease-in-out, top 1.6s ease-in-out;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.16));
+  }
+  /* 🐶🐱 강아지/고양이는 존재감이 느껴지도록 다른 펫보다 크게 표시해요 */
+  .pet-wrap.pet-size-large{ width:96px; height:78px; }
+  .pet-figure{ width:100%; height:100%; position:relative; }
+  .pet-figure svg{ width:100%; height:100%; overflow:visible; display:block; }
+  .pet-figure.face-left{ transform:scaleX(-1); }
+  .pet-bubble{
+    position:absolute; left:50%; bottom:100%; transform:translateX(-50%) scale(0.85);
+    margin-bottom:5px; background:#fff; border-radius:12px; padding:4px 10px;
+    font-size:10.5px; font-weight:700; color:#3a4636; white-space:nowrap;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15); opacity:0; pointer-events:none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .pet-bubble.show{ opacity:1; transform:translateX(-50%) scale(1); }
+  /* 🚶 걷기: 몸통이 살짝 위아래로 통통 튀고, 다리가 번갈아 앞뒤로 움직여요 */
+  @keyframes pet-walk-bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-2px); } }
+  .pet-anim-walking .pet-body-group{ animation: pet-walk-bob 0.5s ease-in-out infinite; }
+  @keyframes pet-leg-swing{ 0%,100%{ transform:rotate(14deg); } 50%{ transform:rotate(-14deg); } }
+  .pet-anim-walking .pet-leg-a{ animation: pet-leg-swing 0.45s ease-in-out infinite; transform-origin: top center; }
+  .pet-anim-walking .pet-leg-b{ animation: pet-leg-swing 0.45s ease-in-out infinite reverse; transform-origin: top center; }
+  /* 🐕 꼬리 흔들기 (걷는 동안 계속) */
+  @keyframes pet-tail-wag{ 0%,100%{ transform:rotate(-16deg); } 50%{ transform:rotate(16deg); } }
+  .pet-tail{ animation: pet-tail-wag 0.55s ease-in-out infinite; transform-origin: bottom right; }
+  /* 😴 눕기/기대기: 천천히 숨쉬듯 커졌다 작아졌다 */
+  @keyframes pet-breathe{ 0%,100%{ transform:scaleY(1); } 50%{ transform:scaleY(1.035); } }
+  .pet-anim-lying .pet-body-group{ animation: pet-breathe 2.4s ease-in-out infinite; transform-origin:center bottom; }
+  @keyframes pet-zzz-float{ 0%{ opacity:0; transform:translateY(2px); } 30%{ opacity:1; } 100%{ opacity:0; transform:translateY(-8px); } }
+  .pet-zzz{ animation: pet-zzz-float 2.4s ease-in-out infinite; }
+  /* 🐝🦋 날기: 날개는 빠르게 파닥이고, 몸통은 위아래로 두둥실 */
+  @keyframes wing-flap{ 0%,100%{ transform:scaleX(1); } 50%{ transform:scaleX(0.55); } }
+  .pet-wing-l{ animation: wing-flap 0.16s ease-in-out infinite; transform-origin:right center; }
+  .pet-wing-r{ animation: wing-flap 0.16s ease-in-out infinite; transform-origin:left center; animation-delay:0.02s; }
+  @keyframes bee-bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+  .pet-anim-flying .pet-body-group{ animation: bee-bob 0.85s ease-in-out infinite; }
+  /* 🍃 잎에 앉아 쉬기: 날개를 천천히 접었다 폈다 */
+  .pet-anim-sitting .pet-wing-l, .pet-anim-sitting .pet-wing-r{ animation-duration:0.9s; }
+
   .location-tag{
     position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
     background: rgba(40,60,45,0.55); color:#fff; padding:4px 12px;
@@ -1092,6 +1136,10 @@
       <div class="speech-bubble" id="chat-bubble">안녕하세요!</div>
     </div>
     <svg id="plant-svg" class="plant-stage-svg sway" viewBox="0 -20 200 260" width="200" height="260" preserveAspectRatio="xMidYMid meet" overflow="visible" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="pet-wrap" id="pet-wrap" style="display:none;">
+      <div class="pet-bubble" id="pet-bubble"></div>
+      <div class="pet-figure" id="pet-figure"></div>
+    </div>
     <div class="location-tag" id="current-location-tag">📍 창가</div>
   </div>
 
@@ -1303,7 +1351,8 @@ const SHARED_FIELDS = [
   'gardenerLevel','gardenerXp','missionSeenLevel',
   'lifeWater','lifeTalk','lifeDays','lifePet','lifeCoinsEarned','lifeDiaryCount',
   'lastGrowthBoosterBuyDay',
-  'ownedPotDesigns'   // 🏺 한 번 구매한 화분 디자인은 정원사 계정 전체(모든 식물)에서 공유해서 쓸 수 있어요
+  'ownedPotDesigns',  // 🏺 한 번 구매한 화분 디자인은 정원사 계정 전체(모든 식물)에서 공유해서 쓸 수 있어요
+  'ownedPets'         // 🐾 한 번 구매한 펫도 정원사 계정 전체(모든 식물)에서 공유해서 쓸 수 있어요
 ];
 function loadSharedState(){
   try{
@@ -1632,15 +1681,48 @@ const SHOP_ITEMS = [
 ];
 /* 🏺 화분 디자인 — 코인으로 구매해서 화분의 색상뿐 아니라 모양(shape)까지 바꿀 수 있어요.
    한 번 구매하면 정원사 계정의 모든 식물(슬롯)에서 자유롭게 장착할 수 있어요(공용 소장품). */
+/* 🔒 화분은 2개씩 묶어서 +5레벨마다 새로운 묶음이 열려요 (Lv.5 / Lv.10 / Lv.15 / Lv.20).
+   Lv.5에서는 기본 화분에 더해 새로운 화분 묶음(2개)이 열리는 방식이에요. */
 const POT_DESIGNS = [
-  { key:'rattan',     shape:'wicker',    title:'내추럴 라탄 바스켓',   cost:15000, potColor:'#b98a54', potColorLight:'#e6c896', desc:'자연스러운 짜임 결의 라탄 바구니 화분' },
-  { key:'sage',       shape:'round',     title:'큐트 라운드 세이지',   cost:18000, potColor:'#6fa876', potColorLight:'#cdeec0', desc:'콩콩 물방울 무늬가 있는 동글동글 항아리' },
-  { key:'terracotta', shape:'ridged',    title:'빈티지 리지 테라코타', cost:18000, potColor:'#d97a4d', potColorLight:'#f6c199', desc:'은은한 엠보싱 줄무늬의 클래식 토분' },
-  { key:'lilac',      shape:'speckle',   title:'라벤더 스페클 세라믹', cost:20000, potColor:'#8a76ab', potColorLight:'#e2d5f5', desc:'매트한 표면에 스페클 유약이 흩뿌려진 감성 도자기' },
-  { key:'blush',      shape:'scalloped', title:'리본 블러쉬 스캘럽',   cost:22000, potColor:'#e39aa3', potColorLight:'#ffd9e2', desc:'리본 장식이 달린 물결 테두리 화분' },
-  { key:'navy',       shape:'hex',       title:'모던 페이스드 네이비', cost:25000, potColor:'#2c3e54', potColorLight:'#5b7fa3', desc:'골드 라인 포인트의 각진 모던 화분' },
-  { key:'marble',     shape:'marble',    title:'골드림 화이트 마블',   cost:30000, potColor:'#e9e2d6', potColorLight:'#fdfaf3', desc:'대리석 무늬와 얇은 골드 라인의 프리미엄 화분' }
+  { key:'rattan',     shape:'wicker',    title:'내추럴 라탄 바스켓',   cost:15000, potColor:'#b98a54', potColorLight:'#e6c896', desc:'자연스러운 짜임 결의 라탄 바구니 화분', unlockLevel:5 },
+  { key:'sage',       shape:'round',     title:'큐트 라운드 세이지',   cost:18000, potColor:'#6fa876', potColorLight:'#cdeec0', desc:'콩콩 물방울 무늬가 있는 동글동글 항아리', unlockLevel:5 },
+  { key:'terracotta', shape:'ridged',    title:'빈티지 리지 테라코타', cost:18000, potColor:'#d97a4d', potColorLight:'#f6c199', desc:'은은한 엠보싱 줄무늬의 클래식 토분', unlockLevel:10 },
+  { key:'lilac',      shape:'speckle',   title:'라벤더 스페클 세라믹', cost:20000, potColor:'#8a76ab', potColorLight:'#e2d5f5', desc:'매트한 표면에 스페클 유약이 흩뿌려진 감성 도자기', unlockLevel:10 },
+  { key:'blush',      shape:'scalloped', title:'리본 블러쉬 스캘럽',   cost:22000, potColor:'#e39aa3', potColorLight:'#ffd9e2', desc:'리본 장식이 달린 물결 테두리 화분', unlockLevel:15 },
+  { key:'navy',       shape:'hex',       title:'모던 페이스드 네이비', cost:25000, potColor:'#2c3e54', potColorLight:'#5b7fa3', desc:'골드 라인 포인트의 각진 모던 화분', unlockLevel:15 },
+  { key:'marble',     shape:'marble',    title:'골드림 화이트 마블',   cost:30000, potColor:'#e9e2d6', potColorLight:'#fdfaf3', desc:'대리석 무늬와 얇은 골드 라인의 프리미엄 화분', unlockLevel:20 }
 ];
+/* 잠긴 이유를 짧은 문구로 반환 (이미 열려있으면 null) */
+function getPotLockReason(key){
+  const d = POT_DESIGNS.find(p=>p.key===key);
+  if(!d) return null;
+  const level = plantState.gardenerLevel || 1;
+  if(level < (d.unlockLevel||1)) return `🔒 Lv.${d.unlockLevel} 필요`;
+  return null;
+}
+
+/* 🐾 펫 상점 — 화분 곁을 지켜주는 동반 동물이에요. 이모티콘이 아니라 직접 그린 SVG로
+   걷기/눕기/날기/앉기 같은 여러 포즈와 랜덤 혼잣말 말풍선을 가지고 있어요.
+   한 번 구매하면 정원사 계정의 모든 식물(슬롯)에서 자유롭게 장착할 수 있어요(공용 소장품).
+   🔓 Lv.10에 강아지·고양이가, Lv.15에 꿀벌·나비가 열려요. */
+const PET_DESIGNS = [
+  { key:'puppy',     species:'dog',       emoji:'🐶', title:'든든한 강아지',   cost:12000, unlockLevel:10,
+    desc:'하루 두 번 화분 곁에 응가로 거름을 줘요. 성장률 +3%가 고정으로 두 번 붙어요' },
+  { key:'kitty',     species:'cat',       emoji:'🐱', title:'나른한 고양이',   cost:12000, unlockLevel:10,
+    desc:'하루 한 번 밖에 나가서 좋은 기운을 물어와요. 성장률 +3~5% 랜덤으로 올라가요' },
+  { key:'bee',       species:'bee',       emoji:'🐝', title:'부지런 꿀벌',     cost:16000, unlockLevel:15,
+    desc:'하루 한 번 꽃가루를 날라와요. 성장률 +5~8% 랜덤으로 올라가요' },
+  { key:'butterfly', species:'butterfly', emoji:'🦋', title:'하늘하늘 나비',   cost:16000, unlockLevel:15,
+    desc:'하루 한 번 팔랑팔랑 날아다니며 도와줘요. 성장률 +5~8% 랜덤으로 올라가요' }
+];
+/* 잠긴 이유를 짧은 문구로 반환 (이미 열려있으면 null) */
+function getPetLockReason(key){
+  const d = PET_DESIGNS.find(p=>p.key===key);
+  if(!d) return null;
+  const level = plantState.gardenerLevel || 1;
+  if(level < (d.unlockLevel||1)) return `🔒 Lv.${d.unlockLevel} 필요`;
+  return null;
+}
 
 /* 🎯 일일미션: 매일 자정(달력 기준) 초기화되는 소소한 목표예요 */
 const DAILY_MISSION_TARGET = 5;
@@ -1799,6 +1881,9 @@ let plantState = {
   lastGrowthBoosterBuyDay: null, // 🚀 성장촉진제는 하루에 1개만 살 수 있어서, 마지막 구매 날짜를 기억해요 (계정 전체 공유)
   ownedPotDesigns: [],          // 🏺 구매해서 보유중인 화분 디자인 키 목록 (정원사 계정 전체 공유 · 모든 식물에서 사용 가능)
   equippedPotDesign: null,      // 🏺 이 식물(슬롯)에 현재 장착중인 화분 디자인 키 (null이면 기본 화분 색). 식물마다 다른 화분을 장착할 수 있어요
+  ownedPets: [],                // 🐾 구매해서 보유중인 펫 키 목록 (정원사 계정 전체 공유 · 모든 식물에서 사용 가능)
+  equippedPet: null,            // 🐾 이 식물(슬롯)에 현재 장착중인 펫 키 (null이면 펫 없음). 식물마다 다른 펫을 장착할 수 있어요
+  lastPetBuffDay: null,         // 🐾 펫이 오늘치 성장 버프를 이미 줬는지 확인하는 날짜 기록 (이 식물 슬롯 기준)
   speedMultiplier: 1,
   speedBudgetMs: SPEED_BUDGET_TOTAL_MS,
   speedCheckpoint: null,
@@ -1884,6 +1969,7 @@ window.onload = function(){
   }
   applyWeatherVisual(true);
   renderPlant();
+  renderPetCompanion();
   updateUI();
   updateBasketBadge();
   updateDiaryBadge();
@@ -1920,6 +2006,9 @@ function loadPlantState(){
       if(!Array.isArray(plantState.diary)) plantState.diary = [];
       if(!Array.isArray(plantState.ownedPotDesigns)) plantState.ownedPotDesigns = [];
       if(typeof plantState.equippedPotDesign !== 'string') plantState.equippedPotDesign = null;
+      if(!Array.isArray(plantState.ownedPets)) plantState.ownedPets = [];
+      if(typeof plantState.equippedPet !== 'string') plantState.equippedPet = null;
+      if(typeof plantState.lastPetBuffDay !== 'number' && plantState.lastPetBuffDay !== null) plantState.lastPetBuffDay = null;
       if(typeof plantState.missionSeenLevel !== 'number') plantState.missionSeenLevel = 1;
       if(typeof plantState.lifeWater !== 'number') plantState.lifeWater = 0;
       if(typeof plantState.lifeTalk !== 'number') plantState.lifeTalk = 0;
@@ -2441,6 +2530,7 @@ function gameTick(){
   rollWeatherIfNewDay();
   applyWeatherVisual();
   writeDiaryIfNewDay();
+  applyPetDailyBuff();
   ensureDailyMission();
   checkFreeCoinNotification();
 
@@ -3336,6 +3426,7 @@ function renderLevelModal(){
 let shopTab = 'nutrient';
 const SHOP_NUTRIENT_MIN_LEVEL = 3;  // 🔒 영양제 상점은 정원사 레벨 3부터 구매 가능
 const SHOP_POT_MIN_LEVEL = 5;       // 🔒 화분 상점은 정원사 레벨 5부터 구매 가능
+const SHOP_PET_MIN_LEVEL = 10;      // 🔒 펫 상점은 정원사 레벨 10부터 (강아지·고양이) 열려요. 꿀벌·나비는 그 안에서 레벨 15에 따로 열려요.
 function switchShopTab(tab){
   shopTab = tab;
   const content = document.getElementById('modal-content-area');
@@ -3347,15 +3438,19 @@ function renderShopModal(){
   const level = plantState.gardenerLevel || 1;
   const nutrientLocked = level < SHOP_NUTRIENT_MIN_LEVEL;
   const potLocked = level < SHOP_POT_MIN_LEVEL;
+  const petLocked = level < SHOP_PET_MIN_LEVEL;
   return `
     <div class="modal-title">🛒 코인 상점</div>
     <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
     <div class="shop-tab-row">
       <button class="shop-tab-btn ${shopTab==='nutrient'?'active':''}" onclick="switchShopTab('nutrient')">${nutrientLocked?'🔒':'🧪'} 영양제</button>
       <button class="shop-tab-btn ${shopTab==='pot'?'active':''}" onclick="switchShopTab('pot')">${potLocked?'🔒':'🏺'} 화분</button>
+      <button class="shop-tab-btn ${shopTab==='pet'?'active':''}" onclick="switchShopTab('pet')">${petLocked?'🔒':'🐾'} 펫</button>
     </div>
     ${shopTab === 'pot'
       ? (potLocked ? renderShopLockedNotice(SHOP_POT_MIN_LEVEL, '화분') : renderPotShopGrid())
+      : shopTab === 'pet'
+      ? (petLocked ? renderShopLockedNotice(SHOP_PET_MIN_LEVEL, '펫') : renderPetShopGrid())
       : (nutrientLocked ? renderShopLockedNotice(SHOP_NUTRIENT_MIN_LEVEL, '영양제') : `
     <div class="shop-grid">
       ${SHOP_ITEMS.map(item=>{
@@ -3390,8 +3485,11 @@ function renderPotShopGrid(){
       ${POT_DESIGNS.map(d=>{
         const owned = (plantState.ownedPotDesigns||[]).includes(d.key);
         const equipped = plantState.equippedPotDesign === d.key;
+        const lockReason = getPotLockReason(d.key);
         let btnHtml;
-        if(equipped){
+        if(lockReason){
+          btnHtml = `<button class="shop-buy-btn" disabled>${lockReason}</button>`;
+        } else if(equipped){
           btnHtml = `<button class="shop-buy-btn pot-equipped" disabled>사용중</button>`;
         } else if(owned){
           btnHtml = `<button class="shop-buy-btn" onclick="equipPotDesign('${d.key}')">장착하기</button>`;
@@ -3403,7 +3501,7 @@ function renderPotShopGrid(){
           <div class="pot-preview-wrap">${renderPotPreviewSVG(d.shape, d.potColor, d.potColorLight)}</div>
           <span class="shop-card-title">${d.title}</span>
           <span class="shop-card-desc">${d.desc}</span>
-          <span class="shop-card-price">${owned ? '보유중' : d.cost+'원'}</span>
+          <span class="shop-card-price">${lockReason ? lockReason : (owned ? '보유중' : d.cost+'원')}</span>
           ${btnHtml}
         </div>
       `;}).join('')}
@@ -3418,9 +3516,9 @@ function renderPotShopGrid(){
   `;
 }
 function buyPotDesign(key){
-  const level = plantState.gardenerLevel || 1;
-  if(level < SHOP_POT_MIN_LEVEL){
-    showInfoToast(`🔒 정원사 레벨 ${SHOP_POT_MIN_LEVEL} 이상부터 화분을 구매할 수 있어요.`);
+  const lockReason = getPotLockReason(key);
+  if(lockReason){
+    showInfoToast(`${lockReason} 이 화분은 아직 잠겨있어요.`);
     return;
   }
   const design = POT_DESIGNS.find(d=>d.key===key);
@@ -3447,6 +3545,82 @@ function equipPotDesign(key){
   plantState.equippedPotDesign = key;
   showBubble(key ? '화분을 바꿔줬어요!' : '기본 화분으로 되돌렸어요!');
   renderPlant();
+  updateUI();
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+  savePlantState();
+}
+
+/* 🐾 펫 상점 그리드: 화분 상점과 같은 구조지만, 펫마다 잠금해제 레벨이 달라서(강아지·고양이 Lv.10 / 꿀벌·나비 Lv.15)
+   개별 카드에 잠금 여부를 표시해요. 미리보기는 이모티콘이 아니라 실제로 그려지는 SVG 포즈를 그대로 써요. */
+function renderPetShopGrid(){
+  const coins = Math.floor(plantState.coins || 0);
+  return `
+    <div class="shop-grid">
+      ${PET_DESIGNS.map(d=>{
+        const owned = (plantState.ownedPets||[]).includes(d.key);
+        const equipped = plantState.equippedPet === d.key;
+        const lockReason = getPetLockReason(d.key);
+        let btnHtml;
+        if(lockReason){
+          btnHtml = `<button class="shop-buy-btn" disabled>${lockReason}</button>`;
+        } else if(equipped){
+          btnHtml = `<button class="shop-buy-btn pot-equipped" disabled>사용중</button>`;
+        } else if(owned){
+          btnHtml = `<button class="shop-buy-btn" onclick="equipPet('${d.key}')">장착하기</button>`;
+        } else {
+          btnHtml = `<button class="shop-buy-btn expensive" onclick="buyPet('${d.key}')" ${coins < d.cost ? 'disabled' : ''}>구매하기</button>`;
+        }
+        return `
+        <div class="shop-card">
+          <div class="pot-preview-wrap">${renderPetPreviewSVG(d.species)}</div>
+          <span class="shop-card-title">${d.title}</span>
+          <span class="shop-card-desc">${d.desc}</span>
+          <span class="shop-card-price">${lockReason ? lockReason : (owned ? '보유중' : d.cost+'원')}</span>
+          ${btnHtml}
+        </div>
+      `;}).join('')}
+      <div class="shop-card">
+        <div class="pot-preview-wrap"><span style="font-size:30px;">🚫</span></div>
+        <span class="shop-card-title">펫 없음</span>
+        <span class="shop-card-desc">아직 펫이 없어요. 원한다면 펫 없이 지낼 수도 있어요.</span>
+        <span class="shop-card-price">무료</span>
+        ${!plantState.equippedPet ? `<button class="shop-buy-btn pot-equipped" disabled>사용중</button>` : `<button class="shop-buy-btn" onclick="equipPet(null)">장착하기</button>`}
+      </div>
+    </div>
+  `;
+}
+function buyPet(key){
+  const lockReason = getPetLockReason(key);
+  if(lockReason){
+    showInfoToast(`${lockReason} 이 펫은 아직 잠겨있어요.`);
+    return;
+  }
+  const design = PET_DESIGNS.find(d=>d.key===key);
+  if(!design) return;
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < design.cost){
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
+    return;
+  }
+  const ok = confirm(`"${design.title}"(${design.cost}원)를 구매할까요?`);
+  if(!ok) return;
+  plantState.coins = coins - design.cost;
+  if(!Array.isArray(plantState.ownedPets)) plantState.ownedPets = [];
+  plantState.ownedPets.push(design.key);
+  plantState.equippedPet = design.key;
+  showBubble(`${design.emoji} 이제부터 함께 지낼 거예요!`);
+  renderPetCompanion();
+  updateUI();
+  const content = document.getElementById('modal-content-area');
+  if(content) content.innerHTML = renderShopModal();
+  savePlantState();
+}
+function equipPet(key){
+  plantState.equippedPet = key;
+  const design = key ? PET_DESIGNS.find(d=>d.key===key) : null;
+  showBubble(design ? `${design.emoji} 펫을 바꿨어요!` : '펫을 내보냈어요.');
+  renderPetCompanion();
   updateUI();
   const content = document.getElementById('modal-content-area');
   if(content) content.innerHTML = renderShopModal();
@@ -3690,6 +3864,270 @@ function getPotBodyMarkup(shape, potColor, potColorLight){
 function renderPotPreviewSVG(shape, potColor, potColorLight){
   return `<svg class="pot-preview-svg" viewBox="46 198 108 58" xmlns="http://www.w3.org/2000/svg">${getPotBodyMarkup(shape, potColor, potColorLight)}</svg>`;
 }
+
+/* ================= 🐾 펫(강아지/고양이/꿀벌/나비) — 직접 그린 SVG + 움직임 =================
+   이모티콘 대신, 걷기/눕기(강아지·고양이)와 날기/잎에 앉기(꿀벌·나비) 두 가지 포즈를 각각
+   손으로 그려서 CSS 애니메이션으로 다리/꼬리/날개를 움직여요. JS가 몇 초마다 다음 행동과
+   화면 속 위치를 무작위로 골라서 화분 주변을 자연스럽게 돌아다니는 것처럼 보이게 해요. */
+function buildPetSVG(species, pose){
+  if(species === 'dog'){
+    return pose === 'lie' ? `
+      <svg viewBox="0 0 104 82" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="dogBodyG" cx="38%" cy="28%" r="80%">
+            <stop offset="0%" stop-color="#fdece0"/>
+            <stop offset="100%" stop-color="#eeccab"/>
+          </radialGradient>
+          <radialGradient id="dogEarG" cx="35%" cy="20%" r="85%">
+            <stop offset="0%" stop-color="#f3bfcb"/>
+            <stop offset="100%" stop-color="#dd94a5"/>
+          </radialGradient>
+        </defs>
+        <g class="pet-body-group">
+          <path d="M18,60 Q8,42 32,34 Q66,22 86,44 Q96,58 80,66 Q48,80 18,60 Z" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <path class="pet-tail" d="M80,48 Q96,36 94,54 Q92,66 78,62 Q82,54 80,48 Z" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <path d="M22,44 Q4,36 6,56 Q8,68 24,62 Q14,52 22,44 Z" fill="url(#dogEarG)" stroke="#8a5a45" stroke-width="2"/>
+          <ellipse cx="32" cy="42" rx="21" ry="17" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <ellipse cx="26" cy="36" rx="4.6" ry="2.8" fill="#f6b9ae" opacity="0.75"/>
+          <ellipse cx="22" cy="31" rx="6.4" ry="3.8" fill="#ffffff" opacity="0.35"/>
+          <path d="M24,46 q 4,3 8,0" stroke="#33402f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <ellipse cx="33" cy="40" rx="2" ry="1.7" fill="#4a3626"/>
+          <g class="pet-zzz"><text x="70" y="26" font-size="12" fill="#a48f75" font-weight="700">Zz</text></g>
+        </g>
+      </svg>` : `
+      <svg viewBox="0 0 104 82" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="dogBodyG" cx="38%" cy="26%" r="80%">
+            <stop offset="0%" stop-color="#fdece0"/>
+            <stop offset="100%" stop-color="#eeccab"/>
+          </radialGradient>
+          <radialGradient id="dogEarG" cx="35%" cy="20%" r="85%">
+            <stop offset="0%" stop-color="#f3bfcb"/>
+            <stop offset="100%" stop-color="#dd94a5"/>
+          </radialGradient>
+        </defs>
+        <g class="pet-body-group">
+          <path class="pet-tail" d="M76,56 Q94,46 92,64 Q90,76 76,70 Q82,60 76,56 Z" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <ellipse class="pet-leg pet-leg-a" cx="34" cy="74" rx="8" ry="5.5" fill="#dcb890" stroke="#8a5a45" stroke-width="1.8"/>
+          <ellipse class="pet-leg pet-leg-b" cx="60" cy="74" rx="8" ry="5.5" fill="#dcb890" stroke="#8a5a45" stroke-width="1.8"/>
+          <ellipse cx="48" cy="52" rx="31" ry="24" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <path d="M24,16 Q2,10 4,46 Q6,64 26,58 Q14,42 24,16 Z" fill="url(#dogEarG)" stroke="#8a5a45" stroke-width="2"/>
+          <path d="M70,16 Q92,10 90,46 Q88,64 68,58 Q80,42 70,16 Z" fill="url(#dogEarG)" stroke="#8a5a45" stroke-width="2"/>
+          <circle cx="46" cy="28" r="26" fill="url(#dogBodyG)" stroke="#8a5a45" stroke-width="2"/>
+          <ellipse cx="36" cy="17" rx="9" ry="5.5" fill="#ffffff" opacity="0.35"/>
+          <ellipse cx="29" cy="35" rx="5.4" ry="3.6" fill="#f6b9ae" opacity="0.75"/>
+          <ellipse cx="63" cy="35" rx="5.4" ry="3.6" fill="#f6b9ae" opacity="0.75"/>
+          <circle cx="37" cy="26" r="2.9" fill="#4a3626"/>
+          <circle cx="55" cy="26" r="2.9" fill="#4a3626"/>
+          <ellipse cx="46" cy="35" rx="3" ry="2.3" fill="#4a3626"/>
+          <path d="M38,40 Q46,46 54,40" stroke="#8a5a45" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>`;
+  }
+  if(species === 'cat'){
+    return pose === 'lie' ? `
+      <svg viewBox="0 0 104 82" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="catBodyG" cx="38%" cy="28%" r="80%">
+            <stop offset="0%" stop-color="#f2efe9"/>
+            <stop offset="100%" stop-color="#d3cabc"/>
+          </radialGradient>
+        </defs>
+        <g class="pet-body-group">
+          <path d="M18,60 Q8,42 32,34 Q66,22 86,44 Q96,58 80,66 Q48,80 18,60 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <path class="pet-tail" d="M80,50 Q98,42 96,60 Q92,70 78,64 Q84,56 80,50 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <ellipse cx="30" cy="42" rx="20" ry="16" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <path d="M16,32 l4,-11 l8,8 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="1.6"/>
+          <path d="M38,32 l-4,-11 l-8,8 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="1.6"/>
+          <ellipse cx="24" cy="37" rx="4.4" ry="2.6" fill="#f0aeb8" opacity="0.7"/>
+          <ellipse cx="20" cy="32" rx="6" ry="3.4" fill="#ffffff" opacity="0.35"/>
+          <path d="M22,46 q 4,2.6 7,0" stroke="#33402f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="31" cy="40" rx="1.8" ry="1.5" fill="#4a3626"/>
+          <g class="pet-zzz"><text x="70" y="26" font-size="12" fill="#a48f75" font-weight="700">Zz</text></g>
+        </g>
+      </svg>` : `
+      <svg viewBox="0 0 104 82" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="catBodyG" cx="38%" cy="26%" r="80%">
+            <stop offset="0%" stop-color="#f2efe9"/>
+            <stop offset="100%" stop-color="#d3cabc"/>
+          </radialGradient>
+        </defs>
+        <g class="pet-body-group">
+          <path class="pet-tail" d="M74,58 Q92,50 90,70 Q86,80 72,72 Q78,64 74,58 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <ellipse class="pet-leg pet-leg-a" cx="34" cy="74" rx="7.5" ry="5.2" fill="#bdb2a1" stroke="#6d6357" stroke-width="1.6"/>
+          <ellipse class="pet-leg pet-leg-b" cx="60" cy="74" rx="7.5" ry="5.2" fill="#bdb2a1" stroke="#6d6357" stroke-width="1.6"/>
+          <ellipse cx="48" cy="52" rx="29" ry="23" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <circle cx="46" cy="28" r="24" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="2"/>
+          <path d="M20,20 l6,-20 l14,16 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="1.8"/>
+          <path d="M72,20 l-6,-20 l-14,16 Z" fill="url(#catBodyG)" stroke="#6d6357" stroke-width="1.8"/>
+          <path d="M25,13 l3,-9 l6,7 Z" fill="#e8a3ae"/>
+          <path d="M67,13 l-3,-9 l-6,7 Z" fill="#e8a3ae"/>
+          <ellipse cx="36" cy="17" rx="8" ry="5" fill="#ffffff" opacity="0.35"/>
+          <ellipse cx="29" cy="35" rx="4.8" ry="3.4" fill="#f0aeb8" opacity="0.7"/>
+          <ellipse cx="63" cy="35" rx="4.8" ry="3.4" fill="#f0aeb8" opacity="0.7"/>
+          <circle cx="37" cy="27" r="2.7" fill="#4a3626"/>
+          <circle cx="55" cy="27" r="2.7" fill="#4a3626"/>
+          <ellipse cx="46" cy="35" rx="2.5" ry="1.9" fill="#e39aa3"/>
+          <path d="M39,40 Q46,45 53,40" stroke="#6d6357" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M20,34 q-9,-1 -13,2" stroke="#6d6357" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <path d="M72,34 q9,-1 13,2" stroke="#6d6357" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/>
+        </g>
+      </svg>`;
+  }
+  if(species === 'bee'){
+    return `
+      <svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg">
+        <g class="pet-body-group">
+          <ellipse class="pet-wing-l" cx="12" cy="10" rx="9" ry="6" fill="#eaf6ff" opacity="0.8" stroke="#cdeaff" stroke-width="1"/>
+          <ellipse class="pet-wing-r" cx="26" cy="10" rx="9" ry="6" fill="#eaf6ff" opacity="0.8" stroke="#cdeaff" stroke-width="1"/>
+          <ellipse cx="19" cy="20" rx="10" ry="8" fill="#ffd54f" stroke="#8a5a00" stroke-width="1.2"/>
+          <path d="M11,16 q8,-3 16,0" stroke="#33402f" stroke-width="2.2" fill="none"/>
+          <path d="M11,22 q8,3 16,0" stroke="#33402f" stroke-width="2.2" fill="none"/>
+          <circle cx="19" cy="12" r="4" fill="#33402f"/>
+          <path d="M16,9 q -3,-4 -5,-3" stroke="#33402f" stroke-width="1" fill="none"/>
+          <path d="M22,9 q 3,-4 5,-3" stroke="#33402f" stroke-width="1" fill="none"/>
+        </g>
+      </svg>`;
+  }
+  if(species === 'butterfly'){
+    return `
+      <svg viewBox="0 0 46 34" xmlns="http://www.w3.org/2000/svg">
+        <g class="pet-body-group">
+          <path class="pet-wing-l" d="M22,17 C10,2 -2,8 6,20 C10,26 18,24 22,17 Z" fill="#f2a15c" stroke="#c97a2e" stroke-width="1"/>
+          <path class="pet-wing-r" d="M24,17 C36,2 48,8 40,20 C36,26 28,24 24,17 Z" fill="#f2a15c" stroke="#c97a2e" stroke-width="1"/>
+          <ellipse cx="23" cy="19" rx="2" ry="8" fill="#33402f"/>
+          <path d="M21,12 q -2,-4 -4,-4" stroke="#33402f" stroke-width="1" fill="none"/>
+          <path d="M25,12 q 2,-4 4,-4" stroke="#33402f" stroke-width="1" fill="none"/>
+        </g>
+      </svg>`;
+  }
+  return '';
+}
+/* 🖼️ 펫 상점 미리보기: 실제 화면에 그려질 기본 포즈를 정지 이미지로 보여줘요 */
+function renderPetPreviewSVG(species){
+  const pose = (species === 'bee' || species === 'butterfly') ? 'fly' : 'walk';
+  return `<div class="pet-figure" style="width:44px;height:34px;">${buildPetSVG(species, pose)}</div>`;
+}
+
+const PET_MONOLOGUES = {
+  dog:       ['멍멍!','킁킁, 좋은 냄새다','오늘도 화분 지킬게요!','꼬리가 근질근질해요','정원사님, 산책 가고싶어요!'],
+  cat:       ['냐옹~','...(하품)','졸려요...','오늘 낮잠 몇 시간 잤더라','저기 나비다...'],
+  bee:       ['윙윙~','꽃가루 모으는 중!','바빠요 바빠!','오늘도 부지런히!','꽃향기 최고예요'],
+  butterfly: ['팔랑팔랑~','오늘 날씨 좋다','어디로 날아갈까?','살랑살랑~','잎사귀가 폭신해요']
+};
+let petAnimTimer = null;
+let petBubbleTimer = null;
+
+function stopPetAnimation(){
+  clearTimeout(petAnimTimer); petAnimTimer = null;
+  clearTimeout(petBubbleTimer); petBubbleTimer = null;
+  const wrap = document.getElementById('pet-wrap');
+  if(wrap) wrap.style.display = 'none';
+}
+
+/* 🐾 화분 옆에 장착된 펫을 그리고, 움직임/혼잣말 스케줄을 시작해요 (renderPlant와 함께 호출) */
+function renderPetCompanion(){
+  stopPetAnimation();
+  const wrap = document.getElementById('pet-wrap');
+  if(!wrap) return;
+  const design = plantState.equippedPet ? PET_DESIGNS.find(p=>p.key===plantState.equippedPet) : null;
+  if(!design){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  startPetBehavior(design.species);
+  schedulePetMonologue(design.species);
+}
+/* 🚶🐝 몇 초마다 다음 포즈(걷기/눕기, 날기/앉기)와 위치를 무작위로 골라서 화분 주변을 자연스럽게 돌아다니게 해요 */
+function startPetBehavior(species){
+  const wrap = document.getElementById('pet-wrap');
+  const figure = document.getElementById('pet-figure');
+  if(!wrap || !figure) return;
+  const isFlyer = (species === 'bee' || species === 'butterfly');
+  wrap.classList.toggle('pet-size-large', species === 'dog' || species === 'cat');
+  function step(){
+    if(plantState.equippedPet == null) return; // 중간에 펫이 없어지면 멈춰요
+    let x, faceLeftClass, poseClass, pose;
+    if(isFlyer){
+      const doSit = Math.random() < 0.35;
+      x = 18 + Math.random()*54;
+      const y = doSit ? (26 + Math.random()*12) : (8 + Math.random()*34);
+      wrap.style.left = x + '%';
+      wrap.style.top = y + '%';
+      wrap.style.bottom = '';
+      pose = doSit ? 'sit' : 'fly';
+      poseClass = doSit ? 'pet-anim-sitting' : 'pet-anim-flying';
+    } else {
+      const doLie = Math.random() < 0.3;
+      x = 8 + Math.random()*58;
+      wrap.style.left = x + '%';
+      wrap.style.top = '';
+      wrap.style.bottom = '6%';
+      pose = doLie ? 'lie' : 'walk';
+      poseClass = doLie ? 'pet-anim-lying' : 'pet-anim-walking';
+    }
+    faceLeftClass = (x > 42) ? ' face-left' : '';
+    figure.className = 'pet-figure ' + poseClass + faceLeftClass;
+    figure.innerHTML = buildPetSVG(species, isFlyer ? (pose === 'sit' ? 'fly' : 'fly') : pose);
+    const nextDelay = isFlyer
+      ? (pose === 'sit' ? (2500 + Math.random()*2500) : (2200 + Math.random()*2000))
+      : (pose === 'lie' ? (3500 + Math.random()*3000) : (2400 + Math.random()*1800));
+    petAnimTimer = setTimeout(step, nextDelay);
+  }
+  step();
+}
+/* 💬 펫이 가끔 화분 곁에서 혼잣말 말풍선을 띄워요 (성격/성장과는 무관한 분위기 연출용) */
+function schedulePetMonologue(species){
+  const bubble = document.getElementById('pet-bubble');
+  function loop(){
+    petBubbleTimer = setTimeout(()=>{
+      if(plantState.equippedPet == null) return;
+      const lines = PET_MONOLOGUES[species] || [];
+      if(lines.length && bubble){
+        bubble.innerText = pickRandom(lines);
+        bubble.classList.add('show');
+        setTimeout(()=>{ bubble.classList.remove('show'); }, 2600);
+      }
+      loop();
+    }, 9000 + Math.random()*9000);
+  }
+  loop();
+}
+
+/* 🐾 하루 한 번, 장착된 펫이 화분에 성장 버프를 줘요.
+   🐶 강아지: 하루 두 번 거름(고정 +3%씩, 하루치를 합쳐서 +6%) · 🐱 고양이: +3~5% 랜덤
+   🐝 꿀벌 / 🦋 나비: +5~8% 랜덤. gameTick에서 날짜가 바뀔 때마다 한 번만 호출돼요. */
+function applyPetDailyBuff(){
+  if(plantState.isDead || plantState.isHarvestable) return;
+  if(!plantState.equippedPet) return;
+  const today = getDayIndex(Date.now());
+  if(plantState.lastPetBuffDay === today) return;
+  plantState.lastPetBuffDay = today;
+  const pet = PET_DESIGNS.find(p=>p.key===plantState.equippedPet);
+  if(!pet) return;
+  let gain = 0, msg = '';
+  if(pet.species === 'dog'){
+    gain = 3 + 3; // 하루 두 번, 고정 +3%씩
+    msg = `🐶 ${escapeHtml(plantName)} 화분에 거름을 두 번 줬어요! 성장률 +6%`;
+  } else if(pet.species === 'cat'){
+    gain = 3 + Math.random()*2;
+    msg = `🐱 나가서 좋은 기운을 물어왔어요! 성장률 +${gain.toFixed(1)}%`;
+  } else if(pet.species === 'bee'){
+    gain = 5 + Math.random()*3;
+    msg = `🐝 꽃가루를 나르며 도와줬어요! 성장률 +${gain.toFixed(1)}%`;
+  } else if(pet.species === 'butterfly'){
+    gain = 5 + Math.random()*3;
+    msg = `🦋 팔랑팔랑 날아다니며 도와줬어요! 성장률 +${gain.toFixed(1)}%`;
+  }
+  if(gain > 0){
+    plantState.growth = clamp(plantState.growth + gain, 0, 100);
+    showInfoToast(msg);
+    if(plantState.growth >= 100 && !plantState.isHarvestable){
+      plantState.growth = 100;
+      plantState.isHarvestable = true;
+    }
+  }
+}
+
 function buildPlantSVG(stage){
 const isGrape = PLANT_TYPE === 'grape';
 const isBanana = PLANT_TYPE === 'banana';
@@ -4731,7 +5169,9 @@ ${moodHint}`;
 }
 
 /* ================= 설정: 배경음악(BGM) =================
-   🎵 예전엔 화이트노이즈(바람소리)만 나왔는데, 게임 분위기에 맞는 귀여운 멜로디가 계속 반복 재생되도록 바꿨어요.
+   🎵 예전엔 단일 사인파 멜로디만 반복돼서 장난감 소리처럼 들렸어요.
+      지금은 (1) 멜로디, (2) 잔잔한 코드 패드, (3) 부드러운 베이스, (4) 은은한 딜레이(잔향)까지
+      4개 층을 함께 재생해서 실제 BGM처럼 공간감과 화음이 느껴지도록 만들었어요.
    🔊 소리 on/off와 음량은 닉네임/식물 슬롯과 무관한 "기기 공용 설정"이라, 어떤 식물을 보고 있어도 항상 동일하게 유지되고,
       화면을 새로고침하거나(화분을 바꿔서 리로드되는 경우 포함) 다시 켜져도 이전 설정 그대로 이어서 재생돼요. */
 const SOUND_ON_KEY = 'miniGarden_soundOn';
@@ -4739,11 +5179,17 @@ const SOUND_VOLUME_KEY = 'miniGarden_soundVolume';
 let soundOn = false;
 let soundVolume = 0.6; // 0~1
 let bgmGainNode = null;
+let bgmDryGain = null;
+let bgmDelayNode = null;
+let bgmDelayFeedback = null;
+let bgmDelayWet = null;
 let bgmSchedulerTimer = null;
 let bgmNextNoteTime = 0;
 let bgmNoteIndex = 0;
+let bgmNextChordTime = 0;
+let bgmChordIndex = 0;
 
-// 🌿 아기자기한 정원 분위기의 짧은 8마디 멜로디 (마림바 느낌의 부드러운 톤으로 계속 반복돼요)
+// 🌿 아기자기한 정원 분위기의 짧은 멜로디 (마림바 느낌의 부드러운 톤으로 계속 반복돼요)
 const BGM_MELODY = [
   {n:'C5',d:0.34},{n:'E5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},
   {n:'A5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},{n:'D5',d:0.34},
@@ -4752,6 +5198,14 @@ const BGM_MELODY = [
   {n:'C5',d:0.9},{n:0,d:0.5}
 ];
 const BGM_NOTE_FREQ = { C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00, B5:987.77, C6:1046.50 };
+
+// 🎹 멜로디를 받쳐주는 코드 진행 (C - Am - F - G, 8마디 멜로디 길이인 7.18초에 맞춘 4개 코드)
+const BGM_CHORDS = [
+  { dur:1.8,  notes:[261.63,329.63,392.00], bass:130.81 },
+  { dur:1.8,  notes:[220.00,261.63,329.63], bass:110.00 },
+  { dur:1.8,  notes:[174.61,220.00,261.63], bass:87.31  },
+  { dur:1.78, notes:[196.00,246.94,293.66], bass:98.00  }
+];
 
 function loadSoundSettings(){
   soundOn = safeGet(SOUND_ON_KEY) === '1';
@@ -4767,27 +5221,96 @@ function ensureAudioCtx(){
   if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
   return audioCtx;
 }
+// 🌫️ 아주 은은한 딜레이 기반 잔향(리버브 대용) 버스를 하나 만들어서, 모든 소리가 여기에도 살짝 흘러들어가게 해요.
+function ensureReverbBus(){
+  if(bgmDelayNode) return;
+  bgmDelayNode = audioCtx.createDelay(1.0);
+  bgmDelayNode.delayTime.value = 0.32;
+  bgmDelayFeedback = audioCtx.createGain();
+  bgmDelayFeedback.gain.value = 0.28;
+  bgmDelayWet = audioCtx.createGain();
+  bgmDelayWet.gain.value = 0.32;
+  const delayFilter = audioCtx.createBiquadFilter();
+  delayFilter.type = 'lowpass';
+  delayFilter.frequency.value = 2200;
+  bgmDelayNode.connect(delayFilter);
+  delayFilter.connect(bgmDelayFeedback);
+  bgmDelayFeedback.connect(bgmDelayNode);
+  bgmDelayNode.connect(bgmDelayWet);
+  bgmDelayWet.connect(bgmGainNode);
+}
 function playBgmNote(freq, time, dur){
   if(!freq) return; // 쉼표
   const osc = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
   const noteGain = audioCtx.createGain();
-  osc.type = 'sine';
+  osc.type = 'triangle';
   osc.frequency.setValueAtTime(freq, time);
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2, time); // 배음을 살짝 얹어서 마림바 같은 따뜻한 음색을 만들어요
+  const osc2Gain = audioCtx.createGain();
+  osc2Gain.gain.value = 0.12;
   noteGain.gain.setValueAtTime(0.0001, time);
-  noteGain.gain.exponentialRampToValueAtTime(0.55, time + 0.025);
+  noteGain.gain.exponentialRampToValueAtTime(0.5, time + 0.02);
   noteGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
   osc.connect(noteGain);
-  noteGain.connect(bgmGainNode);
+  osc2.connect(osc2Gain);
+  osc2Gain.connect(noteGain);
+  noteGain.connect(bgmDryGain);
+  noteGain.connect(bgmDelayNode);
+  osc.start(time); osc.stop(time + dur + 0.05);
+  osc2.start(time); osc2.stop(time + dur + 0.05);
+}
+// 🎧 코드 패드: 세 음을 동시에, 아주 천천히 커졌다 사라지는 부드러운 사인파로 깔아줘요
+function playChordPad(notes, time, dur){
+  const padFilter = audioCtx.createBiquadFilter();
+  padFilter.type = 'lowpass';
+  padFilter.frequency.value = 1400;
+  const padGain = audioCtx.createGain();
+  padGain.gain.setValueAtTime(0.0001, time);
+  padGain.gain.exponentialRampToValueAtTime(0.16, time + dur * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+  padFilter.connect(padGain);
+  padGain.connect(bgmDryGain);
+  padGain.connect(bgmDelayNode);
+  notes.forEach(freq=>{
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.connect(padFilter);
+    osc.start(time);
+    osc.stop(time + dur + 0.1);
+  });
+}
+// 🎸 은은한 베이스: 코드의 뿌리음을 한 옥타브 아래에서 부드럽게 받쳐줘요
+function playBassNote(freq, time, dur){
+  const osc = audioCtx.createOscillator();
+  const bassGain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, time);
+  bassGain.gain.setValueAtTime(0.0001, time);
+  bassGain.gain.exponentialRampToValueAtTime(0.22, time + 0.08);
+  bassGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+  osc.connect(bassGain);
+  bassGain.connect(bgmDryGain);
   osc.start(time);
   osc.stop(time + dur + 0.05);
 }
 function scheduleBgm(){
   if(!bgmGainNode) return;
-  while(bgmNextNoteTime < audioCtx.currentTime + 1.0){
+  const lookAhead = audioCtx.currentTime + 1.0;
+  while(bgmNextNoteTime < lookAhead){
     const note = BGM_MELODY[bgmNoteIndex % BGM_MELODY.length];
     playBgmNote(BGM_NOTE_FREQ[note.n], bgmNextNoteTime, note.d * 0.9);
     bgmNextNoteTime += note.d;
     bgmNoteIndex++;
+  }
+  while(bgmNextChordTime < lookAhead){
+    const chord = BGM_CHORDS[bgmChordIndex % BGM_CHORDS.length];
+    playChordPad(chord.notes, bgmNextChordTime, chord.dur);
+    playBassNote(chord.bass, bgmNextChordTime, chord.dur);
+    bgmNextChordTime += chord.dur;
+    bgmChordIndex++;
   }
   bgmSchedulerTimer = setTimeout(scheduleBgm, 250);
 }
@@ -4797,13 +5320,20 @@ function startBackgroundMusic(){
   bgmGainNode = audioCtx.createGain();
   bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime);
   bgmGainNode.connect(audioCtx.destination);
+  bgmDryGain = audioCtx.createGain();
+  bgmDryGain.gain.value = 1;
+  bgmDryGain.connect(bgmGainNode);
+  ensureReverbBus();
   bgmNoteIndex = 0;
+  bgmChordIndex = 0;
   bgmNextNoteTime = audioCtx.currentTime + 0.1;
+  bgmNextChordTime = audioCtx.currentTime + 0.1;
   scheduleBgm();
 }
 function stopBackgroundMusic(){
   if(bgmSchedulerTimer){ clearTimeout(bgmSchedulerTimer); bgmSchedulerTimer = null; }
   if(bgmGainNode){ try{ bgmGainNode.disconnect(); }catch(e){} bgmGainNode = null; }
+  bgmDryGain = null; bgmDelayNode = null; bgmDelayFeedback = null; bgmDelayWet = null;
 }
 function applyBgmVolume(){
   if(bgmGainNode && audioCtx){ bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime); }
