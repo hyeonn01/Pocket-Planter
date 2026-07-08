@@ -403,6 +403,7 @@
     width: auto;
     max-width: 82%;
     height: clamp(120px, 30dvh, 230px);
+    aspect-ratio: 200 / 260;
     transform-origin: bottom center;
   }
   .plant-stage-svg.sway{
@@ -1088,7 +1089,7 @@
     <div class="speech-bubble-wrap" id="chat-bubble-wrap">
       <div class="speech-bubble" id="chat-bubble">안녕하세요!</div>
     </div>
-    <svg id="plant-svg" class="plant-stage-svg sway" viewBox="0 -20 200 260" overflow="visible" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg id="plant-svg" class="plant-stage-svg sway" viewBox="0 -20 200 260" width="200" height="260" preserveAspectRatio="xMidYMid meet" overflow="visible" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="location-tag" id="current-location-tag">📍 창가</div>
   </div>
 
@@ -3768,16 +3769,17 @@ if(stage === 0){
     seedStage = `       <ellipse cx="100" cy="215" rx="10" ry="7" fill="#8a5a2e"/><ellipse cx="100" cy="212" rx="6" ry="4" fill="#a97a45"/>
   `;
   } else if(isGrape){
-    /* 🍇 포도씨는 작은 씨앗 두 알이 붙어 있는 모습으로 표현해요 */
-    seedStage = `       <ellipse cx="96" cy="216" rx="4.3" ry="6" fill="#6a4c2e" transform="rotate(-14 96 216)"/>
-       <ellipse cx="104" cy="214" rx="3.8" ry="5.4" fill="#7a5a38" transform="rotate(12 104 214)"/>
+    /* 🍇 포도씨는 작은 씨앗 두 알이 붙어 있는 모습으로 표현해요 (화분 입구 안에 들어오도록 위치 보정) */
+    seedStage = `       <ellipse cx="96" cy="217" rx="4.3" ry="5.5" fill="#6a4c2e" transform="rotate(-14 96 217)"/>
+       <ellipse cx="104" cy="215.5" rx="3.8" ry="5" fill="#7a5a38" transform="rotate(12 104 215.5)"/>
   `;
   } else if(isTangerine){
-    /* 🍊 감귤류 씨앗은 하얗고 길쭉한 모양이라 다른 작물들과 색부터 다르게 표현해요 */
-    seedStage = `       <ellipse cx="100" cy="214" rx="5.5" ry="8.5" fill="#f2ecd8" stroke="#d8cfa8" stroke-width="0.8" transform="rotate(-6 100 214)"/>
+    /* 🍊 감귤류 씨앗은 하얗고 길쭉한 모양이라 다른 작물들과 색부터 다르게 표현해요 (화분 입구 안에 들어오도록 위치 보정) */
+    seedStage = `       <ellipse cx="100" cy="216" rx="5.5" ry="7" fill="#f2ecd8" stroke="#d8cfa8" stroke-width="0.8" transform="rotate(-6 100 216)"/>
   `;
   } else {
-    seedStage = `       <ellipse cx="100" cy="214" rx="7" ry="9" fill="#8a5a2e"/>
+    /* 🌱 화분 입구(rim) 상단선(y=208)보다 위로 튀어나오지 않도록 위치/크기 보정 */
+    seedStage = `       <ellipse cx="100" cy="216" rx="7" ry="7" fill="#8a5a2e"/>
   `;
   }
 }
