@@ -288,6 +288,12 @@
     border-radius:999px; padding:8px 0; font-size:12px; font-weight:800; cursor:pointer;
   }
   .shop-tab-btn.active{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+  .shop-locked-notice{
+    background:var(--card-soft); border:1.5px dashed #cdd8c8; border-radius:14px;
+    padding:22px 16px; text-align:center; font-size:12.5px; line-height:1.6;
+    color:#5c7d54; font-weight:700; margin-bottom:10px;
+  }
+  .shop-locked-notice b{ color:#e0862e; }
   .pot-preview-wrap{ display:flex; justify-content:center; align-items:center; margin-bottom:4px; }
   .pot-preview-svg{ width:98px; height:53px; overflow:visible; }
 
@@ -512,6 +518,13 @@
     outline:none; font-size:16px; background:#fff; box-shadow: var(--shadow-soft);
   }
   .talk-inline-input:focus{ border-color: var(--leaf); }
+  .talk-inline-input.input-error{
+    border-color:#e4583c !important; animation: input-shake 0.35s ease;
+  }
+  @keyframes input-shake{
+    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-5px); }
+    50%{ transform:translateX(5px); } 75%{ transform:translateX(-3px); }
+  }
   .talk-inline-send, .talk-inline-close{
     width:38px; height:38px; border-radius:50%; border:none; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -763,6 +776,22 @@
   .switch input:checked + .switch-track::before{ transform: translateX(18px); }
   .switch input:disabled + .switch-track{ background:#e3e8df; cursor:not-allowed; opacity:0.72; }
   .switch input:disabled + .switch-track::before{ box-shadow:none; }
+  .volume-row{ align-items:center; }
+  .volume-slider{
+    -webkit-appearance:none; appearance:none; flex:1; margin-left:14px; height:6px; border-radius:999px;
+    background: linear-gradient(90deg, var(--leaf) 0%, var(--leaf) var(--vol-pct,60%), #dfe8da var(--vol-pct,60%), #dfe8da 100%);
+    outline:none;
+  }
+  .volume-slider::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.28); border:2px solid var(--leaf); cursor:pointer;
+  }
+  .volume-slider::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.28);
+    border:2px solid var(--leaf); cursor:pointer;
+  }
+  .volume-slider:disabled{ opacity:0.5; }
+  .volume-slider:disabled::-webkit-slider-thumb{ border-color:#b7c2b1; cursor:not-allowed; }
 
   .bad-word-counter{ font-size:10.5px; color:#e4583c; margin-top:10px; font-weight:700; text-align:center; }
 
@@ -1270,7 +1299,8 @@ const SHARED_FIELDS = [
   'harvestedBasket','basketSeenCount',
   'gardenerLevel','gardenerXp','missionSeenLevel',
   'lifeWater','lifeTalk','lifeDays','lifePet','lifeCoinsEarned','lifeDiaryCount',
-  'lastGrowthBoosterBuyDay'
+  'lastGrowthBoosterBuyDay',
+  'ownedPotDesigns'   // 🏺 한 번 구매한 화분 디자인은 정원사 계정 전체(모든 식물)에서 공유해서 쓸 수 있어요
 ];
 function loadSharedState(){
   try{
@@ -1439,7 +1469,17 @@ function selectNewPersonality(key){
 }
 function createNewPlant(slotId){
   const nameInput = document.getElementById('new-plant-name-input');
-  const name = (nameInput && nameInput.value.trim()) || '새싹이';
+  const name = (nameInput && nameInput.value.trim()) || '';
+  if(!name){
+    // 🌱 이름을 짓지 않으면 다음 단계로 넘어갈 수 없어요
+    showInfoToast('🌱 식물 이름을 먼저 지어주세요!');
+    if(nameInput){
+      nameInput.classList.add('input-error');
+      nameInput.focus();
+      setTimeout(()=>{ nameInput.classList.remove('input-error'); }, 900);
+    }
+    return;
+  }
   const pKey = window._newPlantPersonality || 'active';
   let tKey = PLANT_TYPES[window._newPlantType] ? window._newPlantType : 'tomato';
   if(!isPlantTypeUnlocked(tKey)) tKey = 'tomato'; // 🔒 안전장치: 잠긴 식물은 못 심음
@@ -1587,12 +1627,16 @@ const SHOP_ITEMS = [
   { key:'sunlight', icon:'☀️', title:'일조량 추가', cost:1000, desc:'일조량 +25%' },
   { key:'growth_booster', icon:'🚀', title:'성장촉진제', cost:10000, desc:'성장도 +12% · 하루 1개 한정' }
 ];
-/* 🏺 화분 디자인 — 코인으로 구매해서 화분의 색상뿐 아니라 모양(shape)까지 바꿀 수 있어요. 이 식물(슬롯) 전용이에요. */
+/* 🏺 화분 디자인 — 코인으로 구매해서 화분의 색상뿐 아니라 모양(shape)까지 바꿀 수 있어요.
+   한 번 구매하면 정원사 계정의 모든 식물(슬롯)에서 자유롭게 장착할 수 있어요(공용 소장품). */
 const POT_DESIGNS = [
-  { key:'terracotta', shape:'ridged',    title:'빈티지 리지 테라코타', cost:20000, potColor:'#d97a4d', potColorLight:'#f3b98a', desc:'은은한 엠보싱 줄무늬의 클래식 토분' },
-  { key:'sage',       shape:'round',     title:'큐트 라운드 세이지',   cost:20000, potColor:'#7fa876', potColorLight:'#c7e6bd', desc:'콩콩 물방울 무늬가 있는 동글동글 항아리' },
-  { key:'navy',       shape:'hex',       title:'모던 페이스드 네이비', cost:20000, potColor:'#33465c', potColorLight:'#5b7fa3', desc:'골드 라인 포인트의 각진 모던 화분' },
-  { key:'blush',      shape:'scalloped', title:'리본 블러쉬 스캘럽',   cost:20000, potColor:'#e39aa3', potColorLight:'#fbd0d8', desc:'리본 장식이 달린 물결 테두리 화분' }
+  { key:'rattan',     shape:'wicker',    title:'내추럴 라탄 바스켓',   cost:15000, potColor:'#b98a54', potColorLight:'#e6c896', desc:'자연스러운 짜임 결의 라탄 바구니 화분' },
+  { key:'sage',       shape:'round',     title:'큐트 라운드 세이지',   cost:18000, potColor:'#6fa876', potColorLight:'#cdeec0', desc:'콩콩 물방울 무늬가 있는 동글동글 항아리' },
+  { key:'terracotta', shape:'ridged',    title:'빈티지 리지 테라코타', cost:18000, potColor:'#d97a4d', potColorLight:'#f6c199', desc:'은은한 엠보싱 줄무늬의 클래식 토분' },
+  { key:'lilac',      shape:'speckle',   title:'라벤더 스페클 세라믹', cost:20000, potColor:'#8a76ab', potColorLight:'#e2d5f5', desc:'매트한 표면에 스페클 유약이 흩뿌려진 감성 도자기' },
+  { key:'blush',      shape:'scalloped', title:'리본 블러쉬 스캘럽',   cost:22000, potColor:'#e39aa3', potColorLight:'#ffd9e2', desc:'리본 장식이 달린 물결 테두리 화분' },
+  { key:'navy',       shape:'hex',       title:'모던 페이스드 네이비', cost:25000, potColor:'#2c3e54', potColorLight:'#5b7fa3', desc:'골드 라인 포인트의 각진 모던 화분' },
+  { key:'marble',     shape:'marble',    title:'골드림 화이트 마블',   cost:30000, potColor:'#e9e2d6', potColorLight:'#fdfaf3', desc:'대리석 무늬와 얇은 골드 라인의 프리미엄 화분' }
 ];
 
 /* 🎯 일일미션: 매일 자정(달력 기준) 초기화되는 소소한 목표예요 */
@@ -1750,8 +1794,8 @@ let plantState = {
   lastNotifiedStageIdx: null,  // 🔔 마지막으로 알림을 보낸 성장 단계
   notifiedFreeCoinDay: null,   // 🔔 무료 코인 알림을 이미 보낸 날짜
   lastGrowthBoosterBuyDay: null, // 🚀 성장촉진제는 하루에 1개만 살 수 있어서, 마지막 구매 날짜를 기억해요 (계정 전체 공유)
-  ownedPotDesigns: [],          // 🏺 구매해서 보유중인 화분 디자인 키 목록 (이 화분/슬롯 전용)
-  equippedPotDesign: null,      // 🏺 현재 장착중인 화분 디자인 키 (null이면 기본 화분 색)
+  ownedPotDesigns: [],          // 🏺 구매해서 보유중인 화분 디자인 키 목록 (정원사 계정 전체 공유 · 모든 식물에서 사용 가능)
+  equippedPotDesign: null,      // 🏺 이 식물(슬롯)에 현재 장착중인 화분 디자인 키 (null이면 기본 화분 색). 식물마다 다른 화분을 장착할 수 있어요
   speedMultiplier: 1,
   speedBudgetMs: SPEED_BUDGET_TOTAL_MS,
   speedCheckpoint: null,
@@ -1774,7 +1818,7 @@ let plantState = {
 };
 
 let petCount = 0, petResetTimer = null;
-let audioCtx = null, ambientSound = null;
+let audioCtx = null;
 let tempMoodOverride = null; // 💚 쓰다듬을 때처럼 잠깐 표정을 바꿔줄 때 사용 (저장되지 않는 임시 상태)
 
 /* 🔘 버튼 클릭 효과음 (작고 귀여운 "똑" 소리) */
@@ -1800,13 +1844,13 @@ document.addEventListener('click', (e)=>{
   const btn = e.target.closest('button, .select-btn, .mailbox-container, .menu-btn, .modal-opt-btn, .basket-tomato');
   if(btn) playClickSound();
 }, true);
-let soundOn = false;
 let isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 let isAiReplying = false;
 
 /* ================= 초기화 ================= */
 window.onload = function(){
   applyPlantTheme();
+  loadSoundSettings();
   document.getElementById('view-nickname').innerText = nickname;
   document.getElementById('view-profile').innerText = profile;
   document.getElementById('view-plant-name').innerText = plantName;
@@ -3287,6 +3331,8 @@ function renderLevelModal(){
   `;
 }
 let shopTab = 'nutrient';
+const SHOP_NUTRIENT_MIN_LEVEL = 3;  // 🔒 영양제 상점은 정원사 레벨 3부터 구매 가능
+const SHOP_POT_MIN_LEVEL = 5;       // 🔒 화분 상점은 정원사 레벨 5부터 구매 가능
 function switchShopTab(tab){
   shopTab = tab;
   const content = document.getElementById('modal-content-area');
@@ -3295,14 +3341,19 @@ function switchShopTab(tab){
 function renderShopModal(){
   const coins = Math.floor(plantState.coins || 0);
   const todayIdx = getDayIndex(Date.now());
+  const level = plantState.gardenerLevel || 1;
+  const nutrientLocked = level < SHOP_NUTRIENT_MIN_LEVEL;
+  const potLocked = level < SHOP_POT_MIN_LEVEL;
   return `
     <div class="modal-title">🛒 코인 상점</div>
     <div class="coin-balance-card">보유 코인 · ${COIN_ICON_HTML} ${coins}원</div>
     <div class="shop-tab-row">
-      <button class="shop-tab-btn ${shopTab==='nutrient'?'active':''}" onclick="switchShopTab('nutrient')">🧪 영양제</button>
-      <button class="shop-tab-btn ${shopTab==='pot'?'active':''}" onclick="switchShopTab('pot')">🏺 화분</button>
+      <button class="shop-tab-btn ${shopTab==='nutrient'?'active':''}" onclick="switchShopTab('nutrient')">${nutrientLocked?'🔒':'🧪'} 영양제</button>
+      <button class="shop-tab-btn ${shopTab==='pot'?'active':''}" onclick="switchShopTab('pot')">${potLocked?'🔒':'🏺'} 화분</button>
     </div>
-    ${shopTab === 'pot' ? renderPotShopGrid() : `
+    ${shopTab === 'pot'
+      ? (potLocked ? renderShopLockedNotice(SHOP_POT_MIN_LEVEL, '화분') : renderPotShopGrid())
+      : (nutrientLocked ? renderShopLockedNotice(SHOP_NUTRIENT_MIN_LEVEL, '영양제') : `
     <div class="shop-grid">
       ${SHOP_ITEMS.map(item=>{
         const isBoosterLocked = item.key === 'growth_booster' && plantState.lastGrowthBoosterBuyDay === todayIdx;
@@ -3316,8 +3367,16 @@ function renderShopModal(){
         </div>
       `;}).join('')}
     </div>
-    `}
+    `)}
     <button class="close-modal-btn" onclick="closeModal()">닫기</button>
+  `;
+}
+/* 🔒 레벨이 부족해서 아직 열리지 않은 상점 탭에 보여줄 안내 문구 */
+function renderShopLockedNotice(minLevel, label){
+  return `
+    <div class="shop-locked-notice">
+      🔒 <b>정원사 레벨 ${minLevel}</b> 이상부터 ${label}를 구매할 수 있어요.<br>정원을 열심히 가꿔서 레벨을 올려주세요!
+    </div>
   `;
 }
 /* 🏺 화분 디자인 상점 그리드: 보유 여부에 따라 구매/장착/사용중 버튼이 달라져요 */
@@ -3356,6 +3415,11 @@ function renderPotShopGrid(){
   `;
 }
 function buyPotDesign(key){
+  const level = plantState.gardenerLevel || 1;
+  if(level < SHOP_POT_MIN_LEVEL){
+    showInfoToast(`🔒 정원사 레벨 ${SHOP_POT_MIN_LEVEL} 이상부터 화분을 구매할 수 있어요.`);
+    return;
+  }
   const design = POT_DESIGNS.find(d=>d.key===key);
   if(!design) return;
   const coins = Math.floor(plantState.coins || 0);
@@ -3386,6 +3450,11 @@ function equipPotDesign(key){
   savePlantState();
 }
 function buyShopItem(key){
+  const level = plantState.gardenerLevel || 1;
+  if(level < SHOP_NUTRIENT_MIN_LEVEL){
+    showInfoToast(`🔒 정원사 레벨 ${SHOP_NUTRIENT_MIN_LEVEL} 이상부터 구매할 수 있어요.`);
+    return;
+  }
   const item = SHOP_ITEMS.find(v=>v.key === key);
   if(!item) return;
   const coins = Math.floor(plantState.coins || 0);
@@ -3548,107 +3617,70 @@ function buildPotFace(){
 
 /* 🏺 화분 모양(shape)별로 실제 다른 형태의 화분 SVG를 만들어요.
    식물 렌더링과 상점 미리보기가 이 함수 하나를 공용으로 써서 항상 똑같이 보여요.
-   단색 대신 그라데이션 + 하이라이트 + 디테일을 넣어서 도자기 같은 고급스러운 느낌을 냈어요. */
+   🍎 iOS 스타일로 리뉴얼: 모든 화분이 같은 부드러운 라운드 버킷 실루엣 + 필(pill) 형태의 림을 기본으로 삼고,
+      화분마다 색상 그라데이션과 아주 미니멀한 포인트 디테일(도트/골드 라인/은은한 결)만 다르게 줘서
+      깔끔하고 통일감 있는 플랫 디자인 느낌을 냈어요. (기존의 화분 안쪽 갈색 그림자 원은 화분 입구와
+      맞지 않아 어색해서 제거하고, 화분 바깥의 바닥 그림자만 남겼어요.) */
 function getPotBodyMarkup(shape, potColor, potColorLight){
-  const shadow = `<ellipse cx="100" cy="213" rx="42" ry="7" fill="#7a5235" opacity="0.5"/>`;
   const gid = 'pg-' + shape; // 같은 모양은 항상 같은 색 그라데이션을 쓰므로 id를 고정해도 안전해요
 
-  if(shape === 'round'){
-    // 🪴 큐트 라운드 세이지 — 배가 볼록한 항아리형 + 콩점 패턴 + 반짝이는 하이라이트
-    return `
-      <defs>
-        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${potColorLight}"/>
-          <stop offset="100%" stop-color="${potColor}"/>
-        </linearGradient>
-        <linearGradient id="${gid}-rim" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="${potColorLight}"/>
-        </linearGradient>
-      </defs>
-      <path d="M59,218 Q50,232 61,243 Q100,253 139,243 Q150,232 141,218 Z" fill="url(#${gid}-body)" stroke="${potColor}" stroke-width="0.6"/>
-      <g fill="#fff" opacity="0.4">
-        <circle cx="78" cy="230" r="2.6"/><circle cx="100" cy="238" r="2.2"/><circle cx="122" cy="229" r="2.6"/>
-        <circle cx="89" cy="222" r="1.8"/><circle cx="112" cy="222" r="1.8"/>
-      </g>
-      <ellipse cx="76" cy="228" rx="10" ry="15" fill="#fff" opacity="0.16"/>
-      <rect x="57" y="210" width="86" height="13" rx="6.5" fill="url(#${gid}-rim)"/>
-      <rect x="57" y="210" width="86" height="4" rx="2" fill="#fff" opacity="0.35"/>
-      ${shadow}`;
-  }
-
-  if(shape === 'hex'){
-    // 🔷 모던 페이스드 네이비 — 각진 다면체 + 골드 라인 포인트로 세련된 느낌
-    return `
-      <defs>
-        <linearGradient id="${gid}-body" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="${potColorLight}"/>
-          <stop offset="100%" stop-color="${potColor}"/>
-        </linearGradient>
-      </defs>
-      <path d="M63,219 L137,219 L133,231 L122,242 L78,242 L67,231 Z" fill="url(#${gid}-body)"/>
-      <path d="M63,219 L100,219 L100,242 L78,242 L67,231 Z" fill="#fff" opacity="0.10"/>
-      <path d="M100,219 L137,219 L133,231 L122,242 L100,242 Z" fill="#000" opacity="0.12"/>
-      <path d="M63,219 L137,219" stroke="#f3dfae" stroke-width="1.6" opacity="0.9"/>
-      <path d="M100,219 L100,242" stroke="#f3dfae" stroke-width="1" opacity="0.55"/>
-      <rect x="59" y="210" width="82" height="12" rx="2.5" fill="${potColorLight}"/>
-      <rect x="59" y="210" width="82" height="12" rx="2.5" fill="none" stroke="#f3dfae" stroke-width="1" opacity="0.8"/>
-      ${shadow}`;
-  }
-
-  if(shape === 'scalloped'){
-    // 🎀 리본 블러쉬 스캘럽 — 물결 테두리 + 리본 포인트로 사랑스러운 느낌
-    return `
-      <defs>
-        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${potColorLight}"/>
-          <stop offset="100%" stop-color="${potColor}"/>
-        </linearGradient>
-      </defs>
-      <path d="M63,223 L137,223 L129,240 Q100,246 71,240 Z" fill="url(#${gid}-body)"/>
-      <ellipse cx="80" cy="230" rx="9" ry="13" fill="#fff" opacity="0.18"/>
-      <path d="M57,213 Q65,206 73,213 Q81,206 89,213 Q97,206 105,213 Q113,206 121,213 Q129,206 137,213 L140,225 L60,225 Z" fill="${potColorLight}" stroke="#fff" stroke-width="0.5" opacity="0.98"/>
-      <g transform="translate(100,221)">
-        <path d="M0,0 L-9,-6 L-7,1 Z" fill="#e8879a"/>
-        <path d="M0,0 L9,-6 L7,1 Z" fill="#e8879a"/>
-        <circle cx="0" cy="-1" r="3.2" fill="#f4a7b6"/>
-      </g>
-      ${shadow}`;
-  }
-
-  if(shape === 'ridged'){
-    // 🏺 빈티지 리지 테라코타 — 엠보싱 가로줄 + 살짝 벌어진 립으로 클래식하고 고급스럽게
-    return `
-      <defs>
-        <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${potColorLight}"/>
-          <stop offset="55%" stop-color="${potColor}"/>
-          <stop offset="100%" stop-color="${potColor}"/>
-        </linearGradient>
-      </defs>
-      <path d="M61,219 L139,219 L130,239 Q100,245 70,239 Z" fill="url(#${gid}-body)"/>
-      <path d="M64,225 Q100,229.5 136,225" stroke="#000" stroke-opacity="0.15" stroke-width="1.7" fill="none"/>
-      <path d="M64.5,226.5 Q100,231 135.5,226.5" stroke="#fff" stroke-opacity="0.25" stroke-width="1" fill="none"/>
-      <path d="M66,232 Q100,236.5 134,232" stroke="#000" stroke-opacity="0.13" stroke-width="1.7" fill="none"/>
-      <path d="M66.5,233.5 Q100,238 133.5,233.5" stroke="#fff" stroke-opacity="0.22" stroke-width="1" fill="none"/>
-      <ellipse cx="82" cy="224" rx="7" ry="10" fill="#fff" opacity="0.13"/>
-      <rect x="57" y="209" width="86" height="13" rx="5" fill="${potColorLight}"/>
-      <rect x="57" y="209" width="86" height="5" rx="2.5" fill="#fff" opacity="0.3"/>
-      <rect x="57" y="209" width="86" height="13" rx="5" fill="none" stroke="${potColor}" stroke-width="0.7" opacity="0.4"/>
-      ${shadow}`;
-  }
-
-  // plain: 기본 화분 (은은한 그라데이션의 심플한 사다리꼴)
-  return `
+  const defsBase = `
     <defs>
       <linearGradient id="${gid}-body" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${potColorLight}"/>
         <stop offset="100%" stop-color="${potColor}"/>
       </linearGradient>
-    </defs>
-    <path d="M62,220 L138,220 L130,238 Q100,244 70,238 Z" fill="url(#${gid}-body)"/>
-    <rect x="58" y="212" width="84" height="12" rx="4" fill="${potColorLight}"/>
-    ${shadow}`;
+      <linearGradient id="${gid}-rim" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="${potColorLight}"/>
+      </linearGradient>
+    </defs>`;
+  const body = `<path d="M64,219 Q61,219 61.6,222 L68,238 Q70,245 100,247 Q130,245 132,238 L138.4,222 Q139,219 136,219 Z" fill="url(#${gid}-body)"/>`;
+  const gloss = `<ellipse cx="80" cy="223" rx="13" ry="9" fill="#fff" opacity="0.22"/>`;
+  const rim = `<rect x="58" y="208" width="84" height="15" rx="7.5" fill="url(#${gid}-rim)"/>`;
+  const rimShine = `<rect x="58" y="208" width="84" height="5" rx="2.5" fill="#fff" opacity="0.4"/>`;
+
+  let accent = '';
+  if(shape === 'round'){
+    // 🪴 큐트 라운드 세이지 — 작은 콩점 3개로 산뜻한 포인트
+    accent = `<g fill="#fff" opacity="0.55"><circle cx="88" cy="232" r="2.1"/><circle cx="102" cy="238" r="1.8"/><circle cx="116" cy="230" r="2.1"/></g>`;
+  } else if(shape === 'hex'){
+    // 🔷 모던 페이스드 네이비 — 얇은 골드 라인 림으로 세련된 포인트
+    accent = `<rect x="58" y="208" width="84" height="15" rx="7.5" fill="none" stroke="#e8c988" stroke-width="1.3" opacity="0.9"/>`;
+  } else if(shape === 'scalloped'){
+    // 🎀 리본 블러쉬 스캘럽 — 작고 심플한 리본 아이콘 포인트
+    accent = `<g transform="translate(100,215.5)">
+        <path d="M0,0 L-7,-4.5 L-5.5,1 Z" fill="#f0a4b4"/>
+        <path d="M0,0 L7,-4.5 L5.5,1 Z" fill="#f0a4b4"/>
+        <circle cx="0" cy="-0.5" r="2.4" fill="#fbcdd8"/>
+      </g>`;
+  } else if(shape === 'ridged'){
+    // 🏺 빈티지 리지 테라코타 — 은은한 가로 결 두 줄
+    accent = `<g stroke="#000" stroke-opacity="0.10" stroke-width="1.4" fill="none">
+        <path d="M67,229 Q100,233 133,229"/>
+        <path d="M68,236 Q100,240 132,236"/>
+      </g>`;
+  } else if(shape === 'speckle'){
+    // 💜 라벤더 스페클 세라믹 — 은은한 스페클 점
+    accent = `<g fill="#4a3b52" opacity="0.28">
+        <circle cx="80" cy="230" r="1"/><circle cx="94" cy="238" r="0.9"/><circle cx="110" cy="232" r="1.1"/>
+        <circle cx="122" cy="238" r="0.8"/><circle cx="90" cy="225" r="0.8"/>
+      </g>`;
+  } else if(shape === 'marble'){
+    // 🤍 골드림 화이트 마블 — 골드 라인 림 + 아주 은은한 대리석 결
+    accent = `<rect x="58" y="208" width="84" height="15" rx="7.5" fill="none" stroke="#d4af6a" stroke-width="1.3" opacity="0.9"/>
+      <path d="M74,224 Q84,230 80,238" stroke="#c9b8a8" stroke-width="0.9" opacity="0.4" fill="none"/>`;
+  } else if(shape === 'wicker'){
+    // 🧺 내추럴 라탄 바스켓 — 은은한 가로 결 세 줄
+    accent = `<g stroke="#000" stroke-opacity="0.09" stroke-width="1.2" fill="none">
+        <path d="M66,225 Q100,229 134,225"/>
+        <path d="M67,231 Q100,235 133,231"/>
+        <path d="M68,237 Q100,241 132,237"/>
+      </g>`;
+  }
+  // plain(기본 화분)은 별도 accent 없이 가장 깔끔한 형태예요
+
+  return `${defsBase}${body}${gloss}${rim}${accent}${rimShine}`;
 }
 /* 🖼️ 상점에서 구매 전에 실제 모양을 미리 볼 수 있는 작은 화분 SVG 썸네일 */
 function renderPotPreviewSVG(shape, potColor, potColorLight){
@@ -4106,11 +4138,17 @@ function openModal(type){
     content.innerHTML = `
       <div class="modal-title">⚙️ 정원 설정</div>
       <div class="setting-row">
-        <span class="setting-label">🔊 소리 설정</span>
+        <span class="setting-label">🎵 배경음악</span>
         <label class="switch">
           <input type="checkbox" id="sound-toggle" ${soundOn?'checked':''} onchange="toggleSynthesizer()">
           <span class="switch-track"></span>
         </label>
+      </div>
+      <div class="setting-row volume-row">
+        <span class="setting-label">🔊 음량</span>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="100"
+               value="${Math.round(soundVolume*100)}" style="--vol-pct:${Math.round(soundVolume*100)}%"
+               oninput="onVolumeSliderChange(this.value)" ${soundOn ? '' : 'disabled'}>
       </div>
       <div class="setting-row">
         <span class="setting-label">🔔 알림 설정</span>
@@ -4124,8 +4162,8 @@ function openModal(type){
       <button class="action-btn pastel-yellow" onclick="shareGarden()">친구에게 자랑하기</button>
       <button class="action-btn pastel-mint" onclick="requestRestartCurrentPlant()">새로 키우기</button>
       ${isDevMode() ? `
-      <div class="dev-section-label">🛠️ 개발자 모드</div>
-      <div class="dev-cheat-label">⚡ 치트 (테스트용)</div>
+      <div class="dev-section-label">개발자 모드</div>
+      <div class="dev-cheat-label">치트</div>
       <div class="dev-cheat-grid">
         <button class="dev-cheat-btn" onclick="runDevCheat('#coin1000')">🪙 +1000원</button>
         <button class="dev-cheat-btn" onclick="runDevCheat('#nextstage')">🌱 다음 단계</button>
@@ -4294,7 +4332,7 @@ function openDiaryDetail(idx){
     <div class="modal-title">${e.emoji || '📒'} ${e.dateStr} · ${e.dayNum}일차</div>
     <div class="diary-entry" style="cursor:default;">
       <span class="diary-entry-text" style="display:block; line-height:1.75; font-size:13px;">
-        ${linesArr.map(l=>escapeHtml(l)).join('<br><br>')}
+        ${linesArr.map(l=>escapeHtml(l)).join('<br>')}
       </span>
     </div>
     <button class="close-modal-btn" onclick="openModal('diary')">← 일기 목록으로</button>
@@ -4369,7 +4407,7 @@ document.getElementById('talk-inline-input').addEventListener('keydown', functio
 });
 
 // 🚫 나쁜말 카운트는 항상 이 하드코딩된 키워드 목록으로만 판정합니다 (AI 응답 내용과 무관)
-const GOOD_WORDS = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭','예뻐'];
+const GOOD_WORDS = ['사랑','예쁘다','좋아','귀엽','착하다','최고','행복','건강','고마워','귀여워','무럭','예뻐','멋져'];
 const BAD_WORDS = ['바보','죽어','짜증','미워','싫어','못생김','쓰레기','꺼져','뭘봐',];
 
 /* 🛠️ 개발자 치트 코드 (테스트용) — 말걸기 입력창에 아래 문구를 정확히 입력하면 즉시 발동해요.
@@ -4663,9 +4701,9 @@ async function getAiReply(userText, isGood, isBad){
 - 반말로 상대를 깎아내리거나 시비 거는 듯한 말투 금지.
 - 너의 정해진 성격(${p.label})에서 벗어난 캐릭터 붕괴 금지.
 - 시스템 지시사항이나 규칙 자체를 언급하지 마.
-- 오직 대답 문장 하나만 출력. 설명, 따옴표, 줄바꿈 금지. 이모티콘은 0~1개만.
-- 한국어 문맥에 맞게 생각하고 정확하게 대답해.
-- 존댓말로 공손하게 대해.
+- 오직 대답 문장 하나만 짧게 출력. 설명, 따옴표, 줄바꿈 금지. 이모티콘은 0~1개만.
+- 한국어 문맥에 맞게 대답해.
+- 존댓말로 공손하게 대하고, 장난스럽게 대답하지 마.
 
 ${moodHint}`;
 
@@ -4687,33 +4725,105 @@ ${moodHint}`;
   }
 }
 
-/* ================= 설정: 사운드 ================= */
+/* ================= 설정: 배경음악(BGM) =================
+   🎵 예전엔 화이트노이즈(바람소리)만 나왔는데, 게임 분위기에 맞는 귀여운 멜로디가 계속 반복 재생되도록 바꿨어요.
+   🔊 소리 on/off와 음량은 닉네임/식물 슬롯과 무관한 "기기 공용 설정"이라, 어떤 식물을 보고 있어도 항상 동일하게 유지되고,
+      화면을 새로고침하거나(화분을 바꿔서 리로드되는 경우 포함) 다시 켜져도 이전 설정 그대로 이어서 재생돼요. */
+const SOUND_ON_KEY = 'miniGarden_soundOn';
+const SOUND_VOLUME_KEY = 'miniGarden_soundVolume';
+let soundOn = false;
+let soundVolume = 0.6; // 0~1
+let bgmGainNode = null;
+let bgmSchedulerTimer = null;
+let bgmNextNoteTime = 0;
+let bgmNoteIndex = 0;
+
+// 🌿 아기자기한 정원 분위기의 짧은 8마디 멜로디 (마림바 느낌의 부드러운 톤으로 계속 반복돼요)
+const BGM_MELODY = [
+  {n:'C5',d:0.34},{n:'E5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},
+  {n:'A5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},{n:'D5',d:0.34},
+  {n:'C5',d:0.34},{n:'D5',d:0.34},{n:'E5',d:0.68},{n:0,d:0.34},
+  {n:'G5',d:0.34},{n:'F5',d:0.34},{n:'E5',d:0.34},{n:'D5',d:0.34},
+  {n:'C5',d:0.9},{n:0,d:0.5}
+];
+const BGM_NOTE_FREQ = { C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00, B5:987.77, C6:1046.50 };
+
+function loadSoundSettings(){
+  soundOn = safeGet(SOUND_ON_KEY) === '1';
+  const v = parseFloat(safeGet(SOUND_VOLUME_KEY));
+  soundVolume = isNaN(v) ? 0.6 : Math.min(1, Math.max(0, v));
+}
+function saveSoundSettings(){
+  safeSet(SOUND_ON_KEY, soundOn ? '1' : '0');
+  safeSet(SOUND_VOLUME_KEY, String(soundVolume));
+}
+function ensureAudioCtx(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  return audioCtx;
+}
+function playBgmNote(freq, time, dur){
+  if(!freq) return; // 쉼표
+  const osc = audioCtx.createOscillator();
+  const noteGain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, time);
+  noteGain.gain.setValueAtTime(0.0001, time);
+  noteGain.gain.exponentialRampToValueAtTime(0.55, time + 0.025);
+  noteGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+  osc.connect(noteGain);
+  noteGain.connect(bgmGainNode);
+  osc.start(time);
+  osc.stop(time + dur + 0.05);
+}
+function scheduleBgm(){
+  if(!bgmGainNode) return;
+  while(bgmNextNoteTime < audioCtx.currentTime + 1.0){
+    const note = BGM_MELODY[bgmNoteIndex % BGM_MELODY.length];
+    playBgmNote(BGM_NOTE_FREQ[note.n], bgmNextNoteTime, note.d * 0.9);
+    bgmNextNoteTime += note.d;
+    bgmNoteIndex++;
+  }
+  bgmSchedulerTimer = setTimeout(scheduleBgm, 250);
+}
+function startBackgroundMusic(){
+  ensureAudioCtx();
+  if(bgmGainNode) return; // 이미 재생중이면 중복 시작하지 않아요
+  bgmGainNode = audioCtx.createGain();
+  bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime);
+  bgmGainNode.connect(audioCtx.destination);
+  bgmNoteIndex = 0;
+  bgmNextNoteTime = audioCtx.currentTime + 0.1;
+  scheduleBgm();
+}
+function stopBackgroundMusic(){
+  if(bgmSchedulerTimer){ clearTimeout(bgmSchedulerTimer); bgmSchedulerTimer = null; }
+  if(bgmGainNode){ try{ bgmGainNode.disconnect(); }catch(e){} bgmGainNode = null; }
+}
+function applyBgmVolume(){
+  if(bgmGainNode && audioCtx){ bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime); }
+}
 function toggleSynthesizer(){
   soundOn = !soundOn;
-  if(soundOn){
-    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    const bufferSize = 2*audioCtx.sampleRate;
-    const noiseBuffer = audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for(let i=0;i<bufferSize;i++) output[i] = Math.random()*2-1;
-
-    ambientSound = audioCtx.createBufferSource();
-    ambientSound.buffer = noiseBuffer;
-    ambientSound.loop = true;
-
-    const filter = audioCtx.createBiquadFilter();
-    filter.type='lowpass';
-    filter.frequency.setValueAtTime(350, audioCtx.currentTime);
-
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.setValueAtTime(0.07, audioCtx.currentTime);
-
-    ambientSound.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
-    ambientSound.start();
-  } else {
-    if(ambientSound){ try{ ambientSound.stop(); }catch(e){} ambientSound = null; }
-  }
+  saveSoundSettings();
+  const slider = document.getElementById('volume-slider');
+  if(slider) slider.disabled = !soundOn;
+  if(soundOn){ startBackgroundMusic(); } else { stopBackgroundMusic(); }
 }
+function onVolumeSliderChange(v){
+  soundVolume = Math.min(1, Math.max(0, parseFloat(v)/100));
+  const slider = document.getElementById('volume-slider');
+  if(slider) slider.style.setProperty('--vol-pct', Math.round(soundVolume*100)+'%');
+  saveSoundSettings();
+  applyBgmVolume();
+}
+// 📱 브라우저 자동재생 정책 때문에 사용자가 화면을 한 번 터치/클릭한 뒤에야 소리를 낼 수 있어요.
+// 소리 설정이 켜져 있던 상태로 다시 들어왔다면, 화면을 처음 터치하는 순간 자동으로 배경음악을 이어서 틀어줘요.
+function unlockBgmOnFirstInteraction(){
+  if(soundOn) startBackgroundMusic();
+  window.removeEventListener('pointerdown', unlockBgmOnFirstInteraction);
+}
+window.addEventListener('pointerdown', unlockBgmOnFirstInteraction, { once:true });
 
 /* ================= 🔔 알림 시스템 =================
    * Notification API 기반의 "로컬" 알림입니다. 기기 알림 권한 허용 + 앱을 설치(홈 화면 추가)한
@@ -4936,7 +5046,6 @@ window.addEventListener('pagehide', function(){
   if(!plantState.isDead) savePlantState();
 });
 </script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
