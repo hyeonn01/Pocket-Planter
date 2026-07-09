@@ -362,7 +362,7 @@
     box-shadow: var(--shadow-soft); border:1px solid rgba(60,100,60,0.06);
     opacity:0; pointer-events:none; transition: opacity 0.18s ease;
   }
-  .growth-info-bubble.show{ opacity:1; }
+  .growth-info-bubble.show{ opacity:1; pointer-events:auto; }
   .growth-info-bubble::after{
     content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
     border-width:7px 7px 0; border-style:solid; border-color:#fff transparent transparent;
