@@ -1624,10 +1624,10 @@ function closeLevelUpPopup(){
   if(screen) screen.style.display = 'none';
 }
 /* ================= 게임 상수 ================= */
-/* 🌱 잘 돌보면 약 7일, 소홀히 하면 최대 14일 정도 걸리도록 성장 속도를 조정했어요.
-   (대화로 얻는 성장 보너스는 하루 5회까지만 반영돼서, 말을 아무리 많이 걸어도
-   최소 성장 기간(약 7일) 밑으로는 내려가지 않아요.) */
-const TOTAL_GROWTH_DAYS = 13;
+/* 🌱 잘 돌보면 약 4일, 소홀히 하면 최대 7일 정도 걸리도록 성장 속도를 조정했어요.
+   (기존 2주 정도 걸리던 것보다 훨씬 빨라졌어요. 날씨/성격/일조량 보너스가 모두 좋으면 4일 안팎,
+   조건이 나쁘면 7일 정도까지 걸릴 수 있어요.) */
+const TOTAL_GROWTH_DAYS = 5;
 const GROWTH_PER_DAY = 100 / TOTAL_GROWTH_DAYS;
 /* 💧☀️ 수분/일조는 실제 흐른 시간(마지막 접속 이후 경과 시간)을 기준으로 계산되기 때문에
    앱을 꺼두거나 폰을 꺼둔 오프라인 상태에서도 그만큼 그대로 줄고 오릅니다.
@@ -2248,6 +2248,7 @@ function applyWeatherVisual(skipFlash){
   const w = getWeatherInfo();
   document.getElementById('weather-chip').innerText = w.label;
   applyTimeVisual();
+  updateAmbienceForWeather(); // 🌬️🌧️ 날씨가 바뀔 때마다 배경음(바람/빗소리)도 함께 갱신해요
 
   const bg = document.getElementById('scene-bg');
   const dim = document.getElementById('scene-dim');
@@ -2303,6 +2304,7 @@ function maybeFlashLightning(){
   flash.classList.remove('flash');
   void flash.offsetWidth;
   flash.classList.add('flash');
+  playThunderSound(); // ⛈️ 번개가 칠 때 살짝 늦게 천둥소리가 따라와요
 }
 function spawnRaindrops(){
   const rain = document.getElementById('rain-layer');
@@ -4114,7 +4116,29 @@ function initPetDrag(){
   function endDrag(e){
     if(!petDragState || (e.pointerId !== undefined && e.pointerId !== petDragState.pointerId)) return;
     wrap.classList.remove('pet-dragging');
+    const { stageRect } = petDragState;
     petDragState = null;
+    const design = plantState.equippedPet ? PET_DESIGNS.find(p=>p.key===plantState.equippedPet) : null;
+    const isGroundPet = design && (design.species === 'ladybug' || design.species === 'ant');
+    if(isGroundPet && stageRect && stageRect.height){
+      /* 🍂 개미·무당벌레는 날지 못하니까 하늘(위쪽)에 놓아도 둥둥 떠 있지 않고,
+         중력에 이끌리듯 화분 바닥(bottom:6%)까지 빠르게 떨어지는 모션을 보여줘요. */
+      const wrapH = wrap.offsetHeight || 40;
+      const groundTopPx = stageRect.height - wrapH - stageRect.height*0.06;
+      const groundTopPct = Math.max(0, (groundTopPx / stageRect.height) * 100);
+      wrap.style.transition = 'top 0.45s cubic-bezier(0.55,0,1,0.45), left 1.6s ease-in-out';
+      void wrap.offsetWidth; // 강제 리플로우시켜서 새 transition 값이 바로 적용되게 해요
+      wrap.style.top = groundTopPct + '%';
+      wrap.style.bottom = '';
+      const onFallEnd = function(ev){
+        if(ev && ev.propertyName && ev.propertyName !== 'top') return;
+        wrap.removeEventListener('transitionend', onFallEnd);
+        wrap.style.transition = '';
+        wrap.style.top = '';
+        wrap.style.bottom = '6%';
+      };
+      wrap.addEventListener('transitionend', onFallEnd);
+    }
     clearTimeout(petAnimTimer);
     petAnimTimer = setTimeout(()=>{ if(petStepFn) petStepFn(); }, 7000 + Math.random()*4000);
   }
@@ -4152,6 +4176,7 @@ function startPetBehavior(species){
     faceLeftClass = (x > 42) ? ' face-left' : '';
     figure.className = 'pet-figure ' + poseClass + faceLeftClass;
     figure.innerHTML = buildPetSVG(species, isFlyer ? (pose === 'sit' ? 'fly' : 'fly') : pose);
+    wrap.dataset.pose = pose; // 🌙 'lie'(웅크려 쉬기=Zz)일 때는 혼잣말을 하지 않도록 현재 포즈를 기록해둬요
     const nextDelay = isFlyer
       ? (pose === 'sit' ? (2500 + Math.random()*2500) : (2200 + Math.random()*2000))
       : (pose === 'lie' ? (3500 + Math.random()*3000) : (2400 + Math.random()*1800));
@@ -4163,11 +4188,14 @@ function startPetBehavior(species){
 /* 💬 펫이 가끔 화분 곁에서 혼잣말 말풍선을 띄워요 (성격/성장과는 무관한 분위기 연출용) */
 function schedulePetMonologue(species){
   const bubble = document.getElementById('pet-bubble');
+  const wrap = document.getElementById('pet-wrap');
   function loop(){
     petBubbleTimer = setTimeout(()=>{
       if(plantState.equippedPet == null) return;
+      // 😴 웅크려 쉬는 중(Zz 표시가 뜬 'lie' 포즈)일 때는 혼잣말을 하지 않아요
+      const isSleeping = wrap && wrap.dataset && wrap.dataset.pose === 'lie';
       const lines = PET_MONOLOGUES[species] || [];
-      if(lines.length && bubble){
+      if(!isSleeping && lines.length && bubble){
         bubble.innerText = pickRandom(lines);
         bubble.classList.add('show');
         setTimeout(()=>{ bubble.classList.remove('show'); }, 2600);
@@ -5253,44 +5281,21 @@ ${moodHint}`;
   }
 }
 
-/* ================= 설정: 배경음악(BGM) =================
-   🎵 예전엔 단일 사인파 멜로디만 반복돼서 장난감 소리처럼 들렸어요.
-      지금은 (1) 멜로디, (2) 잔잔한 코드 패드, (3) 부드러운 베이스, (4) 은은한 딜레이(잔향)까지
-      4개 층을 함께 재생해서 실제 BGM처럼 공간감과 화음이 느껴지도록 만들었어요.
+/* ================= 설정: 배경음(BGM) =================
+   🎵 예전엔 멜로디+코드 패드로 된 마림바풍 BGM이 계속 반복됐는데, 이제는 실제 자연음처럼
+      들리도록 (1) 평상시엔 은은한 바람소리(화이트 노이즈 기반), (2) 비가 오면 빗소리(+가끔 천둥번개)로
+      날씨에 맞춰 자동으로 부드럽게 크로스페이드되는 "환경음" 방식으로 바꿨어요.
    🔊 소리 on/off와 음량은 닉네임/식물 슬롯과 무관한 "기기 공용 설정"이라, 어떤 식물을 보고 있어도 항상 동일하게 유지되고,
       화면을 새로고침하거나(화분을 바꿔서 리로드되는 경우 포함) 다시 켜져도 이전 설정 그대로 이어서 재생돼요. */
 const SOUND_ON_KEY = 'miniGarden_soundOn';
 const SOUND_VOLUME_KEY = 'miniGarden_soundVolume';
 let soundOn = false;
 let soundVolume = 0.6; // 0~1
-let bgmGainNode = null;
-let bgmDryGain = null;
-let bgmDelayNode = null;
-let bgmDelayFeedback = null;
-let bgmDelayWet = null;
-let bgmSchedulerTimer = null;
-let bgmNextNoteTime = 0;
-let bgmNoteIndex = 0;
-let bgmNextChordTime = 0;
-let bgmChordIndex = 0;
-
-// 🌿 아기자기한 정원 분위기의 짧은 멜로디 (마림바 느낌의 부드러운 톤으로 계속 반복돼요)
-const BGM_MELODY = [
-  {n:'C5',d:0.34},{n:'E5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},
-  {n:'A5',d:0.34},{n:'G5',d:0.34},{n:'E5',d:0.34},{n:'D5',d:0.34},
-  {n:'C5',d:0.34},{n:'D5',d:0.34},{n:'E5',d:0.68},{n:0,d:0.34},
-  {n:'G5',d:0.34},{n:'F5',d:0.34},{n:'E5',d:0.34},{n:'D5',d:0.34},
-  {n:'C5',d:0.9},{n:0,d:0.5}
-];
-const BGM_NOTE_FREQ = { C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880.00, B5:987.77, C6:1046.50 };
-
-// 🎹 멜로디를 받쳐주는 코드 진행 (C - Am - F - G, 8마디 멜로디 길이인 7.18초에 맞춘 4개 코드)
-const BGM_CHORDS = [
-  { dur:1.8,  notes:[261.63,329.63,392.00], bass:130.81 },
-  { dur:1.8,  notes:[220.00,261.63,329.63], bass:110.00 },
-  { dur:1.8,  notes:[174.61,220.00,261.63], bass:87.31  },
-  { dur:1.78, notes:[196.00,246.94,293.66], bass:98.00  }
-];
+let bgmGainNode = null;      // 전체 환경음의 마스터 볼륨
+let windNoiseBuffer = null;  // 재사용할 화이트노이즈 버퍼 (바람/비 공통 원재료)
+let windSourceNode = null, windFilterNode = null, windGainNode = null, windLfoNode = null, windLfoGain = null;
+let rainSourceNode = null, rainFilterNode = null, rainGainNode = null;
+let rainPatterTimer = null;  // 후두둑거리는 빗소리 입자를 랜덤하게 더해주는 타이머
 
 function loadSoundSettings(){
   soundOn = safeGet(SOUND_ON_KEY) === '1';
@@ -5306,122 +5311,170 @@ function ensureAudioCtx(){
   if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
   return audioCtx;
 }
-// 🌫️ 아주 은은한 딜레이 기반 잔향(리버브 대용) 버스를 하나 만들어서, 모든 소리가 여기에도 살짝 흘러들어가게 해요.
-function ensureReverbBus(){
-  if(bgmDelayNode) return;
-  bgmDelayNode = audioCtx.createDelay(1.0);
-  bgmDelayNode.delayTime.value = 0.32;
-  bgmDelayFeedback = audioCtx.createGain();
-  bgmDelayFeedback.gain.value = 0.28;
-  bgmDelayWet = audioCtx.createGain();
-  bgmDelayWet.gain.value = 0.32;
-  const delayFilter = audioCtx.createBiquadFilter();
-  delayFilter.type = 'lowpass';
-  delayFilter.frequency.value = 2200;
-  bgmDelayNode.connect(delayFilter);
-  delayFilter.connect(bgmDelayFeedback);
-  bgmDelayFeedback.connect(bgmDelayNode);
-  bgmDelayNode.connect(bgmDelayWet);
-  bgmDelayWet.connect(bgmGainNode);
+// 🌬️ 바람/빗소리 둘 다의 재료가 되는 화이트 노이즈 버퍼를 한 번만 만들어서 계속 재사용해요.
+function ensureNoiseBuffer(){
+  if(windNoiseBuffer) return windNoiseBuffer;
+  const seconds = 4;
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * seconds, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){ data[i] = Math.random()*2 - 1; }
+  windNoiseBuffer = buffer;
+  return buffer;
 }
-function playBgmNote(freq, time, dur){
-  if(!freq) return; // 쉼표
-  const osc = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const noteGain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(freq, time);
-  osc2.type = 'sine';
-  osc2.frequency.setValueAtTime(freq * 2, time); // 배음을 살짝 얹어서 마림바 같은 따뜻한 음색을 만들어요
-  const osc2Gain = audioCtx.createGain();
-  osc2Gain.gain.value = 0.12;
-  noteGain.gain.setValueAtTime(0.0001, time);
-  noteGain.gain.exponentialRampToValueAtTime(0.5, time + 0.02);
-  noteGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-  osc.connect(noteGain);
-  osc2.connect(osc2Gain);
-  osc2Gain.connect(noteGain);
-  noteGain.connect(bgmDryGain);
-  noteGain.connect(bgmDelayNode);
-  osc.start(time); osc.stop(time + dur + 0.05);
-  osc2.start(time); osc2.stop(time + dur + 0.05);
+// 🌬️ 기본 배경음: 낮은 대역만 남긴 화이트노이즈를 느린 LFO로 흔들어서, 세졌다 약해졌다 하는
+//    자연스러운 "바람이 부는" 화이트 노이즈를 만들어요.
+function startWindAmbience(){
+  if(windSourceNode) return;
+  ensureNoiseBuffer();
+  windSourceNode = audioCtx.createBufferSource();
+  windSourceNode.buffer = windNoiseBuffer;
+  windSourceNode.loop = true;
+  windFilterNode = audioCtx.createBiquadFilter();
+  windFilterNode.type = 'bandpass';
+  windFilterNode.frequency.value = 380;
+  windFilterNode.Q.value = 0.6;
+  windGainNode = audioCtx.createGain();
+  windGainNode.gain.value = 0.0001;
+  // 🌀 바람이 "휘이잉~" 강해졌다 약해졌다 하도록, 필터 중심 주파수를 느린 LFO로 흔들어요
+  windLfoNode = audioCtx.createOscillator();
+  windLfoNode.type = 'sine';
+  windLfoNode.frequency.value = 0.07;
+  windLfoGain = audioCtx.createGain();
+  windLfoGain.gain.value = 140;
+  windLfoNode.connect(windLfoGain);
+  windLfoGain.connect(windFilterNode.frequency);
+  windSourceNode.connect(windFilterNode);
+  windFilterNode.connect(windGainNode);
+  windGainNode.connect(bgmGainNode);
+  windSourceNode.start();
+  windLfoNode.start();
 }
-// 🎧 코드 패드: 세 음을 동시에, 아주 천천히 커졌다 사라지는 부드러운 사인파로 깔아줘요
-function playChordPad(notes, time, dur){
-  const padFilter = audioCtx.createBiquadFilter();
-  padFilter.type = 'lowpass';
-  padFilter.frequency.value = 1400;
-  const padGain = audioCtx.createGain();
-  padGain.gain.setValueAtTime(0.0001, time);
-  padGain.gain.exponentialRampToValueAtTime(0.16, time + dur * 0.4);
-  padGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-  padFilter.connect(padGain);
-  padGain.connect(bgmDryGain);
-  padGain.connect(bgmDelayNode);
-  notes.forEach(freq=>{
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, time);
-    osc.connect(padFilter);
-    osc.start(time);
-    osc.stop(time + dur + 0.1);
-  });
+// 🌧️ 비 올 때: 고역대 위주로 필터링한 화이트노이즈로 "쏴아아" 하는 빗소리 바탕을 깔고,
+//    거기에 더해 후두둑 떨어지는 굵은 빗방울 입자들을 랜덤 타이밍으로 얹어요.
+function startRainAmbience(){
+  if(rainSourceNode) return;
+  ensureNoiseBuffer();
+  rainSourceNode = audioCtx.createBufferSource();
+  rainSourceNode.buffer = windNoiseBuffer;
+  rainSourceNode.loop = true;
+  rainFilterNode = audioCtx.createBiquadFilter();
+  rainFilterNode.type = 'bandpass';
+  rainFilterNode.frequency.value = 3200;
+  rainFilterNode.Q.value = 0.5;
+  rainGainNode = audioCtx.createGain();
+  rainGainNode.gain.value = 0.0001;
+  rainSourceNode.connect(rainFilterNode);
+  rainFilterNode.connect(rainGainNode);
+  rainGainNode.connect(bgmGainNode);
+  rainSourceNode.start();
+  scheduleRainPatter();
 }
-// 🎸 은은한 베이스: 코드의 뿌리음을 한 옥타브 아래에서 부드럽게 받쳐줘요
-function playBassNote(freq, time, dur){
-  const osc = audioCtx.createOscillator();
-  const bassGain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq, time);
-  bassGain.gain.setValueAtTime(0.0001, time);
-  bassGain.gain.exponentialRampToValueAtTime(0.22, time + 0.08);
-  bassGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-  osc.connect(bassGain);
-  bassGain.connect(bgmDryGain);
-  osc.start(time);
-  osc.stop(time + dur + 0.05);
-}
-function scheduleBgm(){
-  if(!bgmGainNode) return;
-  const lookAhead = audioCtx.currentTime + 1.0;
-  while(bgmNextNoteTime < lookAhead){
-    const note = BGM_MELODY[bgmNoteIndex % BGM_MELODY.length];
-    playBgmNote(BGM_NOTE_FREQ[note.n], bgmNextNoteTime, note.d * 0.9);
-    bgmNextNoteTime += note.d;
-    bgmNoteIndex++;
+// 💧 굵은 빗방울이 튀는 듯한 짧은 노이즈 입자를 불규칙한 간격으로 더해서 "비가 온다"는 느낌을 살려요.
+function scheduleRainPatter(){
+  clearTimeout(rainPatterTimer);
+  function drop(){
+    if(!rainSourceNode || plantState.weather !== 'rainy'){ rainPatterTimer = setTimeout(drop, 600); return; }
+    const dropSource = audioCtx.createBufferSource();
+    dropSource.buffer = windNoiseBuffer;
+    const dropFilter = audioCtx.createBiquadFilter();
+    dropFilter.type = 'bandpass';
+    dropFilter.frequency.value = 1800 + Math.random()*2600;
+    dropFilter.Q.value = 4;
+    const dropGain = audioCtx.createGain();
+    const now = audioCtx.currentTime;
+    const vol = 0.05 + Math.random()*0.07;
+    dropGain.gain.setValueAtTime(0.0001, now);
+    dropGain.gain.exponentialRampToValueAtTime(vol, now + 0.008);
+    dropGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05 + Math.random()*0.05);
+    dropSource.connect(dropFilter);
+    dropFilter.connect(dropGain);
+    dropGain.connect(bgmGainNode);
+    dropSource.start(now);
+    dropSource.stop(now + 0.15);
+    rainPatterTimer = setTimeout(drop, 20 + Math.random()*70);
   }
-  while(bgmNextChordTime < lookAhead){
-    const chord = BGM_CHORDS[bgmChordIndex % BGM_CHORDS.length];
-    playChordPad(chord.notes, bgmNextChordTime, chord.dur);
-    playBassNote(chord.bass, bgmNextChordTime, chord.dur);
-    bgmNextChordTime += chord.dur;
-    bgmChordIndex++;
+  drop();
+}
+function stopRainAmbience(){
+  clearTimeout(rainPatterTimer); rainPatterTimer = null;
+  if(rainSourceNode){ try{ rainSourceNode.stop(); rainSourceNode.disconnect(); }catch(e){} rainSourceNode = null; }
+  if(rainFilterNode){ try{ rainFilterNode.disconnect(); }catch(e){} rainFilterNode = null; }
+  if(rainGainNode){ try{ rainGainNode.disconnect(); }catch(e){} rainGainNode = null; }
+}
+function stopWindAmbience(){
+  if(windSourceNode){ try{ windSourceNode.stop(); windSourceNode.disconnect(); }catch(e){} windSourceNode = null; }
+  if(windFilterNode){ try{ windFilterNode.disconnect(); }catch(e){} windFilterNode = null; }
+  if(windGainNode){ try{ windGainNode.disconnect(); }catch(e){} windGainNode = null; }
+  if(windLfoNode){ try{ windLfoNode.stop(); windLfoNode.disconnect(); }catch(e){} windLfoNode = null; }
+  if(windLfoGain){ try{ windLfoGain.disconnect(); }catch(e){} windLfoGain = null; }
+}
+// ⛈️ 번개가 칠 때(maybeFlashLightning) 살짝 늦게 우르릉 쾅! 천둥소리가 따라오게 해요.
+//    (빛보다 소리가 늦게 도착하는 느낌을 내려고 100~450ms 정도 딜레이를 줘요)
+function playThunderSound(){
+  if(!soundOn || !bgmGainNode || !audioCtx) return;
+  ensureNoiseBuffer();
+  const delay = 0.1 + Math.random()*0.35;
+  const startAt = audioCtx.currentTime + delay;
+  // 우르릉거리는 저음 바디
+  const rumble = audioCtx.createBufferSource();
+  rumble.buffer = windNoiseBuffer;
+  const rumbleFilter = audioCtx.createBiquadFilter();
+  rumbleFilter.type = 'lowpass';
+  rumbleFilter.frequency.setValueAtTime(900, startAt);
+  rumbleFilter.frequency.exponentialRampToValueAtTime(70, startAt + 1.6);
+  const rumbleGain = audioCtx.createGain();
+  rumbleGain.gain.setValueAtTime(0.0001, startAt);
+  rumbleGain.gain.exponentialRampToValueAtTime(0.55, startAt + 0.05);
+  rumbleGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.8);
+  rumble.connect(rumbleFilter);
+  rumbleFilter.connect(rumbleGain);
+  rumbleGain.connect(bgmGainNode);
+  rumble.start(startAt);
+  rumble.stop(startAt + 1.9);
+  // 쾅! 하는 낮은 사인파 임팩트
+  const boom = audioCtx.createOscillator();
+  boom.type = 'sine';
+  boom.frequency.setValueAtTime(65, startAt);
+  boom.frequency.exponentialRampToValueAtTime(32, startAt + 0.5);
+  const boomGain = audioCtx.createGain();
+  boomGain.gain.setValueAtTime(0.0001, startAt);
+  boomGain.gain.exponentialRampToValueAtTime(0.5, startAt + 0.03);
+  boomGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.7);
+  boom.connect(boomGain);
+  boomGain.connect(bgmGainNode);
+  boom.start(startAt);
+  boom.stop(startAt + 0.75);
+}
+// 🌦️ 현재 날씨(plantState.weather)에 맞춰 바람↔빗소리 볼륨을 부드럽게 크로스페이드해요.
+//    비가 오면 빗소리가 커지고 바람소리는 살짝만 남고, 맑거나 흐리면 바람소리만 들려요.
+function updateAmbienceForWeather(){
+  if(!bgmGainNode || !audioCtx) return;
+  const isRainy = plantState.weather === 'rainy';
+  const now = audioCtx.currentTime;
+  if(windGainNode){ windGainNode.gain.setTargetAtTime(isRainy ? 0.10 : 0.32, now, 1.4); }
+  if(isRainy){ startRainAmbience(); }
+  if(rainGainNode){ rainGainNode.gain.setTargetAtTime(isRainy ? 0.42 : 0.0001, now, 1.2); }
+  if(!isRainy && rainSourceNode){
+    // 빗소리 볼륨이 다 줄어든 다음(약 2.5초 뒤)에 노드를 정리해요 — 바로 끊으면 뚝 끊기는 느낌이 나요
+    setTimeout(()=>{ if(plantState.weather !== 'rainy') stopRainAmbience(); }, 2500);
   }
-  bgmSchedulerTimer = setTimeout(scheduleBgm, 250);
 }
 function startBackgroundMusic(){
   ensureAudioCtx();
   if(bgmGainNode) return; // 이미 재생중이면 중복 시작하지 않아요
   bgmGainNode = audioCtx.createGain();
-  bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime);
+  bgmGainNode.gain.setValueAtTime(soundVolume * 0.7, audioCtx.currentTime);
   bgmGainNode.connect(audioCtx.destination);
-  bgmDryGain = audioCtx.createGain();
-  bgmDryGain.gain.value = 1;
-  bgmDryGain.connect(bgmGainNode);
-  ensureReverbBus();
-  bgmNoteIndex = 0;
-  bgmChordIndex = 0;
-  bgmNextNoteTime = audioCtx.currentTime + 0.1;
-  bgmNextChordTime = audioCtx.currentTime + 0.1;
-  scheduleBgm();
+  startWindAmbience();
+  updateAmbienceForWeather();
 }
 function stopBackgroundMusic(){
-  if(bgmSchedulerTimer){ clearTimeout(bgmSchedulerTimer); bgmSchedulerTimer = null; }
+  stopRainAmbience();
+  stopWindAmbience();
   if(bgmGainNode){ try{ bgmGainNode.disconnect(); }catch(e){} bgmGainNode = null; }
-  bgmDryGain = null; bgmDelayNode = null; bgmDelayFeedback = null; bgmDelayWet = null;
 }
 function applyBgmVolume(){
-  if(bgmGainNode && audioCtx){ bgmGainNode.gain.setValueAtTime(soundVolume * 0.45, audioCtx.currentTime); }
+  if(bgmGainNode && audioCtx){ bgmGainNode.gain.setValueAtTime(soundVolume * 0.7, audioCtx.currentTime); }
 }
 function toggleSynthesizer(){
   soundOn = !soundOn;
