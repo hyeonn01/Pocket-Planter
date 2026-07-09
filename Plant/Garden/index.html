@@ -1709,7 +1709,7 @@ function getPotLockReason(key){
    🔓 Lv.10에 무당벌레·개미가, Lv.15에 꿀벌·나비가 열려요. */
 const PET_DESIGNS = [
   { key:'ladybug',   species:'ladybug',   emoji:'🐞', title:'부지런한 무당벌레', cost:12000, unlockLevel:10,
-    desc:'하루 두 번 잎사귀 진딧물을 잡아줘요. 성장률 +3%가 고정으로 두 번 붙어요' },
+    desc:'하루 두 번 잎사귀 진딧물을 잡아줘요. 하루 성장률 +6% 고정' },
   { key:'ant',       species:'ant',       emoji:'🐜', title:'부지런한 개미',   cost:12000, unlockLevel:10,
     desc:'하루 한 번 부지런히 흙을 골라줘요. 성장률 +3~5% 랜덤으로 올라가요' },
   { key:'bee',       species:'bee',       emoji:'🐝', title:'부지런 꿀벌',     cost:16000, unlockLevel:15,
@@ -1751,11 +1751,11 @@ const PERSONALITY_TABLE = {
   active:  { label:'활발함', emoji:'😊', growthMul:1.05, dryMul:1.25, talkBonus:0.3, complainChance:0.0,
              greeting:['안녕! 오늘도 신나는 하루야!','왔어?! 오늘 뭐할까?!','보고싶었어!','오늘 개미랑 무슨 얘기했는지 알려줄까?'] },
   lazy:    { label:'게으름', emoji:'😴', growthMul:0.95, dryMul:0.7,  talkBonus:0.3, complainChance:0.0,
-             greeting:['...음... 언제 왔어...? 졸려..','조금만 더 자고 싶은데... 안녕.','왔어?(왜 왔어..)','..누워서 자랄수는 없을까?..'] },
+             greeting:['...음... 언제 왔어...? 졸려..','조금만 더 자고 싶은데... 안녕.','왔어? (피곤해..)','..누워서 자랄수는 없을까?..'] },
   shy:     { label:'수줍음', emoji:'🌸', growthMul:1.0,  dryMul:1.0,  talkBonus:0.5, complainChance:0.0,
              greeting:['아, 안녕하세요... 보고 있었어요, 헤헤.','...반가워요 (작게)','...(정원사님이다!)','안녕하세요!(너무 크게 말했나..)'] },
   playful: { label:'장난꾸러기', emoji:'🔥', growthMul:1.0, dryMul:1.1, talkBonus:0.3, complainChance:0.12,
-             greeting:['왜 이제 와! 놀아줘!','너가 늦게와서 무당벌레한테 공격 당했어-_-','오늘은 어떤 장난을 쳐볼까?'] }
+             greeting:['왜 이제 와! 놀아줘!','너가 늦게와서 달팽이한테 공격 당했어-_-','오늘은 어떤 장난을 쳐볼까?'] }
 };
 function getPersonality(){
   return PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
@@ -1774,23 +1774,23 @@ const DIARY_LINES = {
     default: ['오늘도 부지런히 잘 보낸 하루였어!','내일은 또 어떤 신나는 일이 생길까?']
   },
   lazy: {
-    sunny:   ['따뜻해서... 낮잠 자기 딱 좋은 날이었어.','햇볕 쬐다가 살짝 졸았어... 좋았어.'],
-    bright:  ['너무 눈부셔서 눈 감고 있었어...','화창하지만 그냥 가만히 있었어.'],
-    cloudy:  ['흐린 날이라 더 늘어지게 됐어...','구름 보면서 멍하니 있었어.'],
-    rainy:   ['비 오는 소리 들으면서 푹 쉬었어...','오늘은 그냥 종일 쉬었어... 좋았어.'],
-    water:   ['물 줘서... 고마워... 좀 시원했어.','목 마른 거 겨우 해결했어... 졸려.'],
-    talk:    ['말 걸어줘서... 음... 좋았어. 졸리지만..','반가웠어... 다시 잘게.'],
-    badword: ['속상한 말... 그냥 자고 잊을래.','마음이 좀 무겁네... 자고 일어나면 괜찮겠지.'],
-    default: ['오늘도 별일 없이 느긋하게 보냈어...','딱히 한 건 없지만... 평화로웠어.']
+    sunny:   ['따뜻해서 낮잠 자기 딱 좋은 날이었어.','햇볕 쬐다가 살짝 졸았어..좋았어.'],
+    bright:  ['너무 눈부셔서 눈 감고 있었어..','화창하지만 그냥 가만히 있었어.'],
+    cloudy:  ['흐린 날이라 더 늘어지게 됐어..','구름 보면서 멍하니 있었어.'],
+    rainy:   ['비 오는 소리 들으면서 푹 쉬었어','오늘은 그냥 종일 쉬었어..좋았어.'],
+    water:   ['물 줘서 고마워 시원했어.','목 마른 거 겨우 해결했어 졸려.'],
+    talk:    ['말 걸어줘서 좋았어. 졸리지만..','반가웠어. 다시 잘게.'],
+    badword: ['속상한 말. 그냥 자고 잊을래.','마음이 좀 무겁네. 자고 일어나면 괜찮겠지.'],
+    default: ['오늘도 별일 없이 느긋하게 보냈어.','딱히 한 건 없지만..평화로웠어.']
   },
   shy: {
-    sunny:   ['해가 따뜻해서... 살짝 기분이 좋았어요.','아무도 안 볼 때 살짝 웃었어요, 헤헤.'],
+    sunny:   ['해가 따뜻해서 살짝 기분이 좋았어요.','아무도 안 볼 때 살짝 웃었어요, 헤헤.'],
     bright:  ['너무 눈부셔서 부끄러웠어요...','화창한 날엔 왠지 더 소심해져요.'],
     cloudy:  ['흐린 날엔 마음이 편안해요.','조용히 하루를 보냈어요.'],
     rainy:   ['빗소리가 마음을 차분하게 해줘요.','혼자 비 구경하는 것도 좋았어요.'],
-    water:   ['물 줘서... 고마워요. 부끄럽지만 행복했어요.','조용히 물 마시고 기운 차렸어요.'],
-    talk:    ['말 걸어줘서 너무 기뻤어요... 티는 못 냈지만요.','조심스럽게 대답했는데 들렸을까요?'],
-    badword: ['그 말이... 좀 아팠어요. 혼자 삭였어요.','마음이 움츠러들었어요...'],
+    water:   ['물 줘서 고마워요. 부끄럽지만 행복했어요.','조용히 물 마시고 기운 차렸어요.'],
+    talk:    ['말 걸어줘서 너무 기뻤어요. 티는 못 냈지만요.','조심스럽게 대답했는데 들렸을까요?'],
+    badword: ['그 말이 좀 아팠어요. 혼자 삭였어요..','마음이 움츠러들었어요...'],
     default: ['조용히, 그렇지만 알차게 보낸 하루였어요.','오늘도 혼자 생각이 많았어요.']
   },
   playful: {
@@ -1807,7 +1807,7 @@ const DIARY_LINES = {
 
 /* 🩺 관리 상태에 따라 일기에 오늘 몸 상태를 알려줘서, 다음엔 어떻게 돌봐야 할지 알 수 있게 해요 */
 const STATUS_DIARY_LINES = {
-  overwater: ['오늘은 물이 너무 많아서 하루 종일 어지러웠어... 물을 조금만 줄여줘!','속이 울렁거릴 만큼 물이 넘쳤어. 흙이 마를 시간을 좀 줘!'],
+  overwater: ['오늘은 물이 너무 많아서 하루 종일 어지러웠어.. 물을 조금만 줄여줘!','속이 울렁거릴 만큼 물이 넘쳤어. 흙이 마를 시간을 좀 줘!'],
   drought:   ['너무 목이 말라서 힘이 하나도 안 났어... 물 좀 자주 줘!','오랫동안 물을 못 마셔서 잎이 축 처졌어.'],
   overheat:  ['오늘 해가 너무 쨍쨍해서 잎이 다 타버릴 뻔했어! 시원한 곳으로 옮겨줘.','너무 더워서 그늘이 간절했어...']
 };
@@ -2010,7 +2010,7 @@ function loadPlantState(){
       if(typeof plantState.equippedPotDesign !== 'string') plantState.equippedPotDesign = null;
       if(!Array.isArray(plantState.ownedPets)) plantState.ownedPets = [];
       if(typeof plantState.equippedPet !== 'string') plantState.equippedPet = null;
-      // 🐿️→🐞 🐰→🐜 예전 다람쥐/토끼 펫을 무당벌레/개미로 자연스럽게 교체해줘요 (기존 구매/장착 내역 유지)
+      
       const PET_KEY_MIGRATION = { squirrel:'ladybug', rabbit:'ant' };
       plantState.ownedPets = plantState.ownedPets.map(k => PET_KEY_MIGRATION[k] || k);
       if(PET_KEY_MIGRATION[plantState.equippedPet]) plantState.equippedPet = PET_KEY_MIGRATION[plantState.equippedPet];
@@ -2730,7 +2730,7 @@ function revivePlant(){
     showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
     return;
   }
-  const ok = confirm(`${cost}원을 써서 ${plantName}을(를) 되살릴까요?\n\n다음에 또 죽으면 되살리기 비용이 ${cost*2}원으로 올라가요.`);
+  const ok = confirm(`${cost}원을 써서 ${plantName}을(를) 되살릴까요?\n\n`);
   if(!ok) return;
   plantState.coins = coins - cost;
   plantState.reviveCount = (plantState.reviveCount || 0) + 1;
