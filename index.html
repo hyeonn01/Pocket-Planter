@@ -359,13 +359,14 @@
             <div class="screen-card">
                 <h1><span class="floating-emoji">🌱</span> 식물 고르기 <span class="floating-emoji delay-emoji">🌱</span></h1>
                 <p><span id="user-profile" style="font-size: 20px; margin-right: 4px;"></span><span id="user-greeting" style="font-weight: bold; color: #2e7d32;"></span> 정원사님,<br>식물을 골라주세요!</p>
-                <p style="font-size: 12.5px; color: #e53935; font-weight: bold; margin-top: -10px; margin-bottom: 18px;">⚠️ 한 번 고르면 수확하기 전까지는 바꿀 수 없어요. 신중하게 골라주세요!</p>
+                <p style="font-size: 12.5px; color: #e53935; font-weight: bold; margin-top: -10px; margin-bottom: 6px;">⚠️ 한 번 고르면 수확하기 전까지는 바꿀 수 없어요. 신중하게 골라주세요!</p>
+                <p style="font-size: 12px; color: #8a978a; font-weight: bold; margin-top: 0; margin-bottom: 18px;">🔒 포도·귤·바나나는 정원사 레벨을 올리면 순서대로 열려요. 지금은 토마토부터 시작해요!</p>
                 <hr>
                 <button class="select-btn" onclick="selectPlant('Tomato', '토마토')">🍅 토마토</button>
-                <button class="select-btn" onclick="selectPlant('Grape', '포도')">🍇 포도</button>
-                <button class="select-btn" onclick="selectPlant('Tangerine', '귤')">🍊 귤</button>
-                <button class="select-btn" onclick="selectPlant('Banana', '바나나')">🍌 바나나</button>
-                <button class="select-btn locked" onclick="lockedPlantAlert()">🍓 <span class="lock-badge">준비중</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert('level')">🍇 포도 <span class="lock-badge">레벨업 필요</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert('level')">🍊 귤 <span class="lock-badge">레벨업 필요</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert('level')">🍌 바나나 <span class="lock-badge">레벨업 필요</span></button>
+                <button class="select-btn locked" onclick="lockedPlantAlert('soon')">🍓 딸기 <span class="lock-badge">준비중</span></button>
             </div>
         </div>
 
@@ -462,8 +463,12 @@
             if (btn) playClickSound();
         }, true);
 
-        function lockedPlantAlert(){
-            alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요.');
+        function lockedPlantAlert(reason){
+            if (reason === 'level') {
+                alert('🔒 정원사 레벨을 올리면 열리는 식물이에요!\n지금은 토마토부터 정성껏 키워보세요 🍅');
+            } else {
+                alert('🔒 아직 준비 중인 식물이에요! 곧 만나볼 수 있어요.');
+            }
         }
 
         /* ================= 📲 PWA 설치 안내 ================= */
