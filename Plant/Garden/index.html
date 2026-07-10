@@ -2101,6 +2101,7 @@ document.addEventListener('click', (e)=>{
 }, true);
 let isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 let isAiReplying = false;
+let dataWipedInProgress = false; // 🧹 전체 초기화 중에는 pagehide 등에서 재저장되지 않도록 막는 플래그
 
 /* ================= 초기화 ================= */
 window.onload = function(){
@@ -2224,11 +2225,13 @@ function loadPlantState(){
   ensureTypeUnlockRecords(); // 🌱 페이지별 화분 개수 계산 기준값을 최신 상태로 맞춰둬요
 }
 function savePlantState(){
+  if(dataWipedInProgress) return; // 🧹 초기화 직후엔 절대 다시 저장하지 않음
   plantState.lastRealTick = Date.now();
   safeSet(SAVE_KEY, JSON.stringify(plantState));
   saveSharedState();
 }
 function savePlantStateSoft(){
+  if(dataWipedInProgress) return; // 🧹 초기화 직후엔 절대 다시 저장하지 않음
   safeSet(SAVE_KEY, JSON.stringify(plantState));
   saveSharedState();
 }
@@ -2940,6 +2943,7 @@ function restartToGardenSelect(){
     safeSet(CURRENT_SLOT_KEY, String(plantSlots[0].id));
     window.location.reload();
   } else {
+    dataWipedInProgress = true; // 🧹 이 화분 삭제 후 메인으로 나갈 때도 재저장 방지
     safeRemove(`miniGarden_currentPlantDir_${nickname}`);
     window.location.href = '../../index.html';
   }
@@ -5398,6 +5402,7 @@ function resetEverythingData(fromCheat){
     `절대 되돌릴 수 없어요.`;
   if(!confirm(msg)) return false;
   if(!confirm('정말 정말 확실한가요? 마지막 확인이에요.')) return false;
+  dataWipedInProgress = true; // 🧹 여기서부터는 어떤 이벤트(pagehide 등)가 저장을 시도해도 무시됨
   nukeAllDataForNickname();
   window.location.href = '../../index.html';
   return true; // 🚨 페이지 이동이 예약된 상태예요. 이 뒤로 호출한 쪽에서 checkLevelUp/savePlantState 같은 걸
