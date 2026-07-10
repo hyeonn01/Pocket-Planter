@@ -1728,6 +1728,7 @@ function checkLevelUp(){
     const reward = levelUpCoinReward(plantState.gardenerLevel);
     totalReward += reward;
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + reward);
+    ensureTypeUnlockRecords(); // 🌱 레벨업마다 바로 기록해야, 한 번에 여러 레벨을 올라도 화분 슬롯 개수가 정확하게 계산돼요
     Object.keys(PLANT_TYPES).forEach(k=>{
       const t = PLANT_TYPES[k];
       if(t.unlockLevel === plantState.gardenerLevel && isPlantTypeUnlocked(k)) unlockedNow.push(t);
@@ -1736,7 +1737,6 @@ function checkLevelUp(){
   updateLevelUI();
   updateMissionBadge();
   if(leveledUp){
-    ensureTypeUnlockRecords(); // 🌱 방금 레벨업으로 해금된 작물이 있으면 "처음 해금된 레벨"을 기록
     showLevelUpPopup(plantState.gardenerLevel, totalReward, unlockedNow);
     saveSharedState();
     savePlantState();
@@ -1785,6 +1785,7 @@ function showLevelUpPopup(newLevel, reward, unlockedList){
 function closeLevelUpPopup(){
   const screen = document.getElementById('level-up-screen');
   if(screen) screen.style.display = 'none';
+  renderSidePots(); // 🌱 팝업에 가려져 있던 동안 새로 열린 화분 자리(+)가 확실히 보이도록 다시 그려요
 }
 /* ================= 게임 상수 ================= */
 /* 🌱 잘 돌보면 약 4일, 소홀히 하면 최대 7일 정도 걸리도록 성장 속도를 조정했어요.
@@ -2945,12 +2946,14 @@ function restartToGardenSelect(){
 }
 
 /* ⚙️🌱 설정 화면에서 "새로 키우기"를 누르면, 죽음/수확과 무관하게 지금 키우고 있는
-   식물의 저장 데이터(성장 기록·수확 바구니·일기·업적·이름·성격)를 전부 지우고
-   같은 슬롯을 다시 씨앗부터 시작할 수 있는 상태로 되돌려요. 되돌릴 수 없으니 반드시 확인을 받습니다. */
+   식물의 저장 데이터(성장 기록·일기·이름·성격)를 전부 지우고 이 화분 자리를 정리해요.
+   수확 바구니/코인/레벨은 이 정원사 계정 전체가 공유하는 값(다음 작물 해금 조건에도 쓰여요)이라
+   여기서는 지워지지 않고 그대로 유지됩니다. 되돌릴 수 없으니 반드시 확인을 받습니다. */
 function requestRestartCurrentPlant(){
   const ok = confirm(
-    `정말 "${plantName}"(${PLANT_INFO.name}) 키우기를 그만두고 처음부터 새로 시작할까요?\n\n` +
-    `지금까지 쌓인 성장 기록, 수확 바구니, 일기, 업적이 모두 사라지고 되돌릴 수 없어요.`
+    `정말 "${plantName}"(${PLANT_INFO.name}) 키우기를 그만두고 이 화분을 정리할까요?\n\n` +
+    `지금까지 쌓인 이 화분의 성장 기록과 일기가 모두 사라지고 되돌릴 수 없어요.\n` +
+    `(수확 바구니·코인·레벨은 정원사 계정 전체 값이라 그대로 유지돼요)`
   );
   if(!ok) return;
   closeModal();
@@ -5301,23 +5304,32 @@ const DEV_CHEATS = {
     plantState.gardenerLevel = (plantState.gardenerLevel || 1) + 1;
     const reward = levelUpCoinReward(plantState.gardenerLevel);
     plantState.coins = Math.max(0, Math.floor(plantState.coins || 0) + reward);
+    ensureTypeUnlockRecords();
     updateLevelUI();
     updateMissionBadge();
     saveSharedState();
+    renderPlantTabs();
+    renderSidePots();
     showInfoToast(`🛠️ [치트] 레벨업! 현재 Lv.${plantState.gardenerLevel}`);
   },
   '#레벨업10': function(){
     plantState.gardenerLevel = (plantState.gardenerLevel || 1) + 10;
+    ensureTypeUnlockRecords();
     updateLevelUI();
     updateMissionBadge();
     saveSharedState();
+    renderPlantTabs();
+    renderSidePots();
     showInfoToast(`🛠️ [치트] 10레벨 상승! 현재 Lv.${plantState.gardenerLevel}`);
   },
   '#레벨100': function(){
     plantState.gardenerLevel = 100;
+    ensureTypeUnlockRecords();
     updateLevelUI();
     updateMissionBadge();
     saveSharedState();
+    renderPlantTabs();
+    renderSidePots();
     showInfoToast(`🛠️ [치트] 레벨 100 달성!`);
   },
   '#레벨초기화': function(){
@@ -5326,6 +5338,8 @@ const DEV_CHEATS = {
     updateLevelUI();
     updateMissionBadge();
     saveSharedState();
+    renderPlantTabs();
+    renderSidePots();
     showInfoToast('🛠️ [치트] 정원사 레벨을 1로 초기화했어요.');
   },
 
@@ -5371,6 +5385,11 @@ function nukeAllDataForNickname(){
       }
     }
     keysToRemove.forEach(k=>safeRemove(k));
+    // 🧹 닉네임 접미사가 안 붙는 전역 포인터 키들도 같이 지워야 해요.
+    // 안 지우면 시작 화면이 "이어하기" 로직에서 방금 삭제한 이 닉네임을 여전히 최근 정원사로 인식해서
+    // 데이터는 없는데 계속 이 정원사로 들어가려는 이상한 상태가 남아요.
+    if(safeGet('miniGarden_nickname') === nickname) safeRemove('miniGarden_nickname');
+    if(safeGet('miniGarden_profile') === profile) safeRemove('miniGarden_profile');
   }catch(e){}
 }
 function resetEverythingData(fromCheat){
