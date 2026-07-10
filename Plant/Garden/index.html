@@ -2742,7 +2742,54 @@ function toggleSpeedMode(enabled){
   }
   updateSpeedBadge();
   savePlantState();
+
+  // ⏩ 배속은 화면에 있는 화분 전체(최대 3개)에 동시에 켜지고 꺼져요. 단, 각자 자기
+  //    예산(하루 1시간)을 따로 소모해서, 이미 다 쓴 화분은 자동으로 건너뛰어요.
+  const slotsOfType = getSlotsForType(PLANT_TYPE);
+  slotsOfType.forEach(s=>{
+    if(s.id === currentSlotId) return;
+    toggleSpeedBackgroundSlot(s.id, enabled, now);
+  });
+  renderSidePots();
+
   openModal('speed');
+}
+/* 지금 보고 있지 않은(옆) 화분에도 같은 방식으로 배속을 켜거나 꺼요. 이 화분 자신의
+   배속 예산/쿨다운을 기준으로 판단해서, 예산이 없으면 조용히 건너뛰어요. */
+function toggleSpeedBackgroundSlot(slotId, enabled, now){
+  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`;
+  let raw = safeGet(key);
+  if(!raw) return;
+  let st;
+  try{ st = JSON.parse(raw); }catch(e){ return; }
+  if(!st || st.isDead || st.isHarvestable) return;
+
+  // 예산/쿨다운 경계부터 최신 상태로 보정해요 (refreshSpeedState와 동일한 로직)
+  if(st.speedExhaustedAt && (now - st.speedExhaustedAt) >= SPEED_CYCLE_MS){
+    st.speedBudgetMs = SPEED_BUDGET_TOTAL_MS;
+    st.speedExhaustedAt = null;
+  }
+  let liveBudget = typeof st.speedBudgetMs === 'number' ? st.speedBudgetMs : SPEED_BUDGET_TOTAL_MS;
+  if(st.speedMultiplier > 1 && st.speedCheckpoint){
+    liveBudget -= (now - st.speedCheckpoint);
+  }
+  liveBudget = Math.max(0, Math.min(SPEED_BUDGET_TOTAL_MS, liveBudget));
+  if(st.speedMultiplier > 1 && liveBudget <= 0){
+    st.speedMultiplier = 1; st.speedBudgetMs = 0; st.speedCheckpoint = null; st.speedExhaustedAt = now;
+  }
+
+  if(enabled){
+    const cooldownMs = st.speedExhaustedAt ? Math.max(0, SPEED_CYCLE_MS - (now - st.speedExhaustedAt)) : 0;
+    if(st.speedMultiplier <= 1 && cooldownMs <= 0 && liveBudget > 0){
+      st.speedMultiplier = FIXED_SPEED_MULTIPLIER;
+      st.speedCheckpoint = now;
+    }
+  } else {
+    st.speedBudgetMs = liveBudget;
+    st.speedMultiplier = 1;
+    st.speedCheckpoint = null;
+  }
+  safeSet(key, JSON.stringify(st));
 }
 function updateSpeedBadge(){
   const badge = document.getElementById('speed-badge');
@@ -2924,6 +2971,21 @@ function tickOneBackgroundSlot(slotMeta){
 
   const now = Date.now();
   const last = typeof st.lastRealTick === 'number' ? st.lastRealTick : now;
+
+  // ⏳ 이 화분이 배속 중이었다면, 그 사이 예산을 다 썼는지부터 확인해서 꺼줘요
+  //    (배속을 다시 열어보지 않아도 무한정 빨라지지 않도록)
+  if(st.speedExhaustedAt && (now - st.speedExhaustedAt) >= SPEED_CYCLE_MS){
+    st.speedBudgetMs = SPEED_BUDGET_TOTAL_MS;
+    st.speedExhaustedAt = null;
+  }
+  if(st.speedMultiplier > 1 && st.speedCheckpoint){
+    const liveBudget = Math.max(0, Math.min(SPEED_BUDGET_TOTAL_MS,
+      (typeof st.speedBudgetMs === 'number' ? st.speedBudgetMs : SPEED_BUDGET_TOTAL_MS) - (now - st.speedCheckpoint)));
+    if(liveBudget <= 0){
+      st.speedMultiplier = 1; st.speedBudgetMs = 0; st.speedCheckpoint = null; st.speedExhaustedAt = now;
+    }
+  }
+
   const elapsedMs = now - last;
   let elapsedDays = elapsedMs / (24*60*60*1000);
   if(st.speedMultiplier > 1 && elapsedMs > 0){ elapsedDays *= FIXED_SPEED_MULTIPLIER; }
@@ -4128,18 +4190,19 @@ function renderSidePots(){
           '<span class="side-pot-alert">!</span>' +
         '</div>';
     } else {
-      let growth = 0, dead = false, harvestable = false;
+      let growth = 0, dead = false, harvestable = false, moodSt = null;
       try{
         const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${val.id}`);
         const p = raw ? JSON.parse(raw) : null;
-        if(p){ growth = clamp(Math.round(p.growth||0),0,100); dead = !!p.isDead; harvestable = !!p.isHarvestable; }
+        if(p){ growth = clamp(Math.round(p.growth||0),0,100); dead = !!p.isDead; harvestable = !!p.isHarvestable; moodSt = p; }
       }catch(e){}
       const stageIdx = getStageInfo(growth).idx;
-      const miniSvg = `<svg class="side-pot-plant-svg" viewBox="0 -20 200 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${buildPlantSVG(stageIdx)}</svg>`;
+      const mood = getPotMoodFor(moodSt);
+      const miniSvg = `<svg class="side-pot-plant-svg" viewBox="0 -20 200 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${buildPlantSVG(stageIdx)}${buildPotFace(mood)}</svg>`;
       const statusEmoji = dead ? '💀' : (harvestable ? '✨' : '');
       const safeName = (val.plantName||'').replace(/</g,'').slice(0,4);
       mount.innerHTML =
-        `<div class="side-pot filled" onclick="handleSidePotClick(event, ${val.id})" aria-label="${safeName} 화분으로 전환 (더블클릭하면 성장 정보를 볼 수 있어요)">` +
+        `<div class="side-pot filled" onclick="handleSidePotClick(event, ${val.id})" aria-label="${safeName} 화분 쓰다듬기/수확하기">` +
           miniSvg +
           (statusEmoji ? `<span class="side-pot-status-emoji">${statusEmoji}</span>` : '') +
           `<span class="side-pot-name">${safeName}</span>` +
@@ -4153,25 +4216,14 @@ function onGhostPotTap(){
   openAddPlantModal(nextSlotId(), false, PLANT_TYPE);
 }
 
-/* 🖱️👆 좌우 화분(썸네일)은 한번 누르면 화분 전환(페이지 새로고침)이 일어나서, 네이티브 dblclick으로는
-   더블클릭을 감지할 수 없어요(첫 클릭에서 이미 새로고침돼버리니까). 그래서 직접 두 번 탭인지
-   시간차로 판단해서: 짧은 시간 안에 두 번 누르면 전환은 취소하고 성장 정보 말풍선만 보여줘요. */
-let sidePotTapState = { id:null, time:0, timer:null };
+/* 🖱️👆 좌우 화분(썸네일)도 이제 탭 한 번으로 바로 그 화분으로 전환되면서 동시에
+   조작(다 자랐으면 수확, 아니면 쓰다듬기)까지 이어져요. 전환 자체는 화면 이동 없이
+   그 자리에서 즉시 일어나요 — 따로 먼저 선택할 필요가 없어요. */
 function handleSidePotClick(ev, slotId){
-  const now = Date.now();
-  if(sidePotTapState.id === slotId && (now - sidePotTapState.time) < 320){
-    clearTimeout(sidePotTapState.timer);
-    sidePotTapState.id = null;
-    showSidePotInfoBubble(ev.currentTarget, slotId);
-    return;
-  }
-  sidePotTapState.id = slotId;
-  sidePotTapState.time = now;
-  clearTimeout(sidePotTapState.timer);
-  sidePotTapState.timer = setTimeout(()=>{
-    sidePotTapState.id = null;
-    selectSlotInPlace(slotId);
-  }, 320);
+  selectSlotInPlace(slotId);
+  if(plantState.isDead) return;
+  if(plantState.isHarvestable){ startHarvest(); }
+  else { petPlant(); }
 }
 
 /* 좌우 화분(썸네일)을 더블클릭했을 때, 그 화분의 마지막 저장된 성장 상태를 읽어와 정보 말풍선을 띄워요.
@@ -4219,19 +4271,25 @@ function closeGrowthInfoBubble(){
 
 function getPotMood(){
   if(tempMoodOverride) return tempMoodOverride;
-  if(plantState.isDead) return 'dead';
-  if(plantState.isHarvestable) return 'happy';
-  if(plantState.badWordCount >= 14) return 'sad';
-  if(plantState.water <= 15) return 'thirsty';
-  if(plantState.water >= 90) return 'soggy';
-  if(plantState.sun >= 92) return 'hot';
-  if(plantState.sun <= 15) return 'sleepy';
-  if(plantState.water >= 55 && plantState.water <= 85 && plantState.sun >= 40) return 'content';
+  return getPotMoodFor(plantState);
+}
+/* 🌱 가운데 화분뿐 아니라 옆 화분의 표정도 그릴 수 있도록, 임의의 화분 상태(st)를 받아서
+   기분을 계산해요. (tempMoodOverride는 "지금 조작 중인" 가운데 화분만의 임시 효과라 제외) */
+function getPotMoodFor(st){
+  if(!st) return 'neutral';
+  if(st.isDead) return 'dead';
+  if(st.isHarvestable) return 'happy';
+  if((st.badWordCount||0) >= 14) return 'sad';
+  if(st.water <= 15) return 'thirsty';
+  if(st.water >= 90) return 'soggy';
+  if(st.sun >= 92) return 'hot';
+  if(st.sun <= 15) return 'sleepy';
+  if(st.water >= 55 && st.water <= 85 && st.sun >= 40) return 'content';
   return 'neutral';
 }
 
-function buildPotFace(){
-  const mood = getPotMood();
+function buildPotFace(moodOverride){
+  const mood = moodOverride || getPotMood();
   const cx = 100, cy = 212;
   const eyeY = cy - 1;
   const eyeDX = 11;
@@ -5267,6 +5325,7 @@ function openModal(type){
 function closeModal(){
   document.getElementById('global-modal').style.display = 'none';
 }
+/* 🚚 장소 이동은 화면에 있는 화분 전체(최대 3개)를 한번에 같은 곳으로 옮겨요. */
 function setLocation(loc){
   plantState.location = loc;
   applyLocationVisual();
@@ -5275,6 +5334,24 @@ function setLocation(loc){
   closeModal();
   updateUI();
   savePlantState();
+
+  const slotsOfType = getSlotsForType(PLANT_TYPE);
+  slotsOfType.forEach(s=>{
+    if(s.id === currentSlotId) return;
+    setLocationBackgroundSlot(s.id, loc);
+  });
+  renderSidePots();
+}
+/* 지금 보고 있지 않은(옆) 화분도 같은 장소로 옮겨요. */
+function setLocationBackgroundSlot(slotId, loc){
+  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`;
+  let raw = safeGet(key);
+  if(!raw) return;
+  let st;
+  try{ st = JSON.parse(raw); }catch(e){ return; }
+  if(!st || st.isDead) return;
+  st.location = loc;
+  safeSet(key, JSON.stringify(st));
 }
 
 /* ================= 수확 바구니 모달 ================= */
