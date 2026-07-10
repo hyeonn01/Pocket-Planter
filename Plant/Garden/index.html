@@ -5346,7 +5346,7 @@ const DEV_CHEATS = {
   // 🧹 초기화 치트 — 바구니/일기는 각각 따로, '전체'는 이 정원사의 모든 데이터를 완전히 지워요.
   '#초기화바구니': function(){ resetBasketData(true); },
   '#초기화일기': function(){ resetDiaryData(true); },
-  '#초기화전체': function(){ resetEverythingData(true); }
+  '#초기화전체': function(){ return resetEverythingData(true); }
 };
 
 /* 🧺 수확 바구니를 비워요. 바구니는 이 정원사의 모든 식물이 공유해요. */
@@ -5396,17 +5396,20 @@ function resetEverythingData(fromCheat){
   const msg = `⚠️ 정말 "${nickname}" 정원사의 모든 데이터를 완전히 삭제할까요?\n\n` +
     `모든 화분(작물별 최대 ${MAX_PLANT_SLOTS}개), 코인, 수확 바구니, 업적, 일기가 전부 사라지고\n` +
     `절대 되돌릴 수 없어요.`;
-  if(!confirm(msg)) return;
-  if(!confirm('정말 정말 확실한가요? 마지막 확인이에요.')) return;
+  if(!confirm(msg)) return false;
+  if(!confirm('정말 정말 확실한가요? 마지막 확인이에요.')) return false;
   nukeAllDataForNickname();
   window.location.href = '../../index.html';
+  return true; // 🚨 페이지 이동이 예약된 상태예요. 이 뒤로 호출한 쪽에서 checkLevelUp/savePlantState 같은 걸
+               //    실행하면, 방금 지운 데이터를 그 사이 그대로 다시 저장해버려서 초기화가 안 된 것처럼 보여요.
 }
 
 /* ================= 🛠️ 개발자용: 치트 버튼 실행 =================
    설정 화면의 치트 버튼을 누르면 대화창에 문구를 입력했을 때와 동일하게 동작해요. */
 function runDevCheat(key){
   if(!isDevMode() || !DEV_CHEATS[key]) return;
-  DEV_CHEATS[key]();
+  const justResetEverything = DEV_CHEATS[key]() === true;
+  if(justResetEverything) return; // 🚨 페이지 이동 중이라 아래 저장 로직을 실행하면 안 돼요
   checkDeathConditions();
   checkLevelUp();
   savePlantState();
@@ -5447,9 +5450,10 @@ async function processSpeech(){
 
   // 🛠️ 치트 코드 확인 — 개발자 모드가 켜져 있을 때만 동작하고, 일치하면 일반 대화 로직은 건너뜁니다.
   if(isDevMode() && DEV_CHEATS[text]){
-    DEV_CHEATS[text]();
+    const justResetEverything = DEV_CHEATS[text]() === true;
     inputField.value = '';
     closeTalkInput();
+    if(justResetEverything) return; // 🚨 페이지 이동 중이라 아래 저장 로직을 실행하면 안 돼요
     checkDeathConditions();
     checkLevelUp();
     savePlantState();
