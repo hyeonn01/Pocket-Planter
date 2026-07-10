@@ -377,6 +377,11 @@
     font-size:12px; font-weight:800; color:var(--ink); margin-bottom:6px; text-align:center;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:16px;
   }
+  .growth-info-bubble-personality{
+    font-size:10.5px; font-weight:700; color:var(--ink-soft); text-align:center;
+    background:var(--card-soft); border-radius:999px; padding:3px 8px; margin:0 0 7px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
   .growth-info-bubble .status-row{ margin:3px 0; font-size:10.5px; }
   .growth-info-bubble .status-row > span:first-child{ width:52px; }
 
@@ -437,7 +442,7 @@
 
   .plant-stage-svg{
     width: auto;
-    max-width: 82%;
+    max-width: 62%;
     height: clamp(120px, 30dvh, 230px);
     aspect-ratio: 200 / 260;
     transform-origin: bottom center;
@@ -1040,35 +1045,41 @@
   .plant-side-arrow.hidden{ display:none; }
 
   /* 🌱🌱 한 화면(같은 작물)에 최대 3개까지 함께 키우기 — 가운데는 지금 보고 있는(조작 가능한)
-     화분이고, 좌/우에는 같은 작물의 다른 화분(썸네일)이나 아직 심지 않은 빈 자리(+)가 떠요. */
+     화분이고, 좌/우에는 같은 작물의 다른 화분(실제 미니 화분 그림)이나 아직 심지 않은 빈 자리(+)가
+     "화분이 서 있는 자리" 바로 옆(화면 아래쪽)에 나란히 떠요. 눌러도 화면이 넘어가지 않고
+     그 자리에서 바로 가운데(조작 가능한 화분)로 전환돼요. */
   .side-pot-mount{
-    position:absolute; top:50%; transform:translateY(-50%);
-    z-index:12; width:56px; display:none; align-items:center; justify-content:center;
+    position:absolute; bottom:6%; transform:none;
+    z-index:12; width:78px; display:none; align-items:center; justify-content:center;
   }
-  .side-pot-mount.pos-left{ left:2px; }
-  .side-pot-mount.pos-right{ right:2px; }
+  .side-pot-mount.pos-left{ left:1%; }
+  .side-pot-mount.pos-right{ right:1%; }
   .side-pot{
-    display:flex; flex-direction:column; align-items:center; gap:3px;
-    cursor:pointer; transition: transform 0.12s;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    cursor:pointer; transition: transform 0.12s; position:relative;
   }
   .side-pot:active{ transform:scale(0.92); }
-  .side-pot.filled .side-pot-icon{
-    font-size:26px; line-height:1;
+  .side-pot-plant-svg{
+    width:64px; height:76px; display:block;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
-    opacity:0.88;
+    opacity:0.92;
+  }
+  .side-pot-status-emoji{
+    position:absolute; top:-4px; right:2px; font-size:15px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
   }
   .side-pot-name{
     font-size:9.5px; font-weight:800; color:var(--ink-soft);
-    max-width:54px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .side-pot-bar-bg{ width:40px; height:5px; border-radius:999px; background:#e2ecdb; overflow:hidden; }
+  .side-pot-bar-bg{ width:50px; height:5px; border-radius:999px; background:#e2ecdb; overflow:hidden; }
   .side-pot-bar-fill{ height:100%; background:linear-gradient(90deg, var(--leaf), var(--leaf-deep)); border-radius:999px; }
   .side-pot.ghost{
-    position:relative; width:44px; height:44px; border-radius:16px;
+    position:relative; width:56px; height:66px; border-radius:16px;
     border:2px dashed #b9cdb0; background:rgba(255,255,255,0.55);
     display:flex; align-items:center; justify-content:center;
   }
-  .side-pot-plus{ font-size:22px; font-weight:900; color:var(--leaf-deep); line-height:1; }
+  .side-pot-plus{ font-size:24px; font-weight:900; color:var(--leaf-deep); line-height:1; }
   .side-pot-alert{
     position:absolute; top:-7px; right:-7px; width:17px; height:17px; border-radius:50%;
     background:#e4583c; color:#fff; font-size:11px; font-weight:900;
@@ -1079,6 +1090,7 @@
   @keyframes side-pot-alert-pulse{
     0%,100%{ transform:scale(1); } 50%{ transform:scale(1.18); }
   }
+
 
   /* 📖 일기 항목을 눌러서 상세 내용을 볼 수 있어요 */
   .diary-entry{ cursor:pointer; transition: background 0.12s; }
@@ -1191,14 +1203,14 @@
     </div>
   </div>
 
-  <!-- 🛒🕹️🍀 상점/미니게임/무료코인 버튼 (대시보드 박스 밖, 왼쪽) + 성격 뱃지 (오른쪽, 같은 줄) -->
+  <!-- 🛒🕹️🍀 상점/미니게임/무료코인 버튼 (대시보드 박스 밖, 왼쪽)
+       🌱 성격은 이제 화면에 상시 표시하지 않고, 화분을 더블클릭하면 뜨는 성장 정보 팝업에서 확인해요. -->
   <div class="quick-actions-row">
     <div class="quick-actions-left">
       <button class="utility-icon-btn" id="shop-btn" onclick="openModal('shop')" aria-label="상점">🛒</button>
       <button class="utility-icon-btn" id="minigame-btn" onclick="openModal('minigame')" aria-label="미니게임">🕹️</button>
       <button class="utility-icon-btn" id="daily-free-coin-btn" onclick="claimDailyFreeCoin()" aria-label="오늘의 무료 코인">🍀</button>
     </div>
-    <span class="personality-badge" id="personality-badge">😊 활발함</span>
   </div>
 
   <!-- 식물 스테이지 -->
@@ -1223,6 +1235,7 @@
   <div class="growth-info-bubble" id="growth-info-bubble">
     <button class="growth-info-bubble-close" onclick="closeGrowthInfoBubble()" aria-label="닫기">✕</button>
     <div class="growth-info-bubble-title"><span id="growth-info-icon">🍅</span> <span id="growth-info-name">방울이</span> · <span id="growth-info-stage">씨앗</span></div>
+    <div class="growth-info-bubble-personality" id="growth-info-personality">😊 활발함</div>
     <div class="status-row">
       <span>성장률 <b id="growth-info-growth">0</b>%</span>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="growth-info-growth-bar"></div></div>
@@ -1474,15 +1487,16 @@ safeSet(CURRENT_SLOT_KEY, String(currentSlotId));
 function getCurrentSlot(){
   return plantSlots.find(s=>s.id===currentSlotId) || plantSlots[0];
 }
-const currentSlotData = getCurrentSlot();
+let currentSlotData = getCurrentSlot();
 
-/* 🍅🍇 현재 슬롯의 식물 종류 (기본값은 하위호환을 위해 'tomato') */
+/* 🍅🍇 현재 슬롯의 식물 종류 (기본값은 하위호환을 위해 'tomato')
+   같은 페이지 안에서는(=같은 작물끼리는) 화분을 바꿔도 PLANT_TYPE/PLANT_INFO는 그대로예요. */
 const PLANT_TYPE = (currentSlotData && PLANT_TYPES[currentSlotData.plantType]) ? currentSlotData.plantType : 'tomato';
 const PLANT_INFO = PLANT_TYPES[PLANT_TYPE];
 
-const PLANTNAME_KEY = `miniGarden_plantName_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
-const PERSONALITY_KEY_STORAGE = `miniGarden_personality_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
-const SAVE_KEY = `miniGarden_save_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+let PLANTNAME_KEY = `miniGarden_plantName_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+let PERSONALITY_KEY_STORAGE = `miniGarden_personality_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+let SAVE_KEY = `miniGarden_save_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
 
 /* 🪙🌦️⏩🧺 코인 / 날씨 / 배속 / 바구니는 식물마다 따로가 아니라 정원사 한 명 기준으로 공유돼요.
    (식물을 갈아타도 이 값들은 그대로 유지됩니다) */
@@ -1522,8 +1536,20 @@ function saveSharedState(){
   safeSet(SHARED_STATE_KEY, JSON.stringify(obj));
 }
 
-const plantName = currentSlotData.plantName;
-const personalityKey = currentSlotData.personalityKey;
+let plantName = currentSlotData.plantName;
+let personalityKey = currentSlotData.personalityKey;
+
+/* 🌱🌱🌱 화면 전환(리로드) 없이 다른 화분으로 갈아탈 때, currentSlotId를 기준으로
+   위의 슬롯별 키/이름/성격 값들을 전부 다시 계산해줘요. (PLANT_TYPE/PLANT_INFO는 같은 페이지
+   안에서는 항상 그대로라 다시 계산하지 않아요.) */
+function updateSlotContext(){
+  currentSlotData = getCurrentSlot();
+  PLANTNAME_KEY = `miniGarden_plantName_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+  PERSONALITY_KEY_STORAGE = `miniGarden_personality_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+  SAVE_KEY = `miniGarden_save_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
+  plantName = currentSlotData ? currentSlotData.plantName : plantName;
+  personalityKey = currentSlotData ? currentSlotData.personalityKey : personalityKey;
+}
 
 // 닉네임/프로필/현재 키우는 식물 기록 (재접속 시 바로 이어가기 위함)
 safeSet('miniGarden_nickname', nickname);
@@ -1584,6 +1610,54 @@ function switchSlot(slotId){
   savePlantState();
   safeSet(CURRENT_SLOT_KEY, String(slotId));
   window.location.reload();
+}
+
+/* 🌱🌱🌱 같은 작물(같은 페이지) 안에서 다른 화분으로 바꿔 탈 때 쓰는 함수예요.
+   window.location.reload()를 전혀 쓰지 않고, 그 자리에서 바로 화면을 다시 그려서
+   "다른 화면으로 넘어가는" 느낌 없이 즉시 전환돼요. 서로 다른 작물(페이지)로 갈 때는
+   테마/단계 라벨 등이 통째로 바뀌어야 해서 여전히 switchSlot(새로고침)을 사용해요. */
+function selectSlotInPlace(slotId){
+  if(slotId === currentSlotId) return;
+  if(!plantSlots.find(s=>s.id===slotId)) return;
+
+  // 지금 보고 있던 화분 상태부터 저장해요
+  savePlantState();
+  closeGrowthInfoBubble();
+  closeTalkInput();
+  const chatWrap = document.getElementById('chat-bubble-wrap');
+  if(chatWrap) chatWrap.classList.remove('show');
+
+  currentSlotId = slotId;
+  safeSet(CURRENT_SLOT_KEY, String(currentSlotId));
+  updateSlotContext();
+
+  loadPlantState();
+  applyLocationVisual(true);
+  document.getElementById('game-over-screen').style.display = 'none';
+
+  gameTick(); // 이 화분을 마지막으로 본 뒤 흐른 실제 시간만큼 수분/일조/성장을 바로 계산해요
+
+  if(plantState.isDead){
+    document.getElementById('death-reason').innerText = plantState.deathReason || '';
+    document.getElementById('game-over-screen').style.display = 'flex';
+    renderReviveArea();
+  }
+  applyWeatherVisual(true);
+  renderPlant();
+  renderPetCompanion();
+  updateUI();
+  updateBasketBadge();
+  updateDiaryBadge();
+  updateMissionBadge();
+  updateSpeedBadge();
+  updateCoinUI();
+  refreshDailyFreeCoinButton();
+  renderPlantTabs();
+
+  if(!plantState.isDead){
+    const p = getPersonality();
+    showBubble(pickRandom(p.greeting));
+  }
 }
 
 /* 👆 좌우 스와이프로도 식물을 전환할 수 있어요. 화면 어디서나 동작하도록 game-container 전체에 걸어요. */
@@ -1698,8 +1772,16 @@ function createNewPlant(slotId){
   plantSlots = plantSlots.filter(s=>s.id!==slotId);
   plantSlots.push({ id:slotId, plantType:tKey, plantName:name, personalityKey:pKey });
   safeSet(SLOTS_KEY, JSON.stringify(plantSlots));
-  safeSet(CURRENT_SLOT_KEY, String(slotId));
-  window.location.reload();
+  closeModal();
+  if(tKey === PLANT_TYPE){
+    // 🌱 지금 보고 있는 페이지(같은 작물)에 '+' 자리로 새 화분을 심은 경우 — 새로고침 없이 바로 전환해요
+    // (새로 만든 slotId는 항상 새 번호라 지금 보고 있던 화분과 다르므로 selectSlotInPlace가 정상 동작해요)
+    selectSlotInPlace(slotId);
+  } else {
+    // 🍅🍇 다른 작물로 새로 심은 경우(수확 후 "다음엔 뭘 키울까요?")는 테마 등이 통째로 바뀌어야 해서 새로고침해요
+    safeSet(CURRENT_SLOT_KEY, String(slotId));
+    window.location.reload();
+  }
 }
 
 /* ================= 🌟 정원사 레벨 시스템 =================
@@ -2011,8 +2093,11 @@ function getLevelMissionDefs(level){
   }));
 }
 
-/* ================= 상태 ================= */
-let plantState = {
+/* ================= 상태 =================
+   🌱🌱🌱 화면 전환 없이 다른 화분으로 갈아탈 때, 이전 화분의 값이 남아서 섞이지 않도록
+   매번 이 함수로 "깨끗한 기본값"을 새로 만들어서 씁니다. */
+function createDefaultPlantState(){
+  return {
   growth:0, water:50, sun:50,
   location:'창가',
   badWordCount:0,
@@ -2070,7 +2155,10 @@ let plantState = {
     overwaterToday: false,
     overheatToday: false
   }
-};
+  };
+}
+let plantState = createDefaultPlantState();
+
 
 let petCount = 0, petResetTimer = null;
 let audioCtx = null;
@@ -2115,8 +2203,7 @@ window.onload = function(){
   if(bigFruitDefault) bigFruitDefault.innerText = PLANT_INFO.icon;
   document.title = `Pocket Planter - ${PLANT_INFO.name}`;
 
-  const p = getPersonality();
-  document.getElementById('personality-badge').innerText = `${p.emoji} ${p.label}`;
+  const p = getPersonality(); // 🌱 성격은 이제 화면에 상시 표시하지 않고, 화분을 더블클릭하면 뜨는 성장 팝업에서 확인해요
 
   renderPlantTabs();
   setupPlantCarouselSwipe();
@@ -2151,7 +2238,13 @@ window.onload = function(){
 
   setTimeout(()=>{ showBubble(pickRandom(p.greeting)); }, 700);
 
-  setInterval(gameTick, 60 * 1000);
+  tickOtherSlotsOfCurrentType(); // 🌱 옆 화분들도 접속 전까지 흐른 시간만큼 미리 자라 있게 계산해요
+  renderSidePots();
+  setInterval(function(){
+    gameTick();
+    tickOtherSlotsOfCurrentType();
+    renderSidePots();
+  }, 60 * 1000);
 
   setupPwaInstall();
   setupUpdateWatcher();
@@ -2165,6 +2258,7 @@ window.onload = function(){
 
 /* ================= 저장/로드 ================= */
 function loadPlantState(){
+  plantState = createDefaultPlantState(); // 🌱 화분을 갈아탈 때 이전 화분 값이 섞이지 않도록 항상 깨끗하게 시작해요
   const saved = safeGet(SAVE_KEY);
   if(saved){
     try{
@@ -2792,6 +2886,65 @@ function gameTick(){
   updateUI();
   renderPlant();
   savePlantState();
+}
+
+/* 🌱🌱🌱 지금 조작 중이지 않은 "옆 화분"들도 진짜로 계속 자라야 하니까,
+   화면을 그릴 때마다(그리고 1분마다) 저장된 시간과 실제 시간의 차이만큼
+   수분/일조/성장을 조용히 계산해서 다시 저장해줘요. 말풍선/사망 화면 같은
+   화면 연출은 그 화분을 직접 볼 때만 나오면 되니까 여기서는 값만 계산해요. */
+function tickOtherSlotsOfCurrentType(){
+  const others = getSlotsForType(PLANT_TYPE).filter(s=>s.id!==currentSlotId);
+  others.forEach(s=>tickOneBackgroundSlot(s));
+}
+function tickOneBackgroundSlot(slotMeta){
+  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotMeta.id}`;
+  let raw = safeGet(key);
+  if(!raw) return;
+  let st;
+  try{ st = JSON.parse(raw); }catch(e){ return; }
+  if(!st || st.isDead || st.isHarvestable) return;
+
+  const now = Date.now();
+  const last = typeof st.lastRealTick === 'number' ? st.lastRealTick : now;
+  const elapsedMs = now - last;
+  let elapsedDays = elapsedMs / (24*60*60*1000);
+  if(st.speedMultiplier > 1 && elapsedMs > 0){ elapsedDays *= FIXED_SPEED_MULTIPLIER; }
+  if(elapsedDays <= 0) return;
+
+  const p = PERSONALITY_TABLE[slotMeta.personalityKey] || PERSONALITY_TABLE.active;
+  const w = getWeatherInfo(); // 🌦️ 날씨는 정원사 계정 공용값이라 활성 화분과 동일하게 적용돼요
+  const rainRelief = w.type === 'rainy' ? 0.5 : 1;
+  const loc = st.location || '창가';
+  const water0 = typeof st.water === 'number' ? st.water : 50;
+  const sun0 = typeof st.sun === 'number' ? st.sun : 50;
+  const dry = (WATER_DRY_PER_DAY[loc] || 10) * elapsedDays * rainRelief * p.dryMul;
+  const sunTarget = (SUN_GAIN_PER_DAY[loc] || 8) * w.sunMul;
+  const rainGain = (w.type === 'rainy' && OUTDOOR_LOCATIONS.includes(loc)) ? (RAIN_WATER_GAIN_PER_DAY * elapsedDays) : 0;
+
+  st.water = clamp(water0 - dry + rainGain, 0, 100);
+  st.sun = clamp(sun0*Math.pow(0.6, elapsedDays) + sunTarget*elapsedDays, 0, 100);
+
+  if(st.water > 10 && st.water < 95){
+    let growthGain = GROWTH_PER_DAY * elapsedDays * w.growthMul * p.growthMul;
+    const sunFactor = clamp(st.sun/50, 0.75, 1.25);
+    growthGain *= sunFactor;
+    st.growth = clamp((st.growth||0) + growthGain, 0, 100);
+  }
+  if(st.growth >= 100 && !st.isHarvestable){
+    st.isHarvestable = true;
+    st.growth = 100;
+  }
+
+  // 💀 방치된 화분은 극단치에 다다르면 조용히(말풍선 없이) 시들어요. 확률적 위험은
+  //    직접 보고 있을 때(gameTick)만 적용해서, 안 보는 사이 갑자기 죽는 놀람은 줄였어요.
+  if(!st.isHarvestable){
+    if(st.water <= 0){ st.isDead = true; st.deathReason = '물을 너무 오래 주지 않아서 바짝 말라버렸어요.'; }
+    else if(st.water >= 100){ st.isDead = true; st.deathReason = '뿌리가 계속 물에 잠겨 있어서 과습으로 썩어버렸어요.'; }
+    else if(elapsedDays >= NEGLECT_MAX_DAYS){ st.isDead = true; st.deathReason = `${Math.floor(elapsedDays)}일 동안이나 찾아오지 않아서 그만 시들어버렸어요.`; }
+  }
+
+  st.lastRealTick = now;
+  safeSet(key, JSON.stringify(st));
 }
 
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
@@ -3918,11 +4071,13 @@ function updatePlantBubblePosition(idx){
 }
 window.addEventListener('resize', function(){ updatePlantBubblePosition(); });
 
-/* 🌱🌱 좌/우에 같은 작물의 다른 화분(썸네일) 또는 아직 심지 않은 빈 자리('+'와 빨간 '!')를 그려요.
-   가운데(지금 조작 중인 화분)는 원래 있던 큰 SVG(#plant-svg)를 그대로 써요.
-   옆 화분은 실시간으로 다시 시뮬레이션하지 않고, 그 화분에 마지막으로 저장된 성장 상태를
-   그대로 보여주는 미리보기예요 — 눌러서 전환하면(switchSlot) 그 순간 정확한 값으로 다시 계산돼요. */
+/* 🌱🌱 좌/우에 같은 작물의 다른 화분(진짜로 자라고 있는 미니 화분 그림) 또는 아직 심지 않은
+   빈 자리('+')를 그려요. 가운데(지금 조작 중인 화분)는 원래 있던 큰 SVG(#plant-svg)를 그대로 써요.
+   옆 화분들은 실제로 시간이 흐르는 대로 계속 자라고 있고(tickOtherSlotsOfCurrentType), 여기서는
+   그 최신 상태를 작은 화분 그림으로 보여주기만 해요 — 눌러서 전환하면(selectSlotInPlace) 화면
+   이동 없이 그 자리에서 바로 가운데(조작 가능한 화분)로 바뀌어요. */
 function renderSidePots(){
+  tickOtherSlotsOfCurrentType(); // 👀 보여주기 전에 실제 흐른 시간만큼 먼저 최신 상태로 계산해요
   const positions = getPagePositions();
   ['left','right'].forEach(pos=>{
     const mount = document.getElementById(`side-pot-${pos}`);
@@ -3947,11 +4102,14 @@ function renderSidePots(){
         const p = raw ? JSON.parse(raw) : null;
         if(p){ growth = clamp(Math.round(p.growth||0),0,100); dead = !!p.isDead; harvestable = !!p.isHarvestable; }
       }catch(e){}
-      const statusEmoji = dead ? '💀' : (harvestable ? '✨' : PLANT_INFO.icon);
+      const stageIdx = getStageInfo(growth).idx;
+      const miniSvg = `<svg class="side-pot-plant-svg" viewBox="0 -20 200 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${buildPlantSVG(stageIdx)}</svg>`;
+      const statusEmoji = dead ? '💀' : (harvestable ? '✨' : '');
       const safeName = (val.plantName||'').replace(/</g,'').slice(0,4);
       mount.innerHTML =
         `<div class="side-pot filled" onclick="handleSidePotClick(event, ${val.id})" aria-label="${safeName} 화분으로 전환 (더블클릭하면 성장 정보를 볼 수 있어요)">` +
-          `<span class="side-pot-icon">${statusEmoji}</span>` +
+          miniSvg +
+          (statusEmoji ? `<span class="side-pot-status-emoji">${statusEmoji}</span>` : '') +
           `<span class="side-pot-name">${safeName}</span>` +
           `<div class="side-pot-bar-bg"><div class="side-pot-bar-fill" style="width:${growth}%;"></div></div>` +
         `</div>`;
@@ -3980,7 +4138,7 @@ function handleSidePotClick(ev, slotId){
   clearTimeout(sidePotTapState.timer);
   sidePotTapState.timer = setTimeout(()=>{
     sidePotTapState.id = null;
-    switchSlot(slotId);
+    selectSlotInPlace(slotId);
   }, 320);
 }
 
@@ -3998,18 +4156,20 @@ function showSidePotInfoBubble(anchorEl, slotId){
   }catch(e){}
   const slotInfo = plantSlots.find(s=>s.id===slotId);
   const pName = (slotInfo && slotInfo.plantName) || PLANT_INFO.name;
+  const pPersonality = PERSONALITY_TABLE[(slotInfo && slotInfo.personalityKey) || 'active'] || PERSONALITY_TABLE.active;
   const stageLabel = dead ? '시들었어요' : (harvestable ? `${PLANT_INFO.icon} 수확 가능` : getStageInfo(growth).label);
-  showGrowthInfoBubble(anchorEl, { icon: PLANT_INFO.icon, name: pName, stageLabel, growth });
+  showGrowthInfoBubble(anchorEl, { icon: PLANT_INFO.icon, name: pName, stageLabel, growth, personalityLabel: `${pPersonality.emoji} ${pPersonality.label}` });
 }
 
 /* 💬 성장 정보 말풍선: 지금 조작 중인(가운데) 식물이든, 좌우 미리보기 화분이든 공통으로 사용해요.
-   식물 이름 · 성장상태 · 성장률만 보여줘요. anchorEl 바로 위쪽에 잠깐 나타났다가 자동으로 사라져요. */
+   식물 이름 · 성장상태 · 성격 · 성장률을 보여줘요. anchorEl 바로 위쪽에 잠깐 나타났다가 자동으로 사라져요. */
 function showGrowthInfoBubble(anchorEl, info){
   const bubble = document.getElementById('growth-info-bubble');
   if(!bubble || !anchorEl) return;
   document.getElementById('growth-info-icon').innerText = info.icon;
   document.getElementById('growth-info-name').innerText = info.name;
   document.getElementById('growth-info-stage').innerText = info.stageLabel;
+  document.getElementById('growth-info-personality').innerText = info.personalityLabel || '';
   document.getElementById('growth-info-growth').innerText = info.growth;
   document.getElementById('growth-info-growth-bar').style.width = info.growth + '%';
 
@@ -4756,9 +4916,11 @@ document.getElementById('touch-stage').addEventListener('dblclick', function(e){
   if(!e.target.closest('#plant-svg')) return; // 🌱 정확히 화분(식물)을 눌렀을 때만 반응해요
   const stageInfo = getStageInfo(plantState.growth);
   const label = plantState.isDead ? '시들었어요' : (plantState.isHarvestable ? `${PLANT_INFO.icon} 수확 가능` : stageInfo.label);
+  const p = getPersonality();
   showGrowthInfoBubble(document.getElementById('plant-svg'), {
     icon: PLANT_INFO.icon, name: plantName, stageLabel: label,
-    growth: Math.floor(plantState.growth)
+    growth: Math.floor(plantState.growth),
+    personalityLabel: `${p.emoji} ${p.label}`
   });
 });
 
@@ -6034,6 +6196,8 @@ function createSeasonalFalling(){
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden){
     gameTick();
+    tickOtherSlotsOfCurrentType();
+    renderSidePots();
     checkFloatingCoinSpawn();
     refreshDailyFreeCoinButton();
   } else if(!plantState.isDead){
