@@ -396,7 +396,7 @@
   .garden-stage.multi-pot-layout{ justify-content:space-evenly; }
   .speech-bubble-wrap{
     position:absolute; left:50%; transform:translateX(-50%);
-    bottom: 80%; /* 🌱 특정 화분에 붙지 않고 화면 위쪽 가운데에 고정으로 떠요 (updatePlantBubblePosition이 화면 크기에 맞춰 살짝만 보정해요) */
+    bottom: 80%; /* 🌱 기본값(가운데). 화분이 여러 개면 updatePlantBubblePosition이 말하는 화분(왼쪽/가운데/오른쪽) 바로 위로 좌우 위치를 옮겨줘요 */
     z-index:8; display:none; max-width:70%;
     transition: bottom 0.35s ease;
   }
@@ -413,7 +413,15 @@
     text-align:center; position:relative;
     border: 1.6px solid #eef6e8;
   }
-  /* 💬 여러 화분이 함께 있을 때 "어느 화분이 말했는지" 특정하지 않도록, 아래쪽을 가리키는 꼬리는 없애요 */
+  /* 💬 어떤 화분이 말하고 있는지 알 수 있도록, 말풍선이 그 화분의 위쪽 정중앙에 오도록 좌우 위치를 옮기고
+     아래쪽에 꼬리(화살표)를 달아서 정확히 그 화분을 가리키게 해요. 화분이 하나뿐이면 항상 가운데예요. */
+  .speech-bubble::after{
+    content:''; position:absolute; left:50%; top:100%; transform:translateX(-50%);
+    width:0; height:0;
+    border-left:7px solid transparent; border-right:7px solid transparent;
+    border-top:8px solid #fff;
+    filter: drop-shadow(0 2px 1px rgba(0,0,0,0.06));
+  }
   .thinking-dots{ display:inline-flex; gap:3px; align-items:center; vertical-align:middle; }
   .thinking-dots span{
     width:6px; height:6px; border-radius:50%; background:#9fb89a;
@@ -597,7 +605,21 @@
     transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
   }
   .talk-inline-bar.show{
-    max-height:96px; opacity:1;
+    max-height:132px; opacity:1;
+  }
+  .talk-target-row{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .talk-target-arrow{
+    width:26px; height:26px; border-radius:50%; border:none; flex-shrink:0;
+    background:#fff; color:#5c7d54; box-shadow: var(--shadow-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:900; cursor:pointer; transition: transform 0.1s;
+  }
+  .talk-target-arrow:active{ transform:scale(0.88); }
+  .talk-target-name{
+    font-size:12.5px; font-weight:800; color:var(--ink);
+    max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .talk-badword-mini{
     font-size:10px; font-weight:800; color:#e4583c; text-align:center;
@@ -1064,10 +1086,18 @@
   .side-pot-mount.pos-right{ order:3; }
   .side-pot{
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    cursor:pointer; transition: transform 0.12s; position:relative;
+    transition: transform 0.12s; position:relative;
     width:100%;
+    /* 🌱 하단의 위치 표시(location-tag)와 겹치지 않도록 화분 전체를 살짝 위로 띄워요 */
+    margin-bottom:24px;
   }
   .side-pot:active{ transform:scale(0.96); }
+  .side-pot-image-wrap{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; width:100%;
+    /* 🌱 화면이 좁을 때 이름/성장바가 잘리지 않도록, 이미지를 이름/성장바보다 먼저(위쪽) 배치해요 */
+    order:1;
+  }
   .side-pot-plant-svg{
     width: auto; max-width:96%;
     height: clamp(100px, 26dvh, 200px);
@@ -1080,10 +1110,15 @@
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
   }
   .side-pot-name{
-    font-size:10.5px; font-weight:800; color:var(--ink-soft);
-    max-width:90%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:12px; font-weight:800; color:var(--ink); cursor:pointer;
+    background:rgba(255,255,255,0.85); border-radius:999px; padding:3px 10px;
+    max-width:92%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    box-shadow:0 2px 6px rgba(70,110,70,0.12);
+    /* 🌱 이미지 다음(아래쪽)에 오도록 순서를 바꿔요 */
+    order:2; margin-top:2px;
   }
-  .side-pot-bar-bg{ width:70%; min-width:44px; height:5px; border-radius:999px; background:#e2ecdb; overflow:hidden; }
+  .side-pot-name:active{ transform:scale(0.94); }
+  .side-pot-bar-bg{ width:46%; min-width:38px; max-width:80px; height:5px; border-radius:999px; background:#e2ecdb; overflow:hidden; order:3; }
   .side-pot-bar-fill{ height:100%; background:linear-gradient(90deg, var(--leaf), var(--leaf-deep)); border-radius:999px; }
   .side-pot.ghost{
     position:relative; width:64%; aspect-ratio:1/1; max-width:100px; border-radius:16px;
@@ -1233,10 +1268,12 @@
     </div>
     <div class="side-pot-mount pos-left" id="side-pot-left"></div>
     <div class="side-pot-mount pos-center" id="pot-center-mount">
-      <div class="side-pot filled">
-        <svg id="plant-svg" class="plant-stage-svg sway" viewBox="0 -20 200 260" width="200" height="260" preserveAspectRatio="xMidYMid meet" overflow="visible" xmlns="http://www.w3.org/2000/svg"></svg>
-        <span class="side-pot-status-emoji" id="center-pot-status-emoji" style="display:none;"></span>
-        <span class="side-pot-name" id="center-pot-name"></span>
+      <div class="side-pot filled" id="live-pot-wrap">
+        <span class="side-pot-name" id="center-pot-name" onclick="showPotGrowthInfo(this, currentSlotId)"></span>
+        <div class="side-pot-image-wrap">
+          <svg id="plant-svg" class="plant-stage-svg sway" viewBox="0 -20 200 260" width="200" height="260" preserveAspectRatio="xMidYMid meet" overflow="visible" xmlns="http://www.w3.org/2000/svg"></svg>
+          <span class="side-pot-status-emoji" id="center-pot-status-emoji" style="display:none;"></span>
+        </div>
         <div class="side-pot-bar-bg"><div class="side-pot-bar-fill" id="center-pot-bar-fill" style="width:0%;"></div></div>
       </div>
     </div>
@@ -1267,6 +1304,11 @@
 
   <!-- 💬 말걸기 인라인 입력 바 -->
   <div class="talk-inline-bar" id="talk-inline-bar">
+    <div class="talk-target-row" id="talk-target-row">
+      <button class="talk-target-arrow" onclick="cycleTalkTarget(-1)" aria-label="이전 화분에게 말걸기">◀</button>
+      <span class="talk-target-name" id="talk-target-name">방울이</span>
+      <button class="talk-target-arrow" onclick="cycleTalkTarget(1)" aria-label="다음 화분에게 말걸기">▶</button>
+    </div>
     <div class="talk-badword-mini">⚠️ 나쁜 말 누적 <span id="badword-mini-count">0</span>/15</div>
     <div class="talk-input-row">
       <input type="text" class="talk-inline-input" id="talk-inline-input" placeholder="말을 걸어보세요..." maxlength="30">
@@ -1454,21 +1496,16 @@ function getPageCapacity(type){
   const level = plantState.gardenerLevel || 1;
   return Math.max(1, Math.min(MAX_PLANT_SLOTS, level - firstLevel + 1));
 }
-/* 현재 페이지(PLANT_TYPE)의 화분 배치: 가운데는 항상 "지금 보고 있는 화분", 좌/우에는
-   같은 작물의 다른 화분(썸네일) 또는 아직 심지 않은 빈 자리('ghost')가 놓여요.
-   해당 위치 자체가 없으면(용량 부족) undefined를 반환해요. */
+/* 🌱 화면에서 화분이 왼쪽/가운데/오른쪽 중 어디에 있는지는, 지금 조작 중인 화분이
+   무엇이든 상관없이 항상 "화분이 심어진 순서(슬롯 id)"로 고정돼요. 쓰다듬기/성장정보처럼
+   다른 화분을 조작해도 화분들이 자리를 옮겨 다니지 않아요. 실제로 "살아있는(조작 가능한)"
+   화분이 어디에 있는지는 renderPlant()가 currentSlotId와 이 고정 배치를 비교해서 찾아내요. */
 function getPagePositions(){
-  const slots = getSlotsForType(PLANT_TYPE);
+  const slots = getSlotsForType(PLANT_TYPE); // id 오름차순 정렬됨
   const capacity = Math.max(getPageCapacity(PLANT_TYPE), slots.length, 1);
-  const others = slots.filter(s=>s.id !== currentSlotId);
   const order = capacity <= 1 ? ['center'] : (capacity === 2 ? ['center','right'] : ['left','center','right']);
   const result = {};
-  let otherIdx = 0;
-  order.forEach(pos=>{
-    if(pos === 'center'){ result.center = 'active'; return; }
-    result[pos] = others[otherIdx] || 'ghost';
-    otherIdx++;
-  });
+  order.forEach((pos, i)=>{ result[pos] = slots[i] || 'ghost'; });
   return result;
 }
 
@@ -1641,7 +1678,7 @@ function selectSlotInPlace(slotId){
   // 지금 보고 있던 화분 상태부터 저장해요
   savePlantState();
   closeGrowthInfoBubble();
-  closeTalkInput();
+  if(!suppressTalkCloseOnSwitch) closeTalkInput();
   const chatWrap = document.getElementById('chat-bubble-wrap');
   if(chatWrap) chatWrap.classList.remove('show');
 
@@ -2182,23 +2219,24 @@ let petCount = 0, petResetTimer = null;
 let audioCtx = null;
 let tempMoodOverride = null; // 💚 쓰다듬을 때처럼 잠깐 표정을 바꿔줄 때 사용 (저장되지 않는 임시 상태)
 
-/* 🔘 버튼 클릭 효과음 (작고 귀여운 "똑" 소리) */
+/* 🔘 버튼 클릭 효과음 (작고 귀여운 "똑" 소리) — 설정에서 소리를 껐으면(soundOn=false) 재생하지 않아요 */
 function playClickSound(){
+  if(!soundOn) return;
   try{
-    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const ctx = ensureAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const peak = 0.18 * soundVolume;
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.06);
-    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.13);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak), ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.13);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(ctx.destination);
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.14);
+    osc.stop(ctx.currentTime + 0.14);
   }catch(e){ /* 사운드 실패는 무시 */ }
 }
 document.addEventListener('click', (e)=>{
@@ -2459,11 +2497,47 @@ function writeDiaryIfNewDay(){
   savePlantState();
 }
 
+/* 🌱 일기 배지는 "지금 조작 중인 화분" 하나만 보지 않고, 같은 작물의 화분 전체를 기준으로 봐요.
+   화면에 없는(옆) 화분이라도 오늘 새 일기가 쓰였고 아직 안 읽었다면 배지를 켜줘요. */
 function updateDiaryBadge(){
   const badge = document.getElementById('diary-badge');
   const today = getDayIndex(Date.now());
-  const hasNew = plantState.diary.length > 0 && plantState.lastDiaryDay === today && !plantState.diaryRead;
+  let hasNew = false;
+  getSlotsForType(PLANT_TYPE).forEach(s=>{
+    if(hasNew) return;
+    let st;
+    if(s.id === currentSlotId){
+      st = plantState;
+    } else {
+      try{
+        const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${s.id}`);
+        st = raw ? JSON.parse(raw) : null;
+      }catch(e){ st = null; }
+    }
+    if(!st) return;
+    const diaryArr = Array.isArray(st.diary) ? st.diary : [];
+    if(diaryArr.length > 0 && st.lastDiaryDay === today && !st.diaryRead) hasNew = true;
+  });
   badge.style.display = hasNew ? 'flex' : 'none';
+}
+/* 🌱 일기장을 열어서 다 읽었으면, 같은 작물의 화분 전체를 "읽음" 처리해요. (배지도 전체 기준이니 읽음도 전체 기준으로) */
+function markAllDiaryReadForType(){
+  getSlotsForType(PLANT_TYPE).forEach(s=>{
+    if(s.id === currentSlotId){
+      plantState.diaryRead = true;
+      return;
+    }
+    const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${s.id}`;
+    try{
+      const raw = safeGet(key);
+      if(!raw) return;
+      const st = JSON.parse(raw);
+      if(st && !st.diaryRead){
+        st.diaryRead = true;
+        safeSet(key, JSON.stringify(st));
+      }
+    }catch(e){}
+  });
 }
 
 /* ================= 🎯 일일미션 시스템 ================= */
@@ -4125,7 +4199,28 @@ function getStageInfo(growth){
 }
 
 /* ================= 식물 SVG 렌더링 ================= */
+/* 🌱 지금 조작 중인(살아있는) 화분 그림(#plant-svg 포함)을, 그 화분이 원래 심어져 있던
+   고정된 자리(왼쪽/가운데/오른쪽)로 옮겨서 보여줘요. 다른 화분을 조작해서 currentSlotId가
+   바뀌어도, 화분들은 자기 자리에 그대로 있고 그 중 "누가 지금 살아있는지"만 바뀌어요. */
+function ensureLiveWrapPlacement(){
+  const positions = getPagePositions();
+  let myPos = 'center';
+  ['left','center','right'].forEach(pos=>{
+    const val = positions[pos];
+    if(val && val !== 'ghost' && val.id === currentSlotId) myPos = pos;
+  });
+  const mountId = myPos === 'center' ? 'pot-center-mount' : `side-pot-${myPos}`;
+  const mount = document.getElementById(mountId);
+  const wrap = document.getElementById('live-pot-wrap');
+  if(mount && wrap && wrap.parentElement !== mount){
+    mount.innerHTML = ''; // 이 자리에 있던 미리보기 내용을 정리하고
+    mount.appendChild(wrap); // 살아있는 화분을 이 자리로 옮겨요
+  }
+  if(mount) mount.style.display = 'flex';
+  return myPos;
+}
 function renderPlant(){
+  ensureLiveWrapPlacement();
   const { idx } = getStageInfo(plantState.growth);
   const svg = document.getElementById('plant-svg');
   svg.innerHTML = buildPlantSVG(idx) + buildPotFace();
@@ -4147,9 +4242,9 @@ function updateCenterPotLabel(){
   }
 }
 
-/* 💬 여러 화분이 한 화면에 있을 수 있어서, 말풍선을 특정 화분(키)에 맞춰 붙이지 않고
-   화면 위쪽 가운데의 고정된 자리에 띄워요. 어떤 화분이 "말했는지" 특정하지 않기 위함이에요.
-   (화면 높이에 비해 식물 키가 너무 크게 자란 예외적인 경우에만 최소한으로 위치를 보정해요) */
+/* 💬 화분이 여러 개면, 말풍선을 지금 말하고 있는 화분(왼쪽/가운데/오른쪽) 바로 위로 옮겨서
+   어떤 화분이 말했는지 한눈에 알 수 있게 해요. 말풍선 꼬리(화살표)가 그 화분을 정확히 가리켜요.
+   말풍선은 하나뿐이라 여러 화분이 동시에 말하는 일은 없어요(항상 지금 조작 중인 화분 하나만 말해요). */
 function updatePlantBubblePosition(idx){
   const svg = document.getElementById('plant-svg');
   const stage = document.getElementById('touch-stage');
@@ -4162,21 +4257,57 @@ function updatePlantBubblePosition(idx){
   const minBottom = 30, maxBottom = stageRect.height * 0.9;
   bottomPx = Math.max(minBottom, Math.min(maxBottom, bottomPx));
   wrap.style.bottom = bottomPx + 'px';
+
+  // 🌱 지금 조작 중인(말하는) 화분이 실제로 화면의 어느 자리(왼쪽/가운데/오른쪽)에 있는지 찾아서
+  // 말풍선의 좌우 위치를 그 화분의 가로 중심에 맞춰요. 실제 클램프(화면 밖으로 안 잘리게)는
+  // 말풍선이 뜰 때 그 내용 길이를 기준으로 positionBubbleHorizontally()에서 다시 계산해요.
+  let anchor = document.getElementById('live-pot-wrap');
+  anchor = (anchor && anchor.querySelector('.side-pot-image-wrap')) || anchor;
+  if(anchor && stageRect.width > 0){
+    const anchorRect = anchor.getBoundingClientRect();
+    window._bubbleAnchorX = (anchorRect.left + anchorRect.right) / 2 - stageRect.left;
+  } else {
+    window._bubbleAnchorX = stageRect.width / 2;
+  }
+  positionBubbleHorizontally();
+}
+/* 💬 말풍선의 실제 렌더링 폭을 기준으로, 화분 중심에 최대한 가깝게 붙이되 화면 좌우 밖으로
+   잘리지는 않도록 좌표를 보정해요. (내용이 짧으면 화분 바로 위, 내용이 길면 살짝 안쪽으로) */
+function positionBubbleHorizontally(){
+  const stage = document.getElementById('touch-stage');
+  const wrap = document.getElementById('chat-bubble-wrap');
+  if(!stage || !wrap) return;
+  const stageRect = stage.getBoundingClientRect();
+  const anchorX = typeof window._bubbleAnchorX === 'number' ? window._bubbleAnchorX : stageRect.width/2;
+  // 🌱 폭을 정확히 재기 위해 잠깐 왼쪽 끝(0px)으로 두어 충분한 공간을 확보한 뒤 측정해요.
+  //    (그대로 두면 오른쪽 끝 근처에 있을 때 남은 공간이 좁다고 오인해서 글자가 세로로 좁게 줄바꿈돼요)
+  wrap.style.left = '0px';
+  const wrapWidth = wrap.offsetWidth || 0;
+  const pad = 10; // 화면 가장자리 최소 여백
+  const half = wrapWidth/2;
+  const minX = pad + half;
+  const maxX = Math.max(minX, stageRect.width - pad - half);
+  const clampedX = Math.max(minX, Math.min(maxX, anchorX));
+  wrap.style.left = clampedX + 'px';
 }
 window.addEventListener('resize', function(){ updatePlantBubblePosition(); });
 
-/* 🌱🌱 좌/우에 같은 작물의 다른 화분(진짜로 자라고 있는 미니 화분 그림) 또는 아직 심지 않은
-   빈 자리('+')를 그려요. 가운데(지금 조작 중인 화분)는 원래 있던 큰 SVG(#plant-svg)를 그대로 써요.
-   옆 화분들은 실제로 시간이 흐르는 대로 계속 자라고 있고(tickOtherSlotsOfCurrentType), 여기서는
-   그 최신 상태를 작은 화분 그림으로 보여주기만 해요 — 눌러서 전환하면(selectSlotInPlace) 화면
-   이동 없이 그 자리에서 바로 가운데(조작 가능한 화분)로 바뀌어요. */
+/* 🌱🌱 지금 조작 중인 화분이 아닌 나머지 자리(최대 2곳)에 같은 작물의 다른 화분(진짜로
+   자라고 있는 미리보기 그림) 또는 아직 심지 않은 빈 자리('+')를 그려요. 이 화분들은 실제로
+   시간이 흐르는 대로 계속 자라고 있고(tickOtherSlotsOfCurrentType), 여기서는 그 최신 상태를
+   보여주기만 해요 — 이름을 누르면 성장 정보, 화분(그림)을 누르면 그 자리에서 바로
+   쓰다듬기/수확이 돼요(가운데로 옮겨오지 않아요). */
 function renderSidePots(){
   tickOtherSlotsOfCurrentType(); // 👀 보여주기 전에 실제 흐른 시간만큼 먼저 최신 상태로 계산해요
   const positions = getPagePositions();
-  ['left','right'].forEach(pos=>{
-    const mount = document.getElementById(`side-pot-${pos}`);
-    if(!mount) return;
+  ['left','center','right'].forEach(pos=>{
     const val = positions[pos];
+    // 지금 조작 중인 화분이 있는 자리는 renderPlant()가 이미 그렸으니 건드리지 않아요
+    if(val && val !== 'ghost' && val.id === currentSlotId) return;
+
+    const mountId = pos === 'center' ? 'pot-center-mount' : `side-pot-${pos}`;
+    const mount = document.getElementById(mountId);
+    if(!mount) return;
     if(typeof val === 'undefined'){
       mount.style.display = 'none';
       mount.innerHTML = '';
@@ -4202,10 +4333,12 @@ function renderSidePots(){
       const statusEmoji = dead ? '💀' : (harvestable ? '✨' : '');
       const safeName = (val.plantName||'').replace(/</g,'').slice(0,4);
       mount.innerHTML =
-        `<div class="side-pot filled" onclick="handleSidePotClick(event, ${val.id})" aria-label="${safeName} 화분 쓰다듬기/수확하기">` +
-          miniSvg +
-          (statusEmoji ? `<span class="side-pot-status-emoji">${statusEmoji}</span>` : '') +
-          `<span class="side-pot-name">${safeName}</span>` +
+        `<div class="side-pot filled">` +
+          `<span class="side-pot-name" onclick="showPotGrowthInfo(this, ${val.id})" aria-label="${safeName} 성장 정보">${safeName}</span>` +
+          `<div class="side-pot-image-wrap" onclick="handleSidePotClick(event, ${val.id})" aria-label="${safeName} 화분 쓰다듬기/수확하기">` +
+            miniSvg +
+            (statusEmoji ? `<span class="side-pot-status-emoji">${statusEmoji}</span>` : '') +
+          `</div>` +
           `<div class="side-pot-bar-bg"><div class="side-pot-bar-fill" style="width:${growth}%;"></div></div>` +
         `</div>`;
     }
@@ -4216,9 +4349,9 @@ function onGhostPotTap(){
   openAddPlantModal(nextSlotId(), false, PLANT_TYPE);
 }
 
-/* 🖱️👆 좌우 화분(썸네일)도 이제 탭 한 번으로 바로 그 화분으로 전환되면서 동시에
-   조작(다 자랐으면 수확, 아니면 쓰다듬기)까지 이어져요. 전환 자체는 화면 이동 없이
-   그 자리에서 즉시 일어나요 — 따로 먼저 선택할 필요가 없어요. */
+/* 🖱️👆 다른 자리의 화분(그림)을 누르면 그 화분으로 조작 대상이 바뀌면서 바로
+   쓰다듬기(다 자랐으면 수확)까지 이어져요. 화분들의 자리는 고정되어 있어서
+   (ensureLiveWrapPlacement) 화면이 흔들리거나 화분이 가운데로 옮겨오지 않아요. */
 function handleSidePotClick(ev, slotId){
   selectSlotInPlace(slotId);
   if(plantState.isDead) return;
@@ -4226,7 +4359,24 @@ function handleSidePotClick(ev, slotId){
   else { petPlant(); }
 }
 
-/* 좌우 화분(썸네일)을 더블클릭했을 때, 그 화분의 마지막 저장된 성장 상태를 읽어와 정보 말풍선을 띄워요.
+/* 💬 화분의 "이름"을 누르면 성장 정보 팝업이 떠요. 지금 조작 중인 화분이든 다른 화분이든
+   공통으로 쓰는 함수예요 — 조작 대상을 바꾸지 않고 그냥 정보만 보여줘요. */
+function showPotGrowthInfo(anchorEl, slotId){
+  if(slotId === currentSlotId){
+    const stageInfo = getStageInfo(plantState.growth);
+    const label = plantState.isDead ? '시들었어요' : (plantState.isHarvestable ? `${PLANT_INFO.icon} 수확 가능` : stageInfo.label);
+    const p = getPersonality();
+    showGrowthInfoBubble(anchorEl, {
+      icon: PLANT_INFO.icon, name: plantName, stageLabel: label,
+      growth: Math.floor(plantState.growth),
+      personalityLabel: `${p.emoji} ${p.label}`
+    });
+  } else {
+    showSidePotInfoBubble(anchorEl, slotId);
+  }
+}
+
+/* 좌우 화분(썸네일)의 이름을 눌렀을 때, 그 화분의 마지막 저장된 성장 상태를 읽어와 정보 말풍선을 띄워요.
    수분량/일조량은 더 이상 화분마다 따로 보여주지 않아요 (대시보드에서 화면 전체가 공유하는 값으로 확인). */
 function showSidePotInfoBubble(anchorEl, slotId){
   let growth = 0, dead = false, harvestable = false;
@@ -5028,19 +5178,8 @@ document.getElementById('touch-stage').addEventListener('click', function(e){
   petPlant();
 });
 
-/* 💬 가운데(지금 조작 중인) 식물을 더블클릭/더블탭하면 성장 정보 말풍선이 잠깐 떠요.
-   첫 클릭에서 쓰다듬기/수확은 그대로 실행되고, 두 번째 클릭 때 정보도 함께 표시돼요. */
-document.getElementById('touch-stage').addEventListener('dblclick', function(e){
-  if(!e.target.closest('#plant-svg')) return; // 🌱 정확히 화분(식물)을 눌렀을 때만 반응해요
-  const stageInfo = getStageInfo(plantState.growth);
-  const label = plantState.isDead ? '시들었어요' : (plantState.isHarvestable ? `${PLANT_INFO.icon} 수확 가능` : stageInfo.label);
-  const p = getPersonality();
-  showGrowthInfoBubble(document.getElementById('plant-svg'), {
-    icon: PLANT_INFO.icon, name: plantName, stageLabel: label,
-    growth: Math.floor(plantState.growth),
-    personalityLabel: `${p.emoji} ${p.label}`
-  });
-});
+/* 💬 성장 정보 팝업은 이제 화분 "이름"을 눌러야 나와요 (showPotGrowthInfo).
+   화분(그림)을 누르면 쓰다듬기/수확만 실행돼요. */
 
 function petPlant(){
   if(plantState.isDead) return;
@@ -5092,6 +5231,7 @@ function showBubble(msg){
   const bubble = document.getElementById('chat-bubble');
   bubble.innerText = msg;
   wrap.classList.add('show');
+  positionBubbleHorizontally();
   clearTimeout(showBubble._t);
   showBubble._t = setTimeout(()=>{ wrap.classList.remove('show'); }, 7000);
 }
@@ -5103,6 +5243,7 @@ function showThinkingBubble(){
   clearTimeout(showBubble._t);
   bubble.innerHTML = '<span class="thinking-dots"><span></span><span></span><span></span></span>';
   wrap.classList.add('show');
+  positionBubbleHorizontally();
 }
 
 /* 🧑‍🌾 정원사(나)가 한 말 — 식물 위가 아니라 입력창이 있던 자리에서 뜨고 사라짐 */
@@ -5255,7 +5396,7 @@ function openModal(type){
     savePlantState();
   } else if(type === 'diary'){
     content.innerHTML = renderDiaryModal();
-    plantState.diaryRead = true;
+    markAllDiaryReadForType();
     updateDiaryBadge();
     savePlantState();
   } else if(type === 'missions'){
@@ -5435,8 +5576,29 @@ function openTomatoDetail(idx){
 }
 
 /* ================= 일기 모달 ================= */
+/* 🌱 같은 작물의 화분이 여러 개 있으면, 각 화분에 따로 쓰인 일기를 한 곳에 모아서 보여줘요
+   (날짜순으로 정렬). 어떤 화분에서 쓰인 일기인지는 각 항목에 slotId로 표시해둬요. */
+function getAllDiaryEntriesForType(){
+  const slots = getSlotsForType(PLANT_TYPE);
+  let merged = [];
+  slots.forEach(s=>{
+    let arr;
+    if(s.id === currentSlotId){
+      arr = plantState.diary || [];
+    } else {
+      try{
+        const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${s.id}`);
+        const p = raw ? JSON.parse(raw) : null;
+        arr = (p && Array.isArray(p.diary)) ? p.diary : [];
+      }catch(e){ arr = []; }
+    }
+    arr.forEach((e, i)=>{ merged.push(Object.assign({}, e, { _slotId: s.id, _idx: i })); });
+  });
+  merged.sort((a,b)=> (a.dateStr||'').localeCompare(b.dateStr||''));
+  return merged;
+}
 function renderDiaryModal(){
-  const diary = plantState.diary;
+  const diary = getAllDiaryEntriesForType();
   if(!diary.length){
     return `
       <div class="modal-title">${PLANT_INFO.name}의 일기</div>
@@ -5449,14 +5611,13 @@ function renderDiaryModal(){
   }
   return `
     <div class="modal-title"> ${PLANT_INFO.icon} ${escapeHtml(PLANT_INFO.name)} 일기장 </div>
-    <p class="modal-sub" style="margin-bottom:10px;">일기를 눌러서 전체 내용을 읽어보세요!</p>
+    <p class="modal-sub" style="margin-bottom:10px;">같이 키우는 화분들의 일기를 한 곳에 모았어요. 눌러서 전체 내용을 읽어보세요!</p>
     <div class="diary-list">
       ${diary.slice().reverse().map((e)=>{
-        const realIdx = diary.indexOf(e);
         const preview = (e.lines && e.lines.length) ? e.lines[0] : e.text;
         const authorLabel = e.author ? ` · ${escapeHtml(e.author)}` : '';
         return `
-        <div class="diary-entry" onclick="openDiaryDetail(${realIdx})">
+        <div class="diary-entry" onclick="openDiaryDetail(${e._slotId}, ${e._idx})">
           <span class="diary-entry-date">${e.emoji || ''} ${e.dateStr} · ${e.dayNum}일차${authorLabel}</span>
           <span class="diary-entry-text">${escapeHtml(preview)}</span>
         </div>`;
@@ -5466,9 +5627,18 @@ function renderDiaryModal(){
   `;
 }
 
-/* 📖 일기 상세 팝업: 3~4줄의 전체 내용을 보여줘요 */
-function openDiaryDetail(idx){
-  const e = plantState.diary[idx];
+/* 📖 일기 상세 팝업: 3~4줄의 전체 내용을 보여줘요 (어느 화분의 일기인지 slotId로 찾아와요) */
+function openDiaryDetail(slotId, idx){
+  let e;
+  if(slotId === currentSlotId){
+    e = plantState.diary[idx];
+  } else {
+    try{
+      const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`);
+      const p = raw ? JSON.parse(raw) : null;
+      e = (p && Array.isArray(p.diary)) ? p.diary[idx] : null;
+    }catch(err){ e = null; }
+  }
   if(!e) return;
   const overlay = document.getElementById('global-modal');
   const content = document.getElementById('modal-content-area');
@@ -5533,6 +5703,7 @@ function openTalkInput(){
   const bar = document.getElementById('talk-inline-bar');
   const input = document.getElementById('talk-inline-input');
   document.getElementById('badword-mini-count').innerText = plantState.badWordCount;
+  updateTalkTargetUI();
   bar.classList.add('show');
   if(!isMobile) setTimeout(()=>input.focus(), 50);
 }
@@ -5542,6 +5713,39 @@ function closeTalkInput(){
   bar.classList.remove('show');
   input.value = '';
   input.blur();
+}
+/* 🌱 같은 작물이 여러 화분 있으면, 그 중 살아있는 화분만 골라 말 걸 수 있어요. */
+function getTalkableSlots(){
+  return getSlotsForType(PLANT_TYPE).filter(s=>{
+    if(s.id === currentSlotId) return !plantState.isDead;
+    try{
+      const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${s.id}`);
+      const p = raw ? JSON.parse(raw) : null;
+      return !(p && p.isDead);
+    }catch(e){ return true; }
+  });
+}
+function updateTalkTargetUI(){
+  const nameEl = document.getElementById('talk-target-name');
+  const row = document.getElementById('talk-target-row');
+  if(nameEl) nameEl.innerText = plantName;
+  const slots = getTalkableSlots();
+  if(row) row.style.visibility = slots.length > 1 ? 'visible' : 'hidden';
+}
+/* 🌱 말 걸 상대를 화살표로 바꿔요. 화분들의 화면 자리는 그대로 두고(가운데로 옮겨오지 않아요)
+   "지금 말 거는 대상"만 조용히 바뀌어요. */
+let suppressTalkCloseOnSwitch = false;
+function cycleTalkTarget(direction){
+  const slots = getTalkableSlots();
+  if(slots.length <= 1) return;
+  const idx = slots.findIndex(s=>s.id===currentSlotId);
+  const nextIdx = ((idx===-1?0:idx) + direction + slots.length) % slots.length;
+  if(slots[nextIdx].id === currentSlotId) return;
+  suppressTalkCloseOnSwitch = true;
+  selectSlotInPlace(slots[nextIdx].id);
+  suppressTalkCloseOnSwitch = false;
+  document.getElementById('badword-mini-count').innerText = plantState.badWordCount;
+  updateTalkTargetUI();
 }
 function escapeHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
