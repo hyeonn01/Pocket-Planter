@@ -1398,14 +1398,27 @@ function hadExistingGardenData(){
   return GARDEN_DATA_MARKER_KEYS.some(k => safeGet(k) !== null);
 }
 function collectCoinsBeforeReset(){
+  let best = 0;
   try{
     const raw = safeGet(`miniGarden_shared_${nickname}`);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed.coins === 'number') return Math.max(0, Math.floor(parsed.coins));
+      if(parsed && typeof parsed.coins === 'number') best = Math.max(best, parsed.coins);
     }
   }catch(e){}
-  return 0;
+  // 🛟 안전망: 공유 상태 키가 아직 없거나 값이 이상해도, 이 닉네임의 개별 화분 저장값 안에
+  // 코인이 남아있을 수 있으니 전부 훑어서 가장 큰 값을 구제해요.
+  try{
+    for(let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(!k || k.indexOf('miniGarden_save_') !== 0 || k.indexOf(nickname) === -1) continue;
+      try{
+        const parsed = JSON.parse(safeGet(k));
+        if(parsed && typeof parsed.coins === 'number') best = Math.max(best, parsed.coins);
+      }catch(e){}
+    }
+  }catch(e){}
+  return Math.max(0, Math.floor(best));
 }
 function resetGardenDataKeepingCoins(preservedCoins){
   const keysToRemove = [];
@@ -1413,12 +1426,18 @@ function resetGardenDataKeepingCoins(preservedCoins){
     for(let i=0; i<localStorage.length; i++){
       const k = localStorage.key(i);
       if(!k || k.indexOf('miniGarden_') !== 0) continue;
-      // 닉네임/프로필/사운드/알림동의/튜토리얼 시청여부/버전마커 같은 기기 전역 설정은 남겨두고,
-      // 이 닉네임의 화분/식물/공유상태 기록만 지워요.
+      // 닉네임/프로필/사운드/알림동의/튜토리얼 시청여부/버전마커/코인 백업 같은 기기 전역 설정·안전망은
+      // 남겨두고, 이 닉네임의 화분/식물/공유상태 기록만 지워요.
       if(k === APP_DATA_VERSION_KEY) continue;
+      if(k.indexOf('miniGarden_coinBackup_') === 0) continue;
       if(k.indexOf(nickname) === -1) continue;
       keysToRemove.push(k);
     }
+  }catch(e){}
+  // 🛟 지우기 직전에, 혹시 몰라 복구용 백업 키를 하나 더 남겨둬요. 초기화 대상에서 제외되니
+  // 이후 어떤 문제가 생겨도 개발자도구에서 이 값을 보고 코인을 되살릴 수 있어요.
+  try{
+    safeSet(`miniGarden_coinBackup_${nickname}`, JSON.stringify({ coins: preservedCoins, savedAt: Date.now() }));
   }catch(e){}
   keysToRemove.forEach(k => safeRemove(k));
   try{
@@ -1443,9 +1462,13 @@ function checkAppUpdateAndMaybeReset(){
     `(보유하고 계셨던 코인 ${preservedCoins.toLocaleString()}원은 그대로 남아있어요!)`
   );
   window.location.reload();
-  return true;
+  // 🛑 location.reload()는 페이지를 즉시 멈추지 않고 스크립트가 계속 실행돼요.
+  // 아래에 남은 수천 줄의 초기화 코드가 리로드 직전에 한 번 더 돌면서 방금 지켜낸 코인 값을
+  // 다시 덮어써버릴 위험이 있어서, 여기서 스크립트 실행 자체를 확실히 멈춰요.
+  throw new Error('GARDEN_DATA_RESET_RELOADING');
 }
 checkAppUpdateAndMaybeReset();
+
 
 /* 🌱🌱🌱 같은 작물은 한 화면(페이지)에 최대 3개까지 함께 키울 수 있어요.
    (예: 토마토 페이지에 최대 3개, 포도 페이지에 최대 3개... 서로 다른 작물은 항상 다른 페이지) */
