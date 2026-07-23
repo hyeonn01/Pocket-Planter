@@ -353,6 +353,39 @@
     font-size:12px; color:var(--ink-soft); font-weight:700;
   }
   .dash-coin-value{ display:flex; align-items:center; gap:4px; font-weight:900; color:#8a5a00; font-size:14px; }
+  .dash-env-header{
+    display:flex; align-items:center; gap:5px; margin-bottom:6px;
+    font-size:12px; font-weight:800; color:var(--ink);
+  }
+  .dash-env-name{
+    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .dash-env-growth{ font-size:11px; font-weight:700; color:var(--ink-soft); flex-shrink:0; }
+
+  /* 🎯 여러 화분 중 "누구에게 쓸지" 고르는 선택 팝업 (영양제/화분/펫 구매·장착, 물주기 공통) */
+  .target-picker-overlay{
+    position:fixed; inset:0; z-index:200; background:rgba(30,40,25,0.42);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .target-picker-box{
+    background:#fff; border-radius:18px; padding:16px; width:100%; max-width:300px;
+    box-shadow: var(--shadow-soft); max-height:80vh; overflow-y:auto;
+  }
+  .target-picker-title{
+    font-size:14px; font-weight:800; color:var(--ink); text-align:center; margin-bottom:12px;
+  }
+  .target-picker-btn{
+    width:100%; display:flex; align-items:center; gap:8px; text-align:left;
+    padding:10px 12px; margin-bottom:8px; border-radius:12px; border:1.5px solid #e2ece0;
+    background:var(--card-soft); cursor:pointer; font-size:13px; font-weight:700; color:var(--ink);
+  }
+  .target-picker-btn:active{ transform:scale(0.98); }
+  .target-picker-btn .tp-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .target-picker-btn .tp-growth{ font-size:11px; font-weight:700; color:var(--ink-soft); flex-shrink:0; }
+  .target-picker-cancel{
+    width:100%; padding:9px 12px; border-radius:12px; border:none; background:transparent;
+    color:var(--ink-soft); font-size:12.5px; font-weight:700; cursor:pointer; margin-top:2px;
+  }
   .dash-coin-value .coin-icon{ width:16px; height:16px; flex-shrink:0; }
 
   /* 💬 식물 성장 정보 말풍선 (더블클릭/더블탭 시 잠깐 표시) */
@@ -1237,8 +1270,14 @@
     </div>
   </div>
 
-  <!-- 대시보드②: 수분량/일조량. 이 화면(같은 작물 페이지)의 모든 화분이 동일하게 공유하는 값이에요 -->
+  <!-- 대시보드②: 이름/성장률/수분량/일조량. 화분마다 값이 따로 있고, 화분 이름표를 누르면
+       그 화분 기준으로 여기 값이 바뀌어요(조작 대상은 그대로 유지돼요). -->
   <div class="dashboard dashboard-env">
+    <div class="dash-env-header">
+      <span id="dash-env-icon">🍅</span>
+      <span class="dash-env-name" id="dash-env-name">방울이</span>
+      <span class="dash-env-growth">성장률 <b id="dash-env-growth">0</b>%</span>
+    </div>
     <div class="status-row">
       <span>수분량 <b id="dash-water">0</b>%</span>
       <div class="progress-bar-bg"><div class="progress-bar-fill water-fill" id="dash-water-bar"></div></div>
@@ -1556,6 +1595,128 @@ function getUnlockedPageTypes(){
 function getSlotsForType(type){
   return plantSlots.filter(s=>s.plantType===type).sort((a,b)=>a.id-b.id);
 }
+/* 🌱 슬롯 하나의 지금 상태(이름/수분/일조/성장률/생사)를 읽어와요. 지금 조작 중인 화분이면
+   plantState(실시간 값)에서, 다른(옆) 화분이면 저장된 값에서 읽어요. 상단 대시보드 표시와
+   여러 화분 중 대상 선택 팝업(구매/물주기)의 정보 표시에 공통으로 사용해요. */
+function getSlotSnapshot(slotId){
+  if(slotId === currentSlotId){
+    return {
+      name: plantName, water: plantState.water, sun: plantState.sun,
+      growth: plantState.growth, dead: !!plantState.isDead, harvestable: !!plantState.isHarvestable
+    };
+  }
+  const slotInfo = plantSlots.find(s=>s.id===slotId);
+  let water=50, sun=50, growth=0, dead=false, harvestable=false;
+  try{
+    const raw = safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`);
+    const p = raw ? JSON.parse(raw) : null;
+    if(p){
+      water = typeof p.water === 'number' ? p.water : 50;
+      sun = typeof p.sun === 'number' ? p.sun : 50;
+      growth = typeof p.growth === 'number' ? p.growth : 0;
+      dead = !!p.isDead; harvestable = !!p.isHarvestable;
+    }
+  }catch(e){}
+  return { name: (slotInfo && slotInfo.plantName) || PLANT_INFO.name, water, sun, growth, dead, harvestable };
+}
+/* 🧪💧🏺 영양제/물주기/화분 장착처럼 "화분 하나"의 상태를 바꾸는 액션을 지금 조작 중인 화분이든
+   옆의(배경) 화분이든 똑같은 방식으로 적용할 수 있게 해주는 공통 함수예요. mutatorFn은 그
+   화분의 상태 객체(지금 조작 중이면 plantState 그 자체, 아니면 저장된 값)를 직접 바꾸면 돼요. */
+function mutateSlotState(slotId, mutatorFn){
+  if(slotId === currentSlotId){
+    mutatorFn(plantState, true);
+    return true;
+  }
+  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`;
+  let raw = safeGet(key);
+  if(!raw) return false;
+  let st;
+  try{ st = JSON.parse(raw); }catch(e){ return false; }
+  if(!st) return false;
+  mutatorFn(st, false);
+  st.lastRealTick = Date.now();
+  safeSet(key, JSON.stringify(st));
+  return true;
+}
+/* 👀 상단 대시보드(이름/성장률/수분량/일조량)를 지금 "보고 있는" 화분(viewedSlotId) 기준으로 새로고침해요.
+   화분 이름표를 누르면 조작 대상은 바꾸지 않고 이 화면만 그 화분 걸로 바꿔줘요. */
+function updateEnvDashboard(){
+  if(typeof viewedSlotId !== 'number' || !plantSlots.find(s=>s.id===viewedSlotId)){
+    viewedSlotId = currentSlotId;
+  }
+  const snap = getSlotSnapshot(viewedSlotId);
+  const iconEl = document.getElementById('dash-env-icon');
+  const nameEl = document.getElementById('dash-env-name');
+  const growthEl = document.getElementById('dash-env-growth');
+  if(iconEl) iconEl.innerText = snap.dead ? '💀' : (snap.harvestable ? '✨' : PLANT_INFO.icon);
+  if(nameEl) nameEl.innerText = (snap.name||'').replace(/</g,'').slice(0,8);
+  if(growthEl) growthEl.innerText = clamp(Math.floor(snap.growth),0,100);
+  const dashWaterEl = document.getElementById('dash-water');
+  const dashSunEl = document.getElementById('dash-sun');
+  const dashWaterBar = document.getElementById('dash-water-bar');
+  const dashSunBar = document.getElementById('dash-sun-bar');
+  const waterPct = clamp(Math.floor(snap.water),0,100);
+  const sunPct = clamp(Math.floor(snap.sun),0,100);
+  if(dashWaterEl) dashWaterEl.innerText = waterPct;
+  if(dashSunEl) dashSunEl.innerText = sunPct;
+  if(dashWaterBar) dashWaterBar.style.width = waterPct + '%';
+  if(dashSunBar) dashSunBar.style.width = sunPct + '%';
+}
+
+/* 🎯 화분이 2개 이상인 화면에서 물주기/영양제/화분/펫처럼 "화분 하나"를 대상으로 하는 액션을
+   실행하기 전에, 누구에게 적용할지 고르는 팝업이에요. 화분이 1개뿐이면 고를 필요가 없으니
+   그 화분으로 바로 실행해요(팝업 없이). 버튼을 누르는 것 자체가 선택 + 확인이에요.
+   metric: 버튼 옆에 몇 %를 보여줄지 — 'growth'(성장률, 기본값) 또는 'water'(수분량, 물주기 전용).
+   물주기 팝업에서 성장률이 아니라 실제 수분량을 보여줘야 "누가 목마른지" 제대로 비교할 수 있어요. */
+function withPlantTargetSelection(title, actionFn, metric){
+  const slots = getSlotsForType(PLANT_TYPE);
+  if(slots.length <= 1){
+    const only = slots[0] || { id: currentSlotId };
+    actionFn(only.id);
+    return;
+  }
+  showTargetPickerModal(title, slots, actionFn, metric);
+}
+function showTargetPickerModal(title, slots, onPick, metric){
+  closeTargetPickerModal();
+  const overlay = document.createElement('div');
+  overlay.id = 'target-picker-overlay';
+  overlay.className = 'target-picker-overlay';
+  overlay.innerHTML = `
+    <div class="target-picker-box">
+      <div class="target-picker-title">${title}</div>
+      ${slots.map(s=>{
+        const snap = getSlotSnapshot(s.id);
+        const safeName = (snap.name||'').replace(/</g,'').slice(0,8);
+        const statusEmoji = snap.dead ? '💀' : (snap.harvestable ? '✨' : '');
+        const isWaterMetric = metric === 'water';
+        const metricValue = clamp(Math.floor(isWaterMetric ? snap.water : snap.growth),0,100);
+        const metricLabel = isWaterMetric ? `💧 ${metricValue}%` : `${metricValue}%`;
+        return `<button class="target-picker-btn" data-slot-id="${s.id}">
+          <span>${PLANT_INFO.icon}</span>
+          <span class="tp-name">${safeName}${statusEmoji}</span>
+          <span class="tp-growth">${metricLabel}</span>
+        </button>`;
+      }).join('')}
+      <button class="target-picker-cancel" id="target-picker-cancel-btn">취소</button>
+    </div>
+  `;
+  overlay.querySelectorAll('.target-picker-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const slotId = parseInt(btn.getAttribute('data-slot-id'), 10);
+      closeTargetPickerModal();
+      onPick(slotId);
+    });
+  });
+  const cancelBtn = overlay.querySelector('#target-picker-cancel-btn');
+  if(cancelBtn) cancelBtn.addEventListener('click', closeTargetPickerModal);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeTargetPickerModal(); });
+  document.body.appendChild(overlay);
+}
+function closeTargetPickerModal(){
+  const el = document.getElementById('target-picker-overlay');
+  if(el) el.remove();
+}
 /* 새 화분에 쓸 고유 슬롯 id (기존처럼 1~3로 재사용하지 않고, 계속 늘어나는 번호를 씀) */
 function nextSlotId(){
   return plantSlots.reduce((m,s)=>Math.max(m,s.id),0) + 1;
@@ -1626,6 +1787,10 @@ function getCurrentSlotId(){
 }
 let currentSlotId = getCurrentSlotId();
 safeSet(CURRENT_SLOT_KEY, String(currentSlotId));
+/* 👀 화면 상단(대시보드)에 지금 어떤 화분의 수분량/일조량/이름/성장률을 보여줄지 결정하는 값이에요.
+   기본은 지금 조작 중인 화분(currentSlotId)과 같지만, 다른 화분의 이름표를 눌러 정보만
+   확인할 때는 조작 대상은 그대로 두고 이 값만 바뀌어서 상단 정보가 그 화분 걸로 바뀌어요. */
+let viewedSlotId = currentSlotId;
 
 function getCurrentSlot(){
   return plantSlots.find(s=>s.id===currentSlotId) || plantSlots[0];
@@ -1741,7 +1906,21 @@ function gotoAdjacentSlot(direction){
   const pages = getUnlockedPageTypes();
   const idx = pages.indexOf(PLANT_TYPE);
   const targetIdx = idx + direction;
-  if(targetIdx < 0 || targetIdx >= pages.length) return;
+  if(targetIdx < 0 || targetIdx >= pages.length){
+    // 🔒 다음 작물이 레벨은 됐지만 다른 조건(예: 이전 작물 수확 개수)이 아직 안 채워져 잠긴 경우,
+    // 아무 반응 없이 끝나면 "안 열린다/고장났다"로 오해하기 쉬워서 왜 안 열리는지 알려줘요.
+    if(direction > 0){
+      const orderIdx = PLANT_TYPE_ORDER.indexOf(PLANT_TYPE);
+      const nextType = PLANT_TYPE_ORDER[orderIdx + 1];
+      if(nextType){
+        const reason = getPlantLockReason(nextType);
+        if(reason){
+          showInfoToast(`${PLANT_TYPES[nextType].icon} ${PLANT_TYPES[nextType].name}: ${reason}`);
+        }
+      }
+    }
+    return;
+  }
   const targetType = pages[targetIdx];
   const slotsOfType = getSlotsForType(targetType);
   if(slotsOfType.length > 0){ switchSlot(slotsOfType[0].id); }
@@ -1771,6 +1950,7 @@ function selectSlotInPlace(slotId){
   if(chatWrap) chatWrap.classList.remove('show');
 
   currentSlotId = slotId;
+  viewedSlotId = slotId; // 👀 조작 대상이 바뀌면 상단 대시보드도 기본적으로 그 화분을 따라가요
   safeSet(CURRENT_SLOT_KEY, String(currentSlotId));
   updateSlotContext();
 
@@ -2032,7 +2212,7 @@ const WEATHER_TABLE = [
   { type:'sunny',   label:'☀️ 맑음',   weight:3, growthMul:1.0,  sunMul:1.0 },
   { type:'bright',  label:'🌞 화창함', weight:3, growthMul:1.05, sunMul:1.25 },
   { type:'cloudy',  label:'⛅ 흐림',   weight:2, growthMul:0.95, sunMul:0.5 },
-  { type:'rainy',   label:'🌧️ 비',     weight:2, growthMul:0.95, sunMul:0.25 }
+  { type:'rainy',   label:'🌧️ 비',     weight:1, growthMul:0.95, sunMul:0.25 } // 🌧️ 비 오는 비율을 20%→약 11%로 줄였어요
 ];
 const OUTDOOR_LOCATIONS = ['마당','테라스'];
 const SEASON_FALL_EMOJI = { spring:'🌸', summer:'🍃', autumn:'🍂', winter:'❄️' };
@@ -3098,7 +3278,9 @@ function gameTick(){
 
   if(plantState.water > 10 && plantState.water < 95){
     let growthGain = GROWTH_PER_DAY * elapsedDays * w.growthMul * p.growthMul;
-    const sunFactor = clamp(plantState.sun/50, 0.75, 1.25);
+    // 🛠️ 24~48시간 목표 재조정: 기존 0.75~1.25 범위는 날씨/성격 배수와 겹치면 최악의 경우
+    // 48시간을 넘길 수 있어서(최대 약 53시간), 범위를 0.85~1.15로 좁혀 항상 24~48시간 안에 들어오게 했어요.
+    const sunFactor = clamp(plantState.sun/50, 0.85, 1.15);
     growthGain *= sunFactor;
     plantState.growth = clamp(plantState.growth + growthGain, 0, 100);
   }
@@ -3173,7 +3355,7 @@ function tickOneBackgroundSlot(slotMeta){
 
   if(st.water > 10 && st.water < 95){
     let growthGain = GROWTH_PER_DAY * elapsedDays * w.growthMul * p.growthMul;
-    const sunFactor = clamp(st.sun/50, 0.75, 1.25);
+    const sunFactor = clamp(st.sun/50, 0.85, 1.15); // 🛠️ 위 gameTick()과 동일하게 24~48시간 범위로 조정
     growthGain *= sunFactor;
     st.growth = clamp((st.growth||0) + growthGain, 0, 100);
   }
@@ -3369,16 +3551,9 @@ function updateUI(){
   ensureDailyMission();
   updateMissionUI();
 
-  // 💧☀️ 수분량/일조량은 대시보드에 상시 표시돼요. 이 화면(같은 작물 페이지)의 모든 화분이
-  //    동일하게 이 값을 공유해요 — 개별 화분마다 따로 계산하지 않아요.
-  const dashWaterEl = document.getElementById('dash-water');
-  const dashSunEl = document.getElementById('dash-sun');
-  if(dashWaterEl) dashWaterEl.innerText = Math.floor(plantState.water);
-  if(dashSunEl) dashSunEl.innerText = Math.floor(plantState.sun);
-  const dashWaterBar = document.getElementById('dash-water-bar');
-  const dashSunBar = document.getElementById('dash-sun-bar');
-  if(dashWaterBar) dashWaterBar.style.width = Math.floor(plantState.water) + '%';
-  if(dashSunBar) dashSunBar.style.width = Math.floor(plantState.sun) + '%';
+  // 💧☀️🌱 이름/성장률/수분량/일조량은 화분마다 따로 관리돼요. 상단 대시보드는 지금 "보고 있는"
+  //    화분(viewedSlotId) 기준으로 표시하고, 다른 화분 이름표를 누르면 그 화분 걸로 바뀌어요.
+  updateEnvDashboard();
 
   // 🌱 성장 단계는 상시 대시보드가 아니라 더블클릭 정보 말풍선에서 그때그때 계산해서 보여줘요
   const dayNum = getCurrentDayNum();
@@ -4117,27 +4292,68 @@ function buyPotDesign(key){
     showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
     return;
   }
-  const ok = confirm(`"${design.title}"(${design.cost}원)를 구매할까요?`);
-  if(!ok) return;
-  plantState.coins = coins - design.cost;
+  const slots = getSlotsForType(PLANT_TYPE);
+  if(slots.length <= 1){
+    const ok = confirm(`"${design.title}"(${design.cost}원)를 구매할까요?`);
+    if(!ok) return;
+    finalizeBuyPotDesign(design, slots[0] ? slots[0].id : currentSlotId);
+    return;
+  }
+  // 🎯 화분이 2개 이상이면 새로 산 화분 디자인을 누구에게 입혀줄지 골라요. 고르는 것 자체가 구매 확인이에요.
+  withPlantTargetSelection(`🏺 "${design.title}"을(를) 누구에게 장착할까요?`, function(slotId){
+    finalizeBuyPotDesign(design, slotId);
+  });
+}
+function finalizeBuyPotDesign(design, slotId){
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < design.cost){ showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`); return; }
+  const applied = applyPotDesignTo(slotId, design.key, '새 화분으로 갈아입었어요!', /*dryRunCheckOnly=*/true);
+  if(!applied){
+    showInfoToast('🌱 아직 준비 중인 화분이에요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  plantState.coins = coins - design.cost; // 코인은 정원사 계정 공용
   if(!Array.isArray(plantState.ownedPotDesigns)) plantState.ownedPotDesigns = [];
   plantState.ownedPotDesigns.push(design.key);
-  plantState.equippedPotDesign = design.key;
-  showBubble('새 화분으로 갈아입었어요!');
-  renderPlant();
-  updateUI();
-  const content = document.getElementById('modal-content-area');
-  if(content) content.innerHTML = renderShopModal();
-  savePlantState();
+  applyPotDesignTo(slotId, design.key, '새 화분으로 갈아입었어요!');
 }
 function equipPotDesign(key){
-  plantState.equippedPotDesign = key;
-  showBubble(key ? '화분을 바꿔줬어요!' : '기본 화분으로 되돌렸어요!');
-  renderPlant();
-  updateUI();
+  withPlantTargetSelection(
+    key ? '🏺 누구에게 이 화분을 장착할까요?' : '🏺 누구를 기본 화분으로 되돌릴까요?',
+    function(slotId){ applyPotDesignTo(slotId, key, key ? '화분을 바꿔줬어요!' : '기본 화분으로 되돌렸어요!'); }
+  );
+}
+/* 화분 디자인 장착은 화분마다(슬롯마다) 따로 저장돼요. 지금 조작 중인 화분이면 바로 화면에 반영하고,
+   다른(옆) 화분이면 저장값만 바꾸고 토스트로 알려줘요. dryRun이 true면 실제로 반영하지 않고
+   적용 가능 여부만 미리 확인해요(코인을 먼저 빼기 전에 확인하려는 용도). */
+function applyPotDesignTo(slotId, key, message, dryRun){
+  if(dryRun){
+    if(slotId === currentSlotId) return true;
+    try{
+      return !!safeGet(`miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`);
+    }catch(e){ return false; }
+  }
+  const isCurrent = slotId === currentSlotId;
+  const applied = mutateSlotState(slotId, function(st){ st.equippedPotDesign = key; });
+  if(!applied){
+    showInfoToast('🌱 아직 준비 중인 화분이에요. 잠시 후 다시 시도해주세요.');
+    return false;
+  }
+  if(isCurrent){
+    showBubble(message);
+    renderPlant();
+    updateUI();
+  } else {
+    const snap = getSlotSnapshot(slotId);
+    showInfoToast(`🏺 ${(snap.name||'').replace(/</g,'').slice(0,8)}: ${message}`);
+  }
   const content = document.getElementById('modal-content-area');
   if(content) content.innerHTML = renderShopModal();
   savePlantState();
+  saveSharedState();
+  renderSidePots();
+  updateEnvDashboard();
+  return true;
 }
 
 /* 🐾 펫 상점 그리드: 화분 상점과 같은 구조지만, 펫마다 잠금해제 레벨이 달라서(무당벌레·개미 Lv.10 / 꿀벌·나비 Lv.15)
@@ -4228,10 +4444,6 @@ function buyShopItem(key){
     showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
     return;
   }
-  if(key === 'dehumidifier' && plantState.water <= 15){
-    showInfoToast('💧 지금은 수분제거가 필요 없어요.');
-    return;
-  }
   if(key === 'growth_booster'){
     const today = getDayIndex(Date.now());
     if(plantState.lastGrowthBoosterBuyDay === today){
@@ -4239,36 +4451,85 @@ function buyShopItem(key){
       return;
     }
   }
-  // 🛑 구매 전 확인: 코인은 즉시 차감되고 아이템은 바로 식물에게 사용되니, 실수 구매를 막기 위해 한 번 더 확인받아요.
-  const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n(바로 ${plantName}에게 사용돼요).`);
-  if(!ok) return;
-  plantState.coins = coins - item.cost;
-  if(key === 'nutrient'){
-    plantState.growth = clamp(plantState.growth + 3, 0, 100);
-    plantState.water = clamp(plantState.water + 8, 0, WATER_CAP);
-    plantState.sun = clamp(plantState.sun + 8, 0, 100);
-    showBubble('영양이 쏙쏙 들어와요!');
-  } else if(key === 'dehumidifier'){
-    plantState.water = clamp(plantState.water - 25, 0, 100);
-    showBubble('과한 수분이 정리돼서 한결 가벼워요!');
-  } else if(key === 'sunlight'){
-    plantState.sun = clamp(plantState.sun + 25, 0, 100);
-    showBubble('햇살을 듬뿍 받았어요!');
-  } else if(key === 'growth_booster'){
-    plantState.growth = clamp(plantState.growth + 12, 0, 100);
-    plantState.lastGrowthBoosterBuyDay = getDayIndex(Date.now());
-    showBubble('쑥쑥 자랄 힘이 생겼어요!');
+
+  const slots = getSlotsForType(PLANT_TYPE);
+  if(slots.length <= 1){
+    const onlySlotId = slots[0] ? slots[0].id : currentSlotId;
+    if(key === 'dehumidifier' && getSlotSnapshot(onlySlotId).water <= 15){
+      showInfoToast('💧 지금은 수분제거가 필요 없어요.');
+      return;
+    }
+    // 🛑 화분이 하나뿐일 땐 예전처럼 확인창으로 한 번 더 확인받아요.
+    const ok = confirm(`"${item.title}"(${item.cost}원)를 구매할까요?\n\n(바로 ${plantName}에게 사용돼요).`);
+    if(!ok) return;
+    applyShopItemTo(key, item, onlySlotId);
+    return;
   }
-  if(plantState.growth >= 100 && !plantState.isHarvestable){
-    plantState.growth = 100;
-    plantState.isHarvestable = true;
+
+  // 🎯 화분이 2개 이상이면 "누구에게 사용할까요?" 팝업에서 고른 화분 하나에만 적용해요.
+  // 팝업에서 화분을 고르는 것 자체가 구매 확인이에요.
+  withPlantTargetSelection(`${item.icon} "${item.title}"을(를) 누구에게 사용할까요?`, function(slotId){
+    if(key === 'dehumidifier' && getSlotSnapshot(slotId).water <= 15){
+      showInfoToast('💧 지금은 수분제거가 필요 없어요.');
+      return;
+    }
+    applyShopItemTo(key, item, slotId);
+  });
+}
+/* 골라진 화분 하나(slotId)에 실제로 상점 아이템 효과를 적용하고 코인을 차감해요. */
+function applyShopItemTo(key, item, slotId){
+  const coins = Math.floor(plantState.coins || 0);
+  if(coins < item.cost){
+    showInfoToast(`${COIN_ICON_HTML} 코인이 부족해요!`);
+    return;
   }
-  updateUI();
-  renderPlant();
-  checkDeathConditions();
+  const isCurrent = slotId === currentSlotId;
+  const msgMap = {
+    nutrient:'영양이 쏙쏙 들어와요!', dehumidifier:'과한 수분이 정리돼서 한결 가벼워요!',
+    sunlight:'햇살을 듬뿍 받았어요!', growth_booster:'쑥쑥 자랄 힘이 생겼어요!'
+  };
+  const applied = mutateSlotState(slotId, function(st){
+    if(key === 'nutrient'){
+      st.growth = clamp(st.growth + 3, 0, 100);
+      st.water = clamp(st.water + 8, 0, WATER_CAP);
+      st.sun = clamp(st.sun + 8, 0, 100);
+    } else if(key === 'dehumidifier'){
+      st.water = clamp(st.water - 25, 0, 100);
+    } else if(key === 'sunlight'){
+      st.sun = clamp(st.sun + 25, 0, 100);
+    } else if(key === 'growth_booster'){
+      st.growth = clamp(st.growth + 12, 0, 100);
+    }
+    if(st.growth >= 100 && !st.isHarvestable){
+      st.growth = 100;
+      st.isHarvestable = true;
+    }
+  });
+  if(!applied){
+    // 🛠️ 방금 새로 심어서 아직 저장된 값이 없는 화분처럼, 실제로 적용되지 않았다면
+    // 코인을 차감하거나 성공했다고 알리지 않아요.
+    showInfoToast('🌱 아직 준비 중인 화분이에요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  plantState.coins = coins - item.cost; // 코인은 정원사 계정 공용이라 항상 plantState에서 차감해요
+  if(key === 'growth_booster'){
+    plantState.lastGrowthBoosterBuyDay = getDayIndex(Date.now()); // 하루 1개 제한은 계정 공용
+  }
+  if(isCurrent){
+    showBubble(msgMap[key] || '');
+    updateUI();
+    renderPlant();
+    checkDeathConditions();
+  } else {
+    const snap = getSlotSnapshot(slotId);
+    showInfoToast(`${item.icon} ${(snap.name||'').replace(/</g,'').slice(0,8)}: ${msgMap[key]||''}`);
+  }
   const content = document.getElementById('modal-content-area');
   if(content) content.innerHTML = renderShopModal();
   savePlantState();
+  saveSharedState();
+  renderSidePots();
+  updateEnvDashboard();
 }
 
 function updateBasketBadge(){
@@ -4392,6 +4653,12 @@ window.addEventListener('resize', function(){ updatePlantBubblePosition(); });
    쓰다듬기/수확이 돼요(가운데로 옮겨오지 않아요). */
 function renderSidePots(){
   tickOtherSlotsOfCurrentType(); // 👀 보여주기 전에 실제 흐른 시간만큼 먼저 최신 상태로 계산해요
+  // 🛠️ 버그 수정: 레벨업 등으로 화분 개수(자리 배치)가 바뀌면 지금 조작 중인(살아있는) 화분이
+  // 다른 자리(예: 가운데→왼쪽)로 재배치될 수 있어요. 이때 실제 DOM(#live-pot-wrap)을 먼저
+  // 새 자리로 옮겨두지 않으면, 아래에서 그 자리를 다른 화분/빈 화분(+) 마크업으로 덮어써서
+  // 살아있는 화분 화면이 통째로 사라지는 문제가 있었어요. 그래서 자리 배치를 다시 계산하기 전에
+  // 항상 먼저 실제 위치를 맞춰줘요.
+  ensureLiveWrapPlacement();
   const positions = getPagePositions();
   ['left','center','right'].forEach(pos=>{
     const val = positions[pos];
@@ -4436,6 +4703,7 @@ function renderSidePots(){
         `</div>`;
     }
   });
+  updateEnvDashboard(); // 👀 옆 화분을 보고 있는 중이었다면 시간이 흐른 만큼 최신 값으로 갱신해요
 }
 /* 빈 화분 자리('+')를 누르면, 지금 보고 있는 페이지(작물)로 고정된 새 식물 심기 모달이 열려요. */
 function onGhostPotTap(){
@@ -4452,9 +4720,11 @@ function handleSidePotClick(ev, slotId){
   else { petPlant(); }
 }
 
-/* 💬 화분의 "이름"을 누르면 성장 정보 팝업이 떠요. 지금 조작 중인 화분이든 다른 화분이든
-   공통으로 쓰는 함수예요 — 조작 대상을 바꾸지 않고 그냥 정보만 보여줘요. */
+/* 💬 화분의 "이름"을 누르면 성장 정보 팝업이 뜨고, 동시에 화면 상단 대시보드도 그 화분의
+   이름/성장률/수분량/일조량으로 바뀌어요. 조작 대상(currentSlotId)은 바꾸지 않아요 — 정보만 봐요. */
 function showPotGrowthInfo(anchorEl, slotId){
+  viewedSlotId = slotId;
+  updateEnvDashboard();
   if(slotId === currentSlotId){
     const stageInfo = getStageInfo(plantState.growth);
     const label = plantState.isDead ? '시들었어요' : (plantState.isHarvestable ? `${PLANT_INFO.icon} 수확 가능` : stageInfo.label);
@@ -4470,7 +4740,7 @@ function showPotGrowthInfo(anchorEl, slotId){
 }
 
 /* 좌우 화분(썸네일)의 이름을 눌렀을 때, 그 화분의 마지막 저장된 성장 상태를 읽어와 정보 말풍선을 띄워요.
-   수분량/일조량은 더 이상 화분마다 따로 보여주지 않아요 (대시보드에서 화면 전체가 공유하는 값으로 확인). */
+   수분량/일조량은 화면 상단 대시보드에서 이 화분 기준으로 함께 보여줘요(updateEnvDashboard). */
 function showSidePotInfoBubble(anchorEl, slotId){
   let growth = 0, dead = false, harvestable = false;
   try{
@@ -5208,58 +5478,51 @@ return `     <g transform="translate(0,-70)">
 
 
 /* ================= 인터랙션 ================= */
-/* 💧 물주기는 화면에 보이는 화분 전체(최대 3개)에 한 번에 적용돼요. 하나씩 눌러서
-   전환할 필요 없이, 버튼 한 번으로 다 같이 촉촉해져요. */
+/* 💧 화분이 2개 이상이면 "누구한테 물을 줄까요?" 팝업에서 고른 화분 하나에만 물을 줘요.
+   팝업에는 성장률이 아니라 실제 수분량(%)을 보여줘서, 누가 더 목마른지 보고 고를 수 있어요.
+   화분이 1개뿐이면 예전처럼 팝업 없이 바로 그 화분에 물을 줘요. */
 function waterPlant(){
-  const slotsOfType = getSlotsForType(PLANT_TYPE);
-  let wateredAny = false;
-
-  slotsOfType.forEach(s=>{
-    if(s.id === currentSlotId){
-      if(!plantState.isDead && plantState.water < WATER_CAP){
-        plantState.water = clamp(Math.max(plantState.water, 70) + 4, 0, WATER_CAP);
-        plantState.stats.waterCount = (plantState.stats.waterCount || 0) + 1;
-        plantState.stats.runWaterCount = (plantState.stats.runWaterCount || 0) + 1;
-        plantState.stats.hasWateredAnyDay = true;
-        plantState.stats.wateredToday = true;
-        plantState.lifeWater = (plantState.lifeWater || 0) + 1; // 🎯 레벨 미션용 누적 물주기
-        if(getWeatherInfo().type !== 'rainy'){
-          plantState.stats.wateredOnlyOnRain = false;
-        }
-        wateredAny = true;
-      }
-    } else {
-      if(waterBackgroundSlot(s.id)) wateredAny = true;
-    }
-  });
-
-  if(!wateredAny){
+  withPlantTargetSelection('💧 누구한테 물을 줄까요?', function(slotId){
+    waterSingleSlot(slotId);
+  }, 'water');
+}
+function waterSingleSlot(slotId){
+  const snap = getSlotSnapshot(slotId);
+  if(snap.dead || snap.harvestable || snap.water >= WATER_CAP){
     showInfoToast("💧 지금은 충분히 촉촉해요. 조금 마르면 다시 주세요.");
     return;
   }
+  const isCurrent = slotId === currentSlotId;
+  const applied = mutateSlotState(slotId, function(st){
+    st.water = clamp(Math.max(st.water, 70) + 4, 0, WATER_CAP);
+    if(isCurrent){
+      st.stats.waterCount = (st.stats.waterCount || 0) + 1;
+      st.stats.runWaterCount = (st.stats.runWaterCount || 0) + 1;
+      st.stats.hasWateredAnyDay = true;
+      st.stats.wateredToday = true;
+      if(getWeatherInfo().type !== 'rainy') st.stats.wateredOnlyOnRain = false;
+    }
+  });
+  if(!applied){
+    // 🛠️ 방금 새로 심어서 아직 한 번도 저장되지 않은 화분처럼, 저장된 값이 없으면
+    // 조용히 "성공"으로 처리하지 않고 알려줘요.
+    showInfoToast('🌱 아직 준비 중인 화분이에요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  plantState.lifeWater = (plantState.lifeWater || 0) + 1; // 🎯 레벨 미션용 누적 물주기(정원사 계정 공용)
 
-  showBubble("꿀꺽꿀꺽! 시원해요!");
-  updateUI();
-  checkDeathConditions();
+  if(isCurrent){
+    showBubble("꿀꺽꿀꺽! 시원해요!");
+    updateUI();
+    checkDeathConditions();
+  } else {
+    showInfoToast(`💧 ${(snap.name||'').replace(/</g,'').slice(0,8)}에게 물을 줬어요!`);
+  }
   checkLevelUp();
   savePlantState();
+  saveSharedState();
   renderSidePots();
-}
-/* 지금 보고 있지 않은(옆) 화분에도 같은 방식으로 물을 줘요. 죽었거나 이미 수확 가능한
-   화분, 또는 이미 충분히 촉촉한 화분은 건너뛰어요. */
-function waterBackgroundSlot(slotId){
-  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`;
-  let raw = safeGet(key);
-  if(!raw) return false;
-  let st;
-  try{ st = JSON.parse(raw); }catch(e){ return false; }
-  if(!st || st.isDead || st.isHarvestable) return false;
-  const water0 = typeof st.water === 'number' ? st.water : 50;
-  if(water0 >= WATER_CAP) return false;
-  st.water = clamp(Math.max(water0, 70) + 4, 0, WATER_CAP);
-  st.lastRealTick = Date.now();
-  safeSet(key, JSON.stringify(st));
-  return true;
+  updateEnvDashboard();
 }
 
 document.getElementById('touch-stage').addEventListener('click', function(e){
