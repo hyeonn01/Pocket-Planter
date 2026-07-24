@@ -2611,11 +2611,11 @@ window.onload = function(){
 
   setTimeout(()=>{ showBubble(pickRandom(p.greeting)); }, 700);
 
-  tickOtherSlotsOfCurrentType(); // 🌱 옆 화분들도 접속 전까지 흐른 시간만큼 미리 자라 있게 계산해요
+  tickAllOtherSlots(); // 🌱 옆 화분들도 접속 전까지 흐른 시간만큼 미리 자라 있게 계산해요
   renderSidePots();
   setInterval(function(){
     gameTick();
-    tickOtherSlotsOfCurrentType();
+    tickAllOtherSlots();
     renderSidePots();
   }, 60 * 1000);
 
@@ -3144,21 +3144,21 @@ function toggleSpeedMode(enabled){
   updateSpeedBadge();
   savePlantState();
 
-  // ⏩ 배속은 화면에 있는 화분 전체(최대 3개)에 동시에 켜지고 꺼져요. 단, 각자 자기
-  //    예산(하루 1시간)을 따로 소모해서, 이미 다 쓴 화분은 자동으로 건너뛰어요.
-  const slotsOfType = getSlotsForType(PLANT_TYPE);
-  slotsOfType.forEach(s=>{
-    if(s.id === currentSlotId) return;
-    toggleSpeedBackgroundSlot(s.id, enabled, now);
+  // ⏩ 배속은 정원사가 가진 화분 "전부"(다른 작물 종류 포함)에 동시에 켜지고 꺼져요.
+  //    단, 각자 자기 예산(하루 1시간)을 따로 소모해서, 이미 다 쓴 화분은 자동으로 건너뛰어요.
+  const allOtherSlots = plantSlots.filter(s=>s.id !== currentSlotId);
+  allOtherSlots.forEach(s=>{
+    toggleSpeedBackgroundSlot(s, enabled, now);
   });
   renderSidePots();
 
   openModal('speed');
 }
-/* 지금 보고 있지 않은(옆) 화분에도 같은 방식으로 배속을 켜거나 꺼요. 이 화분 자신의
-   배속 예산/쿨다운을 기준으로 판단해서, 예산이 없으면 조용히 건너뛰어요. */
-function toggleSpeedBackgroundSlot(slotId, enabled, now){
-  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotId}`;
+/* 지금 보고 있지 않은 화분(다른 작물 페이지 포함)에도 같은 방식으로 배속을 켜거나 꺼요.
+   이 화분 자신의 배속 예산/쿨다운을 기준으로 판단해서, 예산이 없으면 조용히 건너뛰어요. */
+function toggleSpeedBackgroundSlot(slotMeta, enabled, now){
+  const slotType = slotMeta.plantType || PLANT_TYPE;
+  const key = `miniGarden_save_${slotType}_${nickname}_${slotMeta.id}`;
   let raw = safeGet(key);
   if(!raw) return;
   let st;
@@ -3265,7 +3265,26 @@ setInterval(()=>{
   updateSpeedModalIfOpen();
 }, 1000);
 
-/* ================= 게임 틱 (현실시간 기반 + 배속 보너스) ================= */
+/* ⏩ 실제로 "배속 켜져 있던 구간"만 정확히 골라서 그 구간만 8배로 계산해요.
+   (지금까지는 catch-up 시점에 배속이 켜져 있냐만 보고 전체 경과시간을 통째로 8배 했는데,
+   한동안 안 들어온 화분은 그 경과시간이 아주 길 수 있어서 실제 배속 예산보다 훨씬 많이
+   자라버리는 문제가 있었어요. 체크포인트~예산 끝난 시점까지의 구간만 부스트해요.) */
+function computeSpeedAdjustedElapsedDays(lastRealTick, now, speedMultiplier, speedCheckpoint, speedBudgetMs){
+  const elapsedMs = now - lastRealTick;
+  if(elapsedMs <= 0) return 0;
+  let boostedMs = 0;
+  if(speedMultiplier > 1 && speedCheckpoint){
+    const budget = typeof speedBudgetMs === 'number' ? Math.max(0, speedBudgetMs) : 0;
+    const boostStart = Math.max(lastRealTick, speedCheckpoint);
+    const boostEnd = Math.min(now, speedCheckpoint + budget);
+    boostedMs = Math.max(0, boostEnd - boostStart);
+  }
+  const normalMs = elapsedMs - boostedMs;
+  const effectiveMs = normalMs + boostedMs * FIXED_SPEED_MULTIPLIER;
+  return effectiveMs / (24*60*60*1000);
+}
+
+
 function gameTick(){
   if(plantState.isDead) return;
 
@@ -3278,12 +3297,9 @@ function gameTick(){
   checkFreeCoinNotification();
 
   const now = Date.now();
-  const elapsedMs = now - plantState.lastRealTick;
-  let elapsedDays = elapsedMs / (24*60*60*1000);
-
-  if(plantState.speedMultiplier > 1 && elapsedMs > 0){
-    elapsedDays *= FIXED_SPEED_MULTIPLIER;
-  }
+  let elapsedDays = computeSpeedAdjustedElapsedDays(
+    plantState.lastRealTick, now, plantState.speedMultiplier, plantState.speedCheckpoint, plantState.speedBudgetMs
+  );
 
   if(elapsedDays <= 0){ updateUI(); return; }
 
@@ -3360,12 +3376,16 @@ function gameTick(){
    화면을 그릴 때마다(그리고 1분마다) 저장된 시간과 실제 시간의 차이만큼
    수분/일조/성장을 조용히 계산해서 다시 저장해줘요. 말풍선/사망 화면 같은
    화면 연출은 그 화분을 직접 볼 때만 나오면 되니까 여기서는 값만 계산해요. */
-function tickOtherSlotsOfCurrentType(){
-  const others = getSlotsForType(PLANT_TYPE).filter(s=>s.id!==currentSlotId);
+/* 🌱 지금 보고 있는 화분만 빼고, 정원사가 가진 "모든" 화분(다른 작물 종류 포함)을 시간이 흐른 만큼
+   미리 계산해둬요. 예전에는 같은 작물 페이지의 화분끼리만 챙겼었는데, 그러면 배속을 켜도 다른
+   작물 페이지의 화분에는 전혀 반영되지 않는 문제가 있었어요. */
+function tickAllOtherSlots(){
+  const others = plantSlots.filter(s=>s.id!==currentSlotId);
   others.forEach(s=>tickOneBackgroundSlot(s));
 }
 function tickOneBackgroundSlot(slotMeta){
-  const key = `miniGarden_save_${PLANT_TYPE}_${nickname}_${slotMeta.id}`;
+  const slotType = slotMeta.plantType || PLANT_TYPE;
+  const key = `miniGarden_save_${slotType}_${nickname}_${slotMeta.id}`;
   let raw = safeGet(key);
   if(!raw) return;
   let st;
@@ -3389,9 +3409,7 @@ function tickOneBackgroundSlot(slotMeta){
     }
   }
 
-  const elapsedMs = now - last;
-  let elapsedDays = elapsedMs / (24*60*60*1000);
-  if(st.speedMultiplier > 1 && elapsedMs > 0){ elapsedDays *= FIXED_SPEED_MULTIPLIER; }
+  const elapsedDays = computeSpeedAdjustedElapsedDays(last, now, st.speedMultiplier, st.speedCheckpoint, st.speedBudgetMs);
   if(elapsedDays <= 0) return;
 
   const p = PERSONALITY_TABLE[slotMeta.personalityKey] || PERSONALITY_TABLE.active;
@@ -3439,7 +3457,7 @@ function tickOneBackgroundSlot(slotMeta){
         overwaterToday: st.water >= 88,
         droughtToday: st.water <= 20,
         overheatToday: st.sun >= 90,
-        authorName: slotMeta.plantName || PLANT_INFO.name
+        authorName: slotMeta.plantName || (PLANT_TYPES[slotType] && PLANT_TYPES[slotType].name) || PLANT_INFO.name
       });
       entry.dayNum = calcDayNum(st.startDate, now);
       st.diary.push(entry);
@@ -4738,11 +4756,11 @@ window.addEventListener('resize', function(){ updatePlantBubblePosition(); });
 
 /* 🌱🌱 지금 조작 중인 화분이 아닌 나머지 자리(최대 2곳)에 같은 작물의 다른 화분(진짜로
    자라고 있는 미리보기 그림) 또는 아직 심지 않은 빈 자리('+')를 그려요. 이 화분들은 실제로
-   시간이 흐르는 대로 계속 자라고 있고(tickOtherSlotsOfCurrentType), 여기서는 그 최신 상태를
+   시간이 흐르는 대로 계속 자라고 있고(tickAllOtherSlots), 여기서는 그 최신 상태를
    보여주기만 해요 — 이름을 누르면 성장 정보, 화분(그림)을 누르면 그 자리에서 바로
    쓰다듬기/수확이 돼요(가운데로 옮겨오지 않아요). */
 function renderSidePots(){
-  tickOtherSlotsOfCurrentType(); // 👀 보여주기 전에 실제 흐른 시간만큼 먼저 최신 상태로 계산해요
+  tickAllOtherSlots(); // 👀 보여주기 전에 실제 흐른 시간만큼 먼저 최신 상태로 계산해요
   // 🛠️ 버그 수정: 레벨업 등으로 화분 개수(자리 배치)가 바뀌면 지금 조작 중인(살아있는) 화분이
   // 다른 자리(예: 가운데→왼쪽)로 재배치될 수 있어요. 이때 실제 DOM(#live-pot-wrap)을 먼저
   // 새 자리로 옮겨두지 않으면, 아래에서 그 자리를 다른 화분/빈 화분(+) 마크업으로 덮어써서
@@ -6953,7 +6971,7 @@ function createSeasonalFalling(){
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden){
     gameTick();
-    tickOtherSlotsOfCurrentType();
+    tickAllOtherSlots();
     renderSidePots();
     checkFloatingCoinSpawn();
     refreshDailyFreeCoinButton();
