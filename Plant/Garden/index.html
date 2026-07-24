@@ -1244,7 +1244,7 @@
 
   <!-- 상단 상태바: 일자 · 날씨만 (레벨/보유금액은 대시보드에서 확인) -->
   <div class="status-bar">
-    <span id="game-date-display">2026.01.01 (1일차)</span>
+    <span id="game-date-display">2026.01.01</span>
     <div class="status-bar-right">
       <span class="weather-chip" id="weather-chip">☀️ 맑음</span>
     </div>
@@ -1817,7 +1817,6 @@ let SAVE_KEY = `miniGarden_save_${PLANT_TYPE}_${nickname}_${currentSlotId}`;
    (식물을 갈아타도 이 값들은 그대로 유지됩니다) */
 const SHARED_STATE_KEY = `miniGarden_shared_${nickname}`;
 const SHARED_FIELDS = [
-  'accountStartDate', // 📅 상단에 표시되는 "N일차"는 화분(식물)이 아니라 정원사 계정을 처음 시작한 날짜 기준
   'coins','lastFreeCoinClaimAt','lastFreeCoinClaimDay','nextFloatingCoinAt','notifiedFreeCoinDay',
   'weather','lastWeatherDay',
   'speedMultiplier','speedBudgetMs','speedCheckpoint','speedExhaustedAt',
@@ -2461,7 +2460,6 @@ function createDefaultPlantState(){
   lastWeatherDay: null,
   weather: 'sunny',
   startDate: Date.now(),
-  accountStartDate: Date.now(), // 📅 정원사가 "처음" 게임을 시작한 날짜 (식물을 새로 심어도 바뀌지 않음)
   isDead:false, deathReason:'',
   reviveCount:0,               // 💊 코인으로 되살린 횟수 (되살릴 때마다 다음 비용이 2배가 돼요)
   chatLog: [],
@@ -2683,9 +2681,6 @@ function loadPlantState(){
       if(typeof plantState.basketSeenCount !== 'number') plantState.basketSeenCount = 0;
       if(typeof plantState.gardenerLevel !== 'number') plantState.gardenerLevel = 1;
       if(typeof plantState.gardenerXp !== 'number') plantState.gardenerXp = 0;
-      // 📅 이전 버전 저장 데이터에는 accountStartDate가 없으니, 그때는 지금 화분의 startDate로 채워둬요
-      // (그게 우리가 갖고 있는 것 중 가장 오래된 날짜예요)
-      if(typeof plantState.accountStartDate !== 'number') plantState.accountStartDate = plantState.startDate || Date.now();
       if(typeof plantState.pendingSwipeHint === 'undefined') plantState.pendingSwipeHint = null;
       delete plantState.lastSpeedActivatedAt;
     }catch(e){}
@@ -2742,43 +2737,26 @@ function getWeatherInfo(){
 }
 
 /* ================= 일기 시스템 ================= */
-function writeDiaryIfNewDay(){
-  const today = getDayIndex(Date.now());
-  if(plantState.lastDiaryDay === today) return;
-  if(plantState.isDead) return;
-
-  plantState.lastDiaryDay = today;
-
-  const p = getPersonality();
+/* 📝 성격/날씨/그날 있었던 일을 기준으로 일기 한 편(3~4줄)을 만들어요.
+   화분이 몇 개든 각자 이 함수로 자기 일기를 따로 써요 (더 이상 랜덤으로 다른 화분 이름을 빌려오지 않아요). */
+function composeDiaryEntry(opts){
+  const personalityKey = opts.personalityKey || 'active';
+  const p = PERSONALITY_TABLE[personalityKey] || PERSONALITY_TABLE.active;
   const lines = DIARY_LINES[personalityKey] || DIARY_LINES.active;
-  const w = getWeatherInfo();
-  const weatherPool = lines[w.type] || lines.sunny;
+  const weatherPool = lines[opts.weatherType] || lines.sunny;
 
   let mainPool;
-  if(plantState.stats.currentRunHadBadWord){
-    mainPool = lines.badword;
-  } else if(plantState.stats.talkedToday){
-    mainPool = lines.talk;
-  } else if(plantState.stats.wateredToday){
-    mainPool = lines.water;
-  } else {
-    mainPool = weatherPool;
-  }
-  // 🩺 오늘 물/일조 상태가 위험했다면(과습 > 건조 > 고온 순), 그 상태를 알려주는
+  if(opts.hadBadWord) mainPool = lines.badword;
+  else if(opts.talkedToday) mainPool = lines.talk;
+  else if(opts.wateredToday) mainPool = lines.water;
+  else mainPool = weatherPool;
+
+  // 🩺 그날 물/일조 상태가 위험했다면(과습 > 건조 > 고온 순), 그 상태를 알려주는
   // 일기 문장을 최우선으로 넣어서 다음엔 어떤 조치를 해야 할지 알 수 있게 해요
   let statusKey = null;
-  if(plantState.stats.overwaterToday) statusKey = 'overwater';
-  else if(plantState.stats.droughtToday) statusKey = 'drought';
-  else if(plantState.stats.overheatToday) statusKey = 'overheat';
-
-  // 🛠️ 오늘 있었던 이벤트 플래그는 일기를 쓴 뒤 전부 초기화해야
-  // 다음날 일기에 어제 있었던 일(예: 나쁜 말)이 잘못 이어져 쓰이지 않아요
-  plantState.stats.currentRunHadBadWord = false;
-  plantState.stats.talkedToday = false;
-  plantState.stats.wateredToday = false;
-  plantState.stats.overwaterToday = false;
-  plantState.stats.droughtToday = false;
-  plantState.stats.overheatToday = false;
+  if(opts.overwaterToday) statusKey = 'overwater';
+  else if(opts.droughtToday) statusKey = 'drought';
+  else if(opts.overheatToday) statusKey = 'overheat';
 
   // 📝 성격별 문장 풀을 조합해서 3~4줄짜리 일기를 만들어요 (같은 문장이 겹치지 않게)
   const used = new Set();
@@ -2800,15 +2778,41 @@ function writeDiaryIfNewDay(){
 
   const d = new Date();
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-  const dayNum = getCurrentDayNum();
 
-  // 🌱🌱🌱 한 화면에 같은 작물이 여러 화분 있으면, 오늘 일기는 그 중 아무나 랜덤으로 쓴 걸로 해요
-  // (실제 성장 기록은 지금 조작 중인 화분 기준이지만, 작성자 이름만 랜덤으로 골라 붙여요)
-  const pageSlots = getSlotsForType(PLANT_TYPE);
-  const author = pageSlots.length > 1 ? pickRandom(pageSlots) : (plantSlots.find(s=>s.id===currentSlotId) || null);
-  const authorName = (author && author.plantName) ? author.plantName : plantName;
+  return { dateStr, lines: diaryLines, text: diaryLines[0], emoji: p.emoji, author: opts.authorName || p.label };
+}
 
-  plantState.diary.push({ dateStr, dayNum, lines: diaryLines, text: diaryLines[0], emoji:p.emoji, author: authorName });
+function writeDiaryIfNewDay(){
+  const today = getDayIndex(Date.now());
+  if(plantState.lastDiaryDay === today) return;
+  if(plantState.isDead) return;
+
+  plantState.lastDiaryDay = today;
+  const w = getWeatherInfo();
+
+  const entry = composeDiaryEntry({
+    personalityKey,
+    weatherType: w.type,
+    hadBadWord: plantState.stats.currentRunHadBadWord,
+    talkedToday: plantState.stats.talkedToday,
+    wateredToday: plantState.stats.wateredToday,
+    overwaterToday: plantState.stats.overwaterToday,
+    droughtToday: plantState.stats.droughtToday,
+    overheatToday: plantState.stats.overheatToday,
+    authorName: plantName
+  });
+  entry.dayNum = getCurrentDayNum();
+
+  // 🛠️ 오늘 있었던 이벤트 플래그는 일기를 쓴 뒤 전부 초기화해야
+  // 다음날 일기에 어제 있었던 일(예: 나쁜 말)이 잘못 이어져 쓰이지 않아요
+  plantState.stats.currentRunHadBadWord = false;
+  plantState.stats.talkedToday = false;
+  plantState.stats.wateredToday = false;
+  plantState.stats.overwaterToday = false;
+  plantState.stats.droughtToday = false;
+  plantState.stats.overheatToday = false;
+
+  plantState.diary.push(entry);
   if(plantState.diary.length > 60) plantState.diary = plantState.diary.slice(-60);
 
   plantState.diaryRead = false; // 🆕 새 일기가 생겼으니 "안읽음" 배지를 다시 켜줘요
@@ -3422,6 +3426,29 @@ function tickOneBackgroundSlot(slotMeta){
     else if(elapsedDays >= NEGLECT_MAX_DAYS){ st.isDead = true; st.deathReason = `${Math.floor(elapsedDays)}일 동안이나 찾아오지 않아서 그만 시들어버렸어요.`; }
   }
 
+  // 📖 이 화분도 오늘 아직 일기를 안 썼으면, 지금 상태(물/일조)를 기준으로 자기 일기를 써요.
+  //    (말을 걸거나 물을 준 건 "보고 있을 때"만 기록되니, 방치된 화분은 최종 물/일조 수치로 상태를 판단해요)
+  if(!st.isDead){
+    const todayIdx = getDayIndex(now);
+    if(st.lastDiaryDay !== todayIdx){
+      if(!Array.isArray(st.diary)) st.diary = [];
+      const entry = composeDiaryEntry({
+        personalityKey: slotMeta.personalityKey || 'active',
+        weatherType: w.type,
+        hadBadWord: false, talkedToday: false, wateredToday: false,
+        overwaterToday: st.water >= 88,
+        droughtToday: st.water <= 20,
+        overheatToday: st.sun >= 90,
+        authorName: slotMeta.plantName || PLANT_INFO.name
+      });
+      entry.dayNum = calcDayNum(st.startDate, now);
+      st.diary.push(entry);
+      if(st.diary.length > 60) st.diary = st.diary.slice(-60);
+      st.lastDiaryDay = todayIdx;
+      st.diaryRead = false;
+    }
+  }
+
   st.lastRealTick = now;
   safeSet(key, JSON.stringify(st));
 }
@@ -3440,11 +3467,6 @@ function calcDayNum(startTs, nowTs){
 }
 function getCurrentDayNum(){
   return calcDayNum(plantState.startDate, Date.now());
-}
-/* 📅 상단 상태바에 표시하는 "N일차"는 지금 키우는 식물이 아니라, 정원사가 처음 게임을 시작한
-   날짜 기준으로 셉니다. (식물을 수확하거나 새로 심어도 이 숫자는 계속 이어져요) */
-function getAccountDayNum(){
-  return calcDayNum(plantState.accountStartDate || plantState.startDate, Date.now());
 }
 
 /* ================= 죽음 판정 ================= */
@@ -3611,10 +3633,9 @@ function updateUI(){
   updateEnvDashboard();
 
   // 🌱 성장 단계는 상시 대시보드가 아니라 더블클릭 정보 말풍선에서 그때그때 계산해서 보여줘요
-  const dayNum = getAccountDayNum(); // 📅 정원사 계정을 처음 시작한 날짜 기준 (식물을 새로 심어도 초기화 안 됨)
   const d = new Date();
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-  document.getElementById('game-date-display').innerText = `${dateStr} (${dayNum}일차)`;
+  document.getElementById('game-date-display').innerText = dateStr;
 
   const stageInfo = getStageInfo(plantState.growth);
   // (성장 단계 텍스트는 더블클릭 정보 말풍선에서 그때그때 표시)
@@ -4679,6 +4700,20 @@ function updatePlantBubblePosition(idx){
     window._bubbleAnchorX = stageRect.width / 2;
   }
   positionBubbleHorizontally();
+  positionBubbleVertically(stageRect, bottomPx); // 🌱 stage가 overflow:hidden이라, 긴 메시지면 위쪽이 잘릴 수 있어 보정
+}
+/* 💬 말풍선이 여러 줄이라 위로 길게 자라나면, stage(overflow:hidden) 위쪽 경계를 넘어가서
+   글자 윗부분이 통째로 안 보일 수 있어요. 실제 렌더링된 말풍선 높이를 재서, 위쪽에 최소 여백이
+   남도록 필요하면 bottom 값을 줄여줘요. (화분이 몇 번째 자리에 있든 동일하게 적용돼요) */
+function positionBubbleVertically(stageRect, bottomPx){
+  const wrap = document.getElementById('chat-bubble-wrap');
+  if(!wrap) return;
+  const topPad = 8; // 화면 맨 위 최소 여백
+  const wrapHeight = wrap.offsetHeight || 0;
+  const maxAllowedBottom = Math.max(30, stageRect.height - topPad - wrapHeight);
+  if(bottomPx > maxAllowedBottom){
+    wrap.style.bottom = maxAllowedBottom + 'px';
+  }
 }
 /* 💬 말풍선의 실제 렌더링 폭을 기준으로, 화분 중심에 최대한 가깝게 붙이되 화면 좌우 밖으로
    잘리지는 않도록 좌표를 보정해요. (내용이 짧으면 화분 바로 위, 내용이 길면 살짝 안쪽으로) */
